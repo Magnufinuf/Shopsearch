@@ -1,0 +1,110 @@
+[
+  {
+    "id": "8999507427497",
+    "title": "Speed men's car tee",
+    "price": 39.99,
+    "currency": "USD",
+    "category": "T-SHIRT",
+    "vendor": "Auto Collections",
+    "tags": ["Cars", "Speed", "T-Shirt"],
+    "image": "https://cdn.shopify.com/s/files/1/0741/7816/6953/files/mens-box-tee-vintage-black-back-6a7a45766ed5a.jpg?v=1786398079",
+    "sizes": ["S", "M", "L", "XL"],
+    "url": "https://auco.store/products/speed-mens-car-tee"
+  },
+  {
+    "id": "8999508836521",
+    "title": "Men's paul walker tee",
+    "price": 33.99,
+    "currency": "USD",
+    "category": "T-SHIRT",
+    "vendor": "Auto Collections",
+    "tags": ["15% Off"],
+    "image": "https://cdn.shopify.com/s/files/1/0741/7816/6953/files/mens-box-tee-white-back-6a7a45cd58796.jpg?v=1786398165",
+    "sizes": ["S", "M", "L", "XL"],
+    "url": "https://auco.store/products/men-s-paul-walker-tee"
+  },
+  {
+    "id": "9011914539177",
+    "title": "Auco blue porsche tee",
+    "price": 34.99,
+    "currency": "USD",
+    "category": "T-SHIRT",
+    "vendor": "Auto Collections",
+    "tags": ["Cars", "T-Shirt"],
+    "image": "https://cdn.shopify.com/s/files/1/0741/7816/6953/files/mens-box-tee-black-back-6a78ed98b38c9.jpg?v=1786310048",
+    "sizes": ["S", "M", "L", "XL"],
+    "url": "https://auco.store/products/auco-blue-porsche-design"
+  },
+  {
+    "id": "9012730298537",
+    "title": "Focus on Millions Poster",
+    "price": 34.99,
+    "currency": "USD",
+    "category": "CANVAS",
+    "vendor": "Auto Collections",
+    "tags": [],
+    "image": "https://cdn.shopify.com/s/files/1/0741/7816/6953/files/canvas-_in_-12x18-front-6a77ad9f728a1.jpg?v=1786228131",
+    "sizes": [],
+    "url": "https://auco.store/products/focus-on-millions-poster"
+  },
+  {
+    "id": "9016958812329",
+    "title": "Need porsche poster",
+    "price": 34.99,
+    "currency": "USD",
+    "category": "CANVAS",
+    "vendor": "Auto Collections",
+    "tags": [],
+    "image": "https://cdn.shopify.com/s/files/1/0741/7816/6953/files/canvas-_in_-12x18-front-6a77b036e6d35.jpg?v=1786228809",
+    "sizes": [],
+    "url": "https://auco.store/products/need-porsche-poster"
+  },
+  {
+    "id": "9017225937065",
+    "title": "Auco red porsche tee",
+    "price": 34.99,
+    "currency": "USD",
+    "category": "T-SHIRT",
+    "vendor": "Auto Collections",
+    "tags": [],
+    "image": "https://cdn.shopify.com/s/files/1/0741/7816/6953/files/mens-box-tee-black-right-front-6a88d86601f37.jpg?v=1787353198",
+    "sizes": ["S", "M", "L", "XL"],
+    "url": "https://auco.store/products/auco-red-porsche-tee"
+  },
+  {
+    "id": "9022511284393",
+    "title": "Oversized Hoodie",
+    "price": 64.99,
+    "currency": "USD",
+    "category": "HOODIE",
+    "vendor": "Auto Collections",
+    "tags": ["Cars", "hoodie"],
+    "image": "https://cdn.shopify.com/s/files/1/0741/7816/6953/files/all-over-print-oversized-cotton-hoodie-white-front-6a88e39236d14.jpg?v=1787356066",
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "url": "https://auco.store/products/oversized-hoodie"
+  },
+  {
+    "id": "9022511382697",
+    "title": "Auco quarter-zip sweatshirt",
+    "price": 64.99,
+    "currency": "USD",
+    "category": "SWEATSHIRT",
+    "vendor": "Auto Collections",
+    "tags": ["Cars"],
+    "image": "https://cdn.shopify.com/s/files/1/0741/7816/6953/files/unisex-garment-dyed-quarter-zip-sweatshirt-true-navy-front-6a8a27ef90783.jpg?v=1787439093",
+    "sizes": ["S", "M", "L", "XL"],
+    "url": "https://auco.store/products/auco-quarter-zip-sweatshirt"
+  },
+  {
+    "id": "9022512332969",
+    "title": "Full Zip Hoodie",
+    "price": 59.99,
+    "currency": "USD",
+    "category": "HOODIE",
+    "vendor": "Auto Collections",
+    "tags": ["Cars"],
+    "image": "https://cdn.shopify.com/s/files/1/0741/7816/6953/files/unisex-heavyweight-full-zip-hoodie-vintage-heather-grey-front-6a88e88ac4720.jpg?v=1787357345",
+    "sizes": ["XS", "S", "M", "L", "XL"],
+    "url": "https://auco.store/products/full-zip-hoodie"
+  }
+]
