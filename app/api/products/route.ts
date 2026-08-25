@@ -18,11 +18,32 @@ type ShopifyProduct = {
   variants: ShopifyVariant[];
 };
 
+async function getAccessToken(domain: string, clientId: string, clientSecret: string) {
+  const res = await fetch(`https://${domain}/admin/oauth/access_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "client_credentials",
+    }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Klarte ikke å hente tilgangsnøkkel: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.access_token as string;
+}
+
 export async function GET() {
   const domain = process.env.SHOPIFY_STORE_DOMAIN;
-  const token = process.env.SHOPIFY_ADMIN_API_TOKEN;
+  const clientId = process.env.SHOPIFY_CLIENT_ID;
+  const clientSecret = process.env.SHOPIFY_CLIENT_SECRET;
 
-  if (!domain || !token) {
+  if (!domain || !clientId || !clientSecret) {
     return NextResponse.json(
       { error: "Shopify er ikke koblet til ennå. Mangler miljøvariabler." },
       { status: 500 }
@@ -30,13 +51,14 @@ export async function GET() {
   }
 
   try {
+    const token = await getAccessToken(domain, clientId, clientSecret);
+
     const res = await fetch(
       `https://${domain}/admin/api/2024-10/products.json?limit=50`,
       {
         headers: {
           "X-Shopify-Access-Token": token,
         },
-        // Ikke cache - vi vil ha ferske data hver gang
         cache: "no-store",
       }
     );
