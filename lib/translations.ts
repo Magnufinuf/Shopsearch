@@ -25,6 +25,7 @@ export type Locale = keyof typeof translations;
 
 export function detectLocale(acceptLanguage: string | null): Locale {
   if (!acceptLanguage) return "en";
-  const lang = acceptLanguage.split(",")[0].split("-")[0].toLowerCase();
+  let lang = acceptLanguage.split(",")[0].split("-")[0].toLowerCase();
+  if (lang === "nb" || lang === "nn") lang = "no";
   return lang in translations ? (lang as Locale) : "en";
 }
