@@ -69,21 +69,23 @@ export default function Home() {
         )}
 
         <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
-          {results.map((p) => (
-            
-              key={p.id}
-              href={p.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-center gap-2 rounded-lg border border-zinc-200 p-3 text-left hover:border-zinc-400 dark:border-zinc-800"
-            >
-              {p.image && (
-                <img src={p.image} alt={p.title} className="h-32 w-full rounded object-cover" />
-              )}
-              <p className="text-sm font-medium text-black dark:text-white">{p.title}</p>
-              <p className="text-sm text-zinc-500">{p.price} {p.currency}</p>
-            </a>
-          ))}
+          {results.map((p) => {
+            return (
+              
+                key={p.id}
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 rounded-lg border border-zinc-200 p-3 text-left hover:border-zinc-400 dark:border-zinc-800"
+              >
+                {p.image && (
+                  <img src={p.image} alt={p.title} className="h-32 w-full rounded object-cover" />
+                )}
+                <p className="text-sm font-medium text-black dark:text-white">{p.title}</p>
+                <p className="text-sm text-zinc-500">{p.price} {p.currency}</p>
+              </a>
+            );
+          })}
         </div>
       </main>
     </div>
