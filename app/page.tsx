@@ -13,6 +13,11 @@ type Product = {
   url: string;
 };
 
+function withTracking(url: string) {
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}ref=shopsearch&utm_source=shopsearch&utm_medium=referral`;
+}
+
 export default function Home() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
@@ -71,7 +76,7 @@ export default function Home() {
         <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
           {results.map(function (p) {
             const linkProps = {
-              href: p.url,
+              href: withTracking(p.url),
               target: "_blank",
               rel: "noopener noreferrer",
             };
