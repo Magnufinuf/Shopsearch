@@ -70,6 +70,8 @@ async function fetchProductsForStore(store: Store) {
       image: p.images[0]?.src ?? "",
       sizes: p.variants.map((v) => v.title),
       url: `https://${store.store_domain}/products/${p.handle}`,
+      storeDomain: store.store_domain,
+      shopifyProductId: String(p.id),
     }));
   } catch {
     return [];
@@ -88,11 +90,21 @@ export async function GET() {
     );
   }
 
+  const { data: hidden } = await supabase
+    .from("hidden_products")
+    .select("store_domain, product_id");
+
+  const hiddenSet = new Set(
+    (hidden || []).map((h) => `${h.store_domain}-${h.product_id}`)
+  );
+
   const results = await Promise.all(
     (stores as Store[]).map((store) => fetchProductsForStore(store))
   );
 
-  const products = results.flat();
+  const products = results
+    .flat()
+    .filter((p) => !hiddenSet.has(`${p.storeDomain}-${p.shopifyProductId}`));
 
   return NextResponse.json({ products });
 }
