@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Product = {
   id: string;
@@ -15,6 +15,20 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("shopsearch_business_domain");
+    if (saved) {
+      setDomain(saved);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (domain) {
+      loadProducts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [domain]);
 
   async function loadProducts() {
     setLoading(true);
@@ -53,6 +67,7 @@ export default function AdminPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ storeDomain: domain }),
     });
+    localStorage.removeItem("shopsearch_business_domain");
     setProducts([]);
     setMessage("Butikken er nå koblet fra Shopsearch.");
   }
@@ -60,17 +75,16 @@ export default function AdminPage() {
   return (
     <main style={{ padding: 24, maxWidth: 600, margin: "0 auto" }}>
       <h1>Butikkadministrasjon</h1>
-      <p>Skriv inn ditt myshopify-domene for å administrere produktene dine.</p>
-      <input
-        value={domain}
-        onChange={(e) => setDomain(e.target.value)}
-        placeholder="dinbutikk.myshopify.com"
-        style={{ padding: 8, width: "100%", marginBottom: 8 }}
-      />
-      <button onClick={loadProducts} disabled={!domain || loading}>
-        {loading ? "Laster..." : "Vis mine produkter"}
-      </button>
 
+      {!domain && (
+        <p>Du må logge inn som bedrift for å se dette. Bruk lenken i sidebaren.</p>
+      )}
+
+      {domain && (
+        <p>Innlogget som: {domain}</p>
+      )}
+
+      {loading && <p>Laster...</p>}
       {message && <p>{message}</p>}
 
       {products.length > 0 && (
