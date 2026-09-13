@@ -24,4 +24,25 @@ export default function LoggInnBedrift() {
       localStorage.setItem("shopsearch_business_domain", domain);
       router.push("/admin");
     } else {
-      setError("Fant ingen registrert butikk med
+      setError("Fant ingen registrert butikk med dette domenet.");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <main style={{ padding: 24, maxWidth: 400 }}>
+      <h1>Logg inn som bedrift</h1>
+      <p>Skriv inn ditt myshopify-domene.</p>
+      <input
+        value={domain}
+        onChange={(e) => setDomain(e.target.value)}
+        placeholder="dinbutikk.myshopify.com"
+        style={{ padding: 8, width: "100%", marginBottom: 8 }}
+      />
+      <button onClick={handleLogin} disabled={!domain || loading}>
+        {loading ? "Sjekker..." : "Logg inn"}
+      </button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </main>
+  );
+}
