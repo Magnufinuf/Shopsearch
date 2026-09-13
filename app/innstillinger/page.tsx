@@ -29,4 +29,18 @@ export default function InnstillingerPage() {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "16px 0",
-          
+          borderBottom: "1px solid #ddd",
+        }}
+      >
+        <span>Mørk modus</span>
+        <button onClick={toggleDarkMode}>
+          {darkMode ? "På" : "Av"}
+        </button>
+      </div>
+
+      <p style={{ marginTop: 16, color: "#888" }}>
+        Flere innstillinger (bedriftsinfo, konto, språk) kommer snart.
+      </p>
+    </main>
+  );
+}
