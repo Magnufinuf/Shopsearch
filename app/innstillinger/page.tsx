@@ -2,20 +2,18 @@
 
 import { useEffect, useState } from "react";
 
+function applyTheme(isDark: boolean) {
+  document.body.style.backgroundColor = isDark ? "#0a0a0a" : "#ffffff";
+  document.body.style.color = isDark ? "#ededed" : "#171717";
+}
+
 export default function InnstillingerPage() {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("shopsearch_theme");
-    const isDark = saved === "dark";
-    setDarkMode(isDark);
-    applyTheme(isDark);
+    setDarkMode(saved === "dark");
   }, []);
-
-  function applyTheme(isDark: boolean) {
-    document.body.style.backgroundColor = isDark ? "#0a0a0a" : "#ffffff";
-    document.body.style.color = isDark ? "#ededed" : "#171717";
-  }
 
   function toggleDarkMode() {
     const newValue = !darkMode;
