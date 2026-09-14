@@ -15,6 +15,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("shopsearch_business_domain");
@@ -72,6 +73,23 @@ export default function AdminPage() {
     setMessage("Butikken er nå koblet fra Shopsearch.");
   }
 
+  async function startCheckout() {
+    setCheckoutLoading(true);
+    const res = await fetch("/api/create-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ storeDomain: domain }),
+    });
+    const data = await res.json();
+    setCheckoutLoading(false);
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Noe gikk galt: " + (data.error || "ukjent feil"));
+    }
+  }
+
   return (
     <main style={{ padding: 24, maxWidth: 600, margin: "0 auto" }}>
       <h1>Butikkadministrasjon</h1>
@@ -81,7 +99,24 @@ export default function AdminPage() {
       )}
 
       {domain && (
-        <p>Innlogget som: {domain}</p>
+        <>
+          <p>Innlogget som: {domain}</p>
+
+          <div
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: 8,
+              padding: 16,
+              margin: "16px 0",
+            }}
+          >
+            <h2 style={{ marginTop: 0 }}>Abonnement</h2>
+            <p>500kr/mnd (for butikker under 15.000kr i salg via Shopsearch)</p>
+            <button onClick={startCheckout} disabled={checkoutLoading}>
+              {checkoutLoading ? "Laster..." : "Start abonnement"}
+            </button>
+          </div>
+        </>
       )}
 
       {loading && <p>Laster...</p>}
