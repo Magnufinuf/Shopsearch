@@ -111,7 +111,11 @@ export default function AdminPage() {
             }}
           >
             <h2 style={{ marginTop: 0 }}>Abonnement</h2>
-            <p>500kr/mnd (for butikker under 15.000kr i salg via Shopsearch)</p>
+            <p>
+              500kr/mnd (for butikker under 15.000kr i salg via Shopsearch).
+              Har du ikke aktivt abonnement, tar vi automatisk 4% provisjon av
+              hvert salg som kommer via Shopsearch i stedet.
+            </p>
             <button onClick={startCheckout} disabled={checkoutLoading}>
               {checkoutLoading ? "Laster..." : "Start abonnement"}
             </button>
