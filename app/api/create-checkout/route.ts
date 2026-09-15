@@ -15,7 +15,10 @@ export async function POST(request: Request) {
   params.append("mode", "subscription");
   params.append("line_items[0][price]", priceId!);
   params.append("line_items[0][quantity]", "1");
-  params.append("success_url", `${appUrl}/admin?abonnement=suksess`);
+  params.append(
+    "success_url",
+    `${appUrl}/admin?abonnement=suksess&session_id={CHECKOUT_SESSION_ID}`
+  );
   params.append("cancel_url", `${appUrl}/admin`);
   params.append("client_reference_id", storeDomain);
 
