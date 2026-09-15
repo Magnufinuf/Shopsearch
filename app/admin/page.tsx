@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 type Product = {
   id: string;
@@ -16,6 +17,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [subscribed, setSubscribed] = useState<boolean | null>(null);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const saved = localStorage.getItem("shopsearch_business_domain");
@@ -27,9 +30,34 @@ export default function AdminPage() {
   useEffect(() => {
     if (domain) {
       loadProducts();
+      checkSubscription();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [domain]);
+
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    if (sessionId && domain) {
+      fetch("/api/confirm-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      }).then(() => {
+        checkSubscription();
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [domain]);
+
+  async function checkSubscription() {
+    const res = await fetch("/api/verify-store", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ storeDomain: domain }),
+    });
+    const data = await res.json();
+    setSubscribed(!!data.subscribed);
+  }
 
   async function loadProducts() {
     setLoading(true);
@@ -111,14 +139,22 @@ export default function AdminPage() {
             }}
           >
             <h2 style={{ marginTop: 0 }}>Abonnement</h2>
-            <p>
-              500kr/mnd (for butikker under 15.000kr i salg via Shopsearch).
-              Har du ikke aktivt abonnement, tar vi automatisk 4% provisjon av
-              hvert salg som kommer via Shopsearch i stedet.
-            </p>
-            <button onClick={startCheckout} disabled={checkoutLoading}>
-              {checkoutLoading ? "Laster..." : "Start abonnement"}
-            </button>
+            {subscribed === true ? (
+              <p>✅ Aktivt (500kr/mnd)</p>
+            ) : subscribed === false ? (
+              <>
+                <p>
+                  500kr/mnd (for butikker under 15.000kr i salg via Shopsearch).
+                  Har du ikke aktivt abonnement, tar vi automatisk 4% provisjon
+                  av hvert salg som kommer via Shopsearch i stedet.
+                </p>
+                <button onClick={startCheckout} disabled={checkoutLoading}>
+                  {checkoutLoading ? "Laster..." : "Start abonnement"}
+                </button>
+              </>
+            ) : (
+              <p>Sjekker abonnementsstatus...</p>
+            )}
           </div>
         </>
       )}
