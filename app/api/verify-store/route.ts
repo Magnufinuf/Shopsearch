@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase
     .from("stores")
-    .select("store_domain")
+    .select("store_domain, subscribed")
     .eq("store_domain", storeDomain)
     .maybeSingle();
 
@@ -21,5 +21,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ valid: false });
   }
 
-  return NextResponse.json({ valid: true });
+  return NextResponse.json({ valid: true, subscribed: !!data.subscribed });
 }
