@@ -28,3 +28,12 @@ export async function POST(request: Request) {
 
   const { error } = await supabase
     .from("stores")
+    .update({ subscribed: true })
+    .eq("store_domain", session.client_reference_id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
