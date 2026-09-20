@@ -43,12 +43,15 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-zinc-50 px-6 py-16 dark:bg-black">
+    <div
+      className="flex min-h-screen flex-col items-center px-6 py-16"
+      style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
+    >
       <main className="flex w-full max-w-2xl flex-col items-center gap-8 text-center">
-        <h1 className="text-4xl font-semibold tracking-tight text-black dark:text-zinc-50">
+        <h1 className="text-4xl font-semibold tracking-tight" style={{ color: "var(--foreground)" }}>
           Don&apos;t search. Ask.
         </h1>
-        <p className="max-w-md text-lg text-zinc-600 dark:text-zinc-400">
+        <p className="max-w-md text-lg" style={{ color: "var(--foreground)", opacity: 0.7 }}>
           Fortell oss hva du leter etter, så finner vi de beste alternativene.
         </p>
         <form onSubmit={handleSearch} className="flex w-full max-w-lg gap-2">
@@ -57,20 +60,26 @@ export default function Home() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="F.eks. svarte sneakers i str. 43 under 2000 kr"
-            className="flex-1 rounded-full border border-zinc-300 px-5 py-3 text-base outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
+            className="flex-1 rounded-full border px-5 py-3 text-base outline-none"
+            style={{
+              borderColor: "var(--border)",
+              backgroundColor: "var(--background)",
+              color: "var(--foreground)",
+            }}
           />
           <button
             type="submit"
-            className="rounded-full bg-black px-6 py-3 font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+            className="rounded-full px-6 py-3 font-medium text-white transition-colors"
+            style={{ backgroundColor: "var(--primary)" }}
           >
             Søk
           </button>
         </form>
 
-        {loading && <p className="text-zinc-500">Søker...</p>}
+        {loading && <p style={{ opacity: 0.6 }}>Søker...</p>}
 
         {!loading && searched && results.length === 0 && (
-          <p className="text-zinc-500">Fant ingen produkter.</p>
+          <p style={{ opacity: 0.6 }}>Fant ingen produkter.</p>
         )}
 
         <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
@@ -81,10 +90,15 @@ export default function Home() {
               rel: "noopener noreferrer",
             };
             return (
-              <a key={p.id} {...linkProps} className="flex flex-col items-center gap-2 rounded-lg border border-zinc-200 p-3 text-left hover:border-zinc-400 dark:border-zinc-800">
+              
+                key={p.id}
+                {...linkProps}
+                className="flex flex-col items-center gap-2 rounded-lg border p-3 text-left"
+                style={{ borderColor: "var(--border)" }}
+              >
                 {p.image ? <img src={p.image} alt={p.title} className="h-32 w-full rounded object-cover" /> : null}
-                <p className="text-sm font-medium text-black dark:text-white">{p.title}</p>
-                <p className="text-sm text-zinc-500">{p.price} {p.currency}</p>
+                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{p.title}</p>
+                <p className="text-sm" style={{ opacity: 0.6 }}>{p.price} {p.currency}</p>
               </a>
             );
           })}
