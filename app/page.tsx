@@ -90,12 +90,7 @@ export default function Home() {
               rel: "noopener noreferrer",
             };
             return (
-              
-                key={p.id}
-                {...linkProps}
-                className="flex flex-col items-center gap-2 rounded-lg border p-3 text-left"
-                style={{ borderColor: "var(--border)" }}
-              >
+              <a key={p.id} {...linkProps} className="flex flex-col items-center gap-2 rounded-lg border p-3 text-left" style={{ borderColor: "var(--border)" }}>
                 {p.image ? <img src={p.image} alt={p.title} className="h-32 w-full rounded object-cover" /> : null}
                 <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{p.title}</p>
                 <p className="text-sm" style={{ opacity: 0.6 }}>{p.price} {p.currency}</p>
