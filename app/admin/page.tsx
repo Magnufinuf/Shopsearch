@@ -1,7 +1,6 @@
 "use client";
-export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type Product = {
@@ -12,7 +11,7 @@ type Product = {
   shopifyProductId: string;
 };
 
-export default function AdminPage() {
+function AdminContent() {
   const [domain, setDomain] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -191,5 +190,13 @@ export default function AdminPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<p style={{ padding: 24 }}>Laster...</p>}>
+      <AdminContent />
+    </Suspense>
   );
 }
