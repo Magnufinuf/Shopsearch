@@ -1,5 +1,5 @@
-export const dynamic = "force-dynamic";
 "use client";
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -165,31 +165,3 @@ export default function AdminPage() {
 
       {products.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <button onClick={disconnectStore} style={{ marginBottom: 16, color: "red" }}>
-            Koble fra hele butikken
-          </button>
-          {products.map((p) => (
-            <div
-              key={p.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderBottom: "1px solid #ddd",
-                padding: "8px 0",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img src={p.image} alt={p.title} width={40} height={40} />
-                <span>{p.title}</span>
-              </div>
-              <button onClick={() => hideProduct(p.shopifyProductId)}>
-                Skjul
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </main>
-  );
-}
