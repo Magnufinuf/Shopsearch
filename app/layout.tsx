@@ -16,8 +16,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Shopsearch",
-  description: "Don't search. Ask.",
+  title: "Scavenger",
+  description: "Finn det du leter etter.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
