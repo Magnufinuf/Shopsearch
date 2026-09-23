@@ -180,3 +180,4 @@ function AdminContent() {
             ) : (
               <p>Sjekker abonnementsstatus...</p>
             )}
+          </div>
