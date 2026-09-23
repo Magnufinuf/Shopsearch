@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 type Product = {
   id: string;
@@ -132,7 +133,31 @@ function AdminContent() {
 
           <div
             style={{
-              border: "1px solid #ddd",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              padding: 16,
+              margin: "16px 0",
+            }}
+          >
+            <h2 style={{ marginTop: 0 }}>Adverts</h2>
+            <p>Last opp en video eller et bilde av produktene dine.</p>
+            <Link
+              href="/adverts/last-opp"
+              style={{
+                display: "inline-block",
+                padding: "10px 20px",
+                borderRadius: 8,
+                backgroundColor: "var(--primary)",
+                color: "white",
+              }}
+            >
+              Last opp advert
+            </Link>
+          </div>
+
+          <div
+            style={{
+              border: "1px solid var(--border)",
               borderRadius: 8,
               padding: 16,
               margin: "16px 0",
@@ -155,48 +180,3 @@ function AdminContent() {
             ) : (
               <p>Sjekker abonnementsstatus...</p>
             )}
-          </div>
-        </>
-      )}
-
-      {loading && <p>Laster...</p>}
-      {message && <p>{message}</p>}
-
-      {products.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <button onClick={disconnectStore} style={{ marginBottom: 16, color: "red" }}>
-            Koble fra hele butikken
-          </button>
-          {products.map((p) => (
-            <div
-              key={p.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderBottom: "1px solid #ddd",
-                padding: "8px 0",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <img src={p.image} alt={p.title} width={40} height={40} />
-                <span>{p.title}</span>
-              </div>
-              <button onClick={() => hideProduct(p.shopifyProductId)}>
-                Skjul
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </main>
-  );
-}
-
-export default function AdminPage() {
-  return (
-    <Suspense fallback={<p style={{ padding: 24 }}>Laster...</p>}>
-      <AdminContent />
-    </Suspense>
-  );
-}
