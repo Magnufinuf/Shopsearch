@@ -151,7 +151,7 @@ function AdminContent() {
                 color: "white",
               }}
             >
-              Last opp advert
+              Last opp annonse
             </Link>
           </div>
 
