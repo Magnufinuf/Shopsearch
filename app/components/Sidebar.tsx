@@ -37,14 +37,27 @@ export default function Sidebar() {
     >
       <div
         style={{
-          fontFamily: "var(--font-heading), Georgia, serif",
-          fontSize: 22,
-          fontWeight: 600,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
           marginBottom: 24,
-          color: "var(--primary)",
         }}
       >
-        Scavenger
+        <img
+          src="/logo.png"
+          alt="Scavenger"
+          style={{ width: 32, height: 32, objectFit: "contain" }}
+        />
+        <span
+          style={{
+            fontFamily: "var(--font-heading), Georgia, serif",
+            fontSize: 22,
+            fontWeight: 600,
+            color: "var(--primary)",
+          }}
+        >
+          Scavenger
+        </span>
       </div>
 
       {items.map((item) => {
