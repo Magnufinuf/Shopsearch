@@ -39,6 +39,7 @@ function AdminContent() {
   const [message, setMessage] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -165,7 +166,7 @@ function AdminContent() {
           {!loading && message && <p style={{ opacity: 0.6 }}>{message}</p>}
           {!loading && products.length > 0 && (
             <div>
-              {products.map((p) => (
+              {(products.length > 10 && !showAll ? products.slice(0, 3) : products).map((p) => (
                 <div key={p.shopifyProductId} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderTop: "1px solid var(--border)" }}>
                   {p.image && (
                     <img src={p.image} alt={p.title} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 10, flexShrink: 0 }} />
@@ -176,6 +177,14 @@ function AdminContent() {
                   </button>
                 </div>
               ))}
+              {products.length > 10 && (
+                <button
+                  onClick={() => setShowAll((v) => !v)}
+                  style={{ marginTop: 12, width: "100%", padding: "10px 0", borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 13, cursor: "pointer" }}
+                >
+                  {showAll ? "Vis færre" : `Vis alle (${products.length})`}
+                </button>
+              )}
             </div>
           )}
         </Panel>
