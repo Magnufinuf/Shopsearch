@@ -124,24 +124,3 @@ function AdminContent() {
   }
 
   if (!domain) {
-    return (
-      <main style={{ padding: "48px 24px", maxWidth: 960, margin: "0 auto" }}>
-        <h1 style={{ fontFamily: "var(--font-heading), Georgia, serif", fontSize: 28, fontWeight: 600, marginBottom: 16 }}>
-          Butikkadministrasjon
-        </h1>
-        <p style={{ opacity: 0.75 }}>Du må logge inn som bedrift for å se dette. Bruk lenken i sidebaren.</p>
-      </main>
-    );
-  }
-
-  return (
-    <main style={{ padding: "48px 24px", maxWidth: 960, margin: "0 auto" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h1 style={{ fontFamily: "var(--font-heading), Georgia, serif", fontSize: 28, fontWeight: 600, margin: "0 0 4px" }}>
-            Butikkadministrasjon
-          </h1>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>{domain}</p>
-        </div>
-        {subscribed === true && (
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, backgroundColor: "rgba(74,222,128,0.15)", color: "#4ade80", fontSize: 13, padding: "6px 14px",
