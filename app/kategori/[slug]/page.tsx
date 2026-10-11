@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
 import {
   Product,
   CATEGORIES,
@@ -94,41 +95,6 @@ const PRICE_RANGES: PriceRangeDef[] = [
   { key: "over2000", label: "Over 2000 kr", min: 2000 },
 ];
 
-async function detectVisitorCurrency(): Promise<string> {
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    const data = await res.json();
-    return data.currency || "USD";
-  } catch {
-    return "USD";
-  }
-}
-
-async function getRatesToCurrency(fromCurrencies: string[], toCurrency: string): Promise<Record<string, number>> {
-  const unique = Array.from(new Set(fromCurrencies)).filter((c) => c && c !== toCurrency);
-  const rates: Record<string, number> = { [toCurrency]: 1 };
-  await Promise.all(
-    unique.map(async (from) => {
-      try {
-        const res = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${toCurrency}`);
-        const data = await res.json();
-        rates[from] = data.rates?.[toCurrency] ?? 1;
-      } catch {
-        rates[from] = 1;
-      }
-    })
-  );
-  return rates;
-}
-
-function formatPrice(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount);
-  } catch {
-    return `${amount.toFixed(2)} ${currency}`;
-  }
-}
-
 export default function KategoriPage() {
   const params = useParams();
   const slug = String(params.slug);
@@ -140,12 +106,7 @@ export default function KategoriPage() {
   const [gender, setGender] = useState<Gender | "alle">("alle");
   const [priceRange, setPriceRange] = useState("alle");
   const [results, setResults] = useState<Product[]>([]);
-  const [visitorCurrency, setVisitorCurrency] = useState("USD");
-  const [rates, setRates] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    detectVisitorCurrency().then(setVisitorCurrency);
-  }, []);
+  const [currencyInfo, setCurrencyInfo] = useState<CurrencyInfo | null>(null);
 
   useEffect(() => {
     fetch("/api/products")
@@ -156,14 +117,9 @@ export default function KategoriPage() {
         setAllProducts(inCategory);
         setResults(inCategory);
         setLoading(false);
+        fetchCurrencyInfo(inCategory.map((p) => p.currency)).then(setCurrencyInfo);
       });
   }, [slug]);
-
-  useEffect(() => {
-    if (results.length === 0) return;
-    const currencies = results.map((p) => p.currency);
-    getRatesToCurrency(currencies, visitorCurrency).then(setRates);
-  }, [results, visitorCurrency]);
 
   function runSearch() {
     const { cleanedQuery, filters } = extractFilters(query);
@@ -173,10 +129,11 @@ export default function KategoriPage() {
     const filtered = allProducts.filter((p) => {
       const text = `${p.title} ${p.category} ${p.vendor} ${p.tags.join(" ")}`.toLowerCase();
       const matchesWords = words.every((w) => text.includes(w));
-      const matchesMin = filters.min === undefined || p.price >= filters.min;
-      const matchesMax = filters.max === undefined || p.price <= filters.max;
-      const matchesRangeMin = !rangeDef || rangeDef.min === undefined || p.price >= rangeDef.min;
-      const matchesRangeMax = !rangeDef || rangeDef.max === undefined || p.price <= rangeDef.max;
+      const price = convertPrice(p.price, p.currency, currencyInfo);
+      const matchesMin = filters.min === undefined || price >= filters.min;
+      const matchesMax = filters.max === undefined || price <= filters.max;
+      const matchesRangeMin = !rangeDef || rangeDef.min === undefined || price >= rangeDef.min;
+      const matchesRangeMax = !rangeDef || rangeDef.max === undefined || price <= rangeDef.max;
       const matchesSize =
         !filters.sizeOptions ||
         (p.sizes || []).some((s) =>
@@ -200,7 +157,7 @@ export default function KategoriPage() {
   useEffect(() => {
     if (!loading) runSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gender, priceRange, allProducts]);
+  }, [gender, priceRange, allProducts, currencyInfo]);
 
   return (
     <div
@@ -314,16 +271,12 @@ export default function KategoriPage() {
               target: "_blank",
               rel: "noopener noreferrer",
             };
-            const rate = rates[p.currency] ?? (p.currency === visitorCurrency ? 1 : undefined);
-            const priceLabel =
-              rate !== undefined
-                ? formatPrice(p.price * rate, visitorCurrency)
-                : `${p.price} ${p.currency}`;
+            const price = priceLabel(p.price, p.currency, currencyInfo);
             return (
               <a key={p.id} {...linkProps} className="flex flex-col items-center gap-2 rounded-lg border p-3 text-left" style={{ borderColor: "var(--border)" }}>
                 {p.image ? <img src={p.image} alt={p.title} className="h-32 w-full rounded object-cover" /> : null}
                 <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{p.title}</p>
-                <p className="text-sm" style={{ opacity: 0.6 }}>{priceLabel}</p>
+                <p className="text-sm" style={{ opacity: 0.6 }}>{price}</p>
               </a>
             );
           })}
