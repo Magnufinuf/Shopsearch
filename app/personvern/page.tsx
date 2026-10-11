@@ -23,6 +23,13 @@ export default function PersonvernPage() {
         du kom fra Scavenger. Kjøpet skjer hos butikken, og deres personvernerklæring gjelder der.
       </p>
 
+      <H2>Når du lager en konto</H2>
+      <p>
+        Logger du inn for å lagre annonser, lagrer vi e-postadressen din og hvilke annonser du har lagret. For å logge
+        inn sender vi en engangskode til e-posten din. Grunnlaget er avtalen med deg om å levere tjenesten. Du kan
+        slette kontoen din når som helst på Min side, og da slettes alt vi har lagret om deg.
+      </p>
+
       <H2>Når du kontakter oss</H2>
       <p>
         Bruker du <Link href="/kontakt" style={{ color: "var(--primary)" }}>kontaktskjemaet</Link>, lagrer vi navn,
@@ -39,7 +46,7 @@ export default function PersonvernPage() {
 
       <H2>Cookies og lagring i nettleseren</H2>
       <p>
-        Vi bruker én nødvendig cookie for å holde butikker innlogget. I tillegg husker nettleseren din om du har valgt
+        Vi bruker nødvendige cookies for å holde deg innlogget, både som bruker og som butikk. I tillegg husker nettleseren din om du har valgt
         mørk eller lys modus. Vi bruker ikke cookies til reklame eller sporing.
       </p>
 
