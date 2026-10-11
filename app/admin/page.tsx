@@ -39,6 +39,7 @@ function AdminContent() {
   const [message, setMessage] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
+  const [freePeriod, setFreePeriod] = useState<{ free: boolean; freeUntil: string | null } | null>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -74,6 +75,7 @@ function AdminContent() {
     });
     const data = await res.json();
     setSubscribed(!!data.subscribed);
+    setFreePeriod({ free: !!data.free, freeUntil: data.freeUntil ?? null });
   }
 
   async function loadProducts() {
@@ -133,6 +135,11 @@ function AdminContent() {
     );
   }
 
+  const isFree = freePeriod?.free === true;
+  const freeLabel = freePeriod?.freeUntil
+    ? `Gratis til ${new Date(freePeriod.freeUntil).toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" })}`
+    : "Gratis i lanseringsperioden";
+
   return (
     <main style={{ padding: "48px 24px", maxWidth: 960, margin: "0 auto" }}>
       {/* Statuslinje */}
@@ -143,12 +150,17 @@ function AdminContent() {
           </h1>
           <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>{domain}</p>
         </div>
-        {subscribed === true && (
+        {isFree && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, backgroundColor: "rgba(74,222,128,0.15)", color: "#4ade80", fontSize: 13, padding: "6px 14px", borderRadius: 999 }}>
+            🎉 {freeLabel}
+          </span>
+        )}
+        {!isFree && subscribed === true && (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, backgroundColor: "rgba(74,222,128,0.15)", color: "#4ade80", fontSize: 13, padding: "6px 14px", borderRadius: 999 }}>
             ✓ Abonnement aktivt (299 kr/mnd)
           </span>
         )}
-        {subscribed === false && (
+        {!isFree && subscribed === false && (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,255,255,0.06)", opacity: 0.75, fontSize: 13, padding: "6px 14px", borderRadius: 999 }}>
             4% provisjon (ikke abonnert)
           </span>
@@ -158,7 +170,7 @@ function AdminContent() {
       {/* Nøkkeltall */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
         <StatCard label="Produkter" value={String(products.length)} />
-        <StatCard label="Plan" value={subscribed ? "299 kr/mnd" : "4% provisjon"} />
+        <StatCard label="Plan" value={isFree ? "Gratis" : subscribed ? "299 kr/mnd" : "4% provisjon"} />
       </div>
 
       {/* To kolonner */}
@@ -204,7 +216,15 @@ function AdminContent() {
             </div>
           </Panel>
 
-          {subscribed === false && (
+          {isFree && (
+            <Panel title="Abonnement">
+              <p style={{ opacity: 0.75, fontSize: 14, lineHeight: 1.5 }}>
+                {freeLabel}. Ingen provisjon og ikke noe abonnement i denne perioden. Etterpå kan dere velge 299 kr/mnd eller 4% provisjon per salg.
+              </p>
+            </Panel>
+          )}
+
+          {!isFree && subscribed === false && (
             <Panel title="Abonnement">
               <p style={{ opacity: 0.75, marginBottom: 14, fontSize: 14, lineHeight: 1.5 }}>
                 299 kr/mnd (for butikker under 300 salg via Scavenger per måned). Uten abonnement tar vi 4% provisjon per salg i stedet.

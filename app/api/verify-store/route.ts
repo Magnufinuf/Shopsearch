@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getFreePeriod } from "@/lib/pricing";
 
 export async function POST(request: Request) {
   const { storeDomain } = await request.json();
@@ -21,5 +22,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ valid: false });
   }
 
-  return NextResponse.json({ valid: true, subscribed: !!data.subscribed });
+  return NextResponse.json({ valid: true, subscribed: !!data.subscribed, ...getFreePeriod() });
 }

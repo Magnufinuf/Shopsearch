@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getFreePeriod } from "@/lib/pricing";
 
 const SALES_LIMIT = 300;
 
@@ -43,6 +44,13 @@ export async function POST(request: Request) {
 
   if (!storeDomain) {
     return NextResponse.json({ error: "Mangler storeDomain" }, { status: 400 });
+  }
+
+  if (getFreePeriod().free) {
+    return NextResponse.json(
+      { error: "Scavenger er gratis i lanseringsperioden. Dere trenger ikke abonnement ennå." },
+      { status: 400 }
+    );
   }
 
   const { data: store } = await supabase
