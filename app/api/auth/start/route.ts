@@ -7,8 +7,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Ugyldig butikkdomene" }, { status: 400 });
   }
 
-  const clientId = process.env.SHOPIFY_CLIENT_ID!;
+  const clientId = process.env.SHOPIFY_CLIENT_ID;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://shopsearch-gamma.vercel.app";
+  if (!clientId || !process.env.SHOPIFY_CLIENT_SECRET) {
+    return NextResponse.redirect(`${appUrl}/logg-inn-bedrift?feil=shopify`);
+  }
   const redirectUri = `${appUrl}/api/auth/callback`;
   const state = randomBytes(16).toString("hex");
   const scope = "read_products";
