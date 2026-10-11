@@ -2,6 +2,8 @@
 export type SessionInfo = {
   loggedIn: boolean;
   shop: string | null;
+  displayName: string | null;
+  shopifyEnabled: boolean;
   subscribed: boolean;
   free: boolean;
   freeUntil: string | null;
@@ -12,7 +14,7 @@ export async function fetchSession(): Promise<SessionInfo> {
     const res = await fetch("/api/auth/me", { cache: "no-store" });
     return (await res.json()) as SessionInfo;
   } catch {
-    return { loggedIn: false, shop: null, subscribed: false, free: true, freeUntil: null };
+    return { loggedIn: false, shop: null, displayName: null, shopifyEnabled: false, subscribed: false, free: true, freeUntil: null };
   }
 }
 

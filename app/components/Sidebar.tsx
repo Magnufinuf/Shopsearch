@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchSession, logout } from "@/lib/session-client";
+import { rememberAccount } from "@/lib/remembered-accounts";
 
 const navItems = [
   { href: "/", label: "Søk" },
@@ -18,7 +19,10 @@ export default function Sidebar() {
   useEffect(() => {
     // Gammel innlogging (før cookies) ryddes bort.
     localStorage.removeItem("shopsearch_business_domain");
-    fetchSession().then((s) => setBusinessDomain(s.shop));
+    fetchSession().then((s) => {
+      setBusinessDomain(s.shop);
+      if (s.shop) rememberAccount({ shop: s.shop, name: s.displayName || s.shop.replace(".myshopify.com", "") });
+    });
   }, [pathname]);
 
   const items = businessDomain
