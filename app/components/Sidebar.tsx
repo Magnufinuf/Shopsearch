@@ -5,15 +5,18 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchSession, logout } from "@/lib/session-client";
 import { rememberAccount } from "@/lib/remembered-accounts";
+import { fetchUser } from "@/lib/user-client";
 
 const navItems = [
   { href: "/", label: "Søk" },
   { href: "/adverts", label: "Annonser" },
+  { href: "/min-side", label: "Min side" },
   { href: "/innstillinger", label: "Innstillinger" },
 ];
 
 export default function Sidebar() {
   const [businessDomain, setBusinessDomain] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -23,6 +26,7 @@ export default function Sidebar() {
       setBusinessDomain(s.shop);
       if (s.shop) rememberAccount({ shop: s.shop, name: s.displayName || s.shop.replace(".myshopify.com", "") });
     });
+    fetchUser().then((u) => setUserEmail(u.email));
   }, [pathname]);
 
   const items = businessDomain
@@ -105,17 +109,19 @@ export default function Sidebar() {
               Logg ut
             </button>
           </div>
+        ) : userEmail ? (
+          <span style={{ fontSize: 12, opacity: 0.6, wordBreak: "break-all" }}>
+            Innlogget som: {userEmail}
+          </span>
         ) : (
-          <Link
-            href="/logg-inn-bedrift"
-            style={{
-              fontSize: 14,
-              color: "var(--primary)",
-              fontWeight: 500,
-            }}
-          >
-            Logg inn som bedrift
-          </Link>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Link href="/logg-inn" style={{ fontSize: 14, color: "var(--primary)", fontWeight: 600 }}>
+              Logg inn
+            </Link>
+            <Link href="/logg-inn-bedrift" style={{ fontSize: 12, opacity: 0.6 }}>
+              Logg inn som bedrift
+            </Link>
+          </div>
         )}
       </div>
     </nav>

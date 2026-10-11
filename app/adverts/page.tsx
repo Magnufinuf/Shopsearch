@@ -1,15 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-type Advert = {
-  id: string;
-  store_domain: string;
-  media_url: string;
-  media_type: "video" | "image";
-  caption: string;
-  created_at: string;
-};
+import { Advert, shareAdvert, storeUrl } from "@/lib/adverts";
+import { fetchUser, setSaved } from "@/lib/user-client";
 
 function ActionButton({
   icon,
@@ -32,7 +25,15 @@ function ActionButton({
   );
 }
 
-function AdvertSlide({ advert }: { advert: Advert }) {
+function AdvertSlide({
+  advert,
+  saved,
+  onToggleSave,
+}: {
+  advert: Advert;
+  saved: boolean;
+  onToggleSave: () => void;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -53,23 +54,10 @@ function AdvertSlide({ advert }: { advert: Advert }) {
     return () => observer.disconnect();
   }, []);
 
-  function handleWishlist() {
-    alert("Lagt til i ønskelisten (kommer snart som egen funksjon)");
-  }
-
   function handleComments() {
     alert("Kommentarer kommer snart");
   }
 
-  async function handleShare() {
-    const url = window.location.href;
-    if (navigator.share) {
-      navigator.share({ title: "Scavenger", url }).catch(() => {});
-    } else {
-      await navigator.clipboard.writeText(url);
-      alert("Lenke kopiert!");
-    }
-  }
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", scrollSnapAlign: "start", backgroundColor: "black", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
@@ -88,15 +76,15 @@ function AdvertSlide({ advert }: { advert: Advert }) {
         {advert.caption && (
           <p style={{ fontSize: 14, opacity: 0.9 }}>{advert.caption}</p>
         )}
-        <a href={`https://${advert.store_domain.replace("myshopify.com", "")}`} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 10, padding: "8px 18px", borderRadius: 20, backgroundColor: "var(--primary)", color: "white", fontSize: 14, fontWeight: 600 }}>
+        <a href={storeUrl(advert.store_domain)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 10, padding: "8px 18px", borderRadius: 20, backgroundColor: "var(--primary)", color: "white", fontSize: 14, fontWeight: 600 }}>
           Kjøp
         </a>
       </div>
 
       <div style={{ position: "absolute", right: 12, bottom: 40, display: "flex", flexDirection: "column", gap: 20 }}>
-        <ActionButton icon="♡" label="Ønskeliste" onClick={handleWishlist} />
+        <ActionButton icon={saved ? "❤️" : "♡"} label={saved ? "Lagret" : "Lagre"} onClick={onToggleSave} />
         <ActionButton icon="💬" label="Kommentarer" onClick={handleComments} />
-        <ActionButton icon="↗" label="Del" onClick={handleShare} />
+        <ActionButton icon="↗" label="Del" onClick={() => shareAdvert(advert)} />
       </div>
     </div>
   );
@@ -105,15 +93,46 @@ function AdvertSlide({ advert }: { advert: Advert }) {
 export default function AdvertsPage() {
   const [adverts, setAdverts] = useState<Advert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    // ?annonse=ID (fra en delt lenke): vis den annonsen først.
+    const sharedId = new URLSearchParams(window.location.search).get("annonse");
     fetch("/api/adverts")
       .then((res) => res.json())
       .then((data) => {
-        setAdverts(data.adverts || []);
+        const all: Advert[] = data.adverts || [];
+        const shared = all.find((a) => String(a.id) === sharedId);
+        setAdverts(shared ? [shared, ...all.filter((a) => a !== shared)] : all);
         setLoading(false);
       });
+    fetchUser().then((u) => {
+      setLoggedIn(u.loggedIn);
+      setSavedIds(new Set(u.savedIds));
+    });
   }, []);
+
+  async function toggleSave(advert: Advert) {
+    if (!loggedIn) {
+      window.location.assign(`/logg-inn?neste=${encodeURIComponent(`/adverts?annonse=${advert.id}`)}`);
+      return;
+    }
+    const id = String(advert.id);
+    const nowSaved = !savedIds.has(id);
+    const update = (save: boolean) =>
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        if (save) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    update(nowSaved);
+    if (!(await setSaved(id, nowSaved))) {
+      update(!nowSaved);
+      alert("Noe gikk galt, prøv igjen.");
+    }
+  }
 
   if (loading) {
     return (
@@ -134,7 +153,12 @@ export default function AdvertsPage() {
   return (
     <main style={{ height: "100vh", overflowY: "scroll", scrollSnapType: "y mandatory" }}>
       {adverts.map((advert) => (
-        <AdvertSlide key={advert.id} advert={advert} />
+        <AdvertSlide
+          key={advert.id}
+          advert={advert}
+          saved={savedIds.has(String(advert.id))}
+          onToggleSave={() => toggleSave(advert)}
+        />
       ))}
     </main>
   );

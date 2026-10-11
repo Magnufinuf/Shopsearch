@@ -28,35 +28,62 @@ export function normalizeDomain(input: string): string {
   return input.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
 }
 
-function createToken(shop: string): string {
+// kind skiller butikk- og bruker-innlogging, så en butikk-cookie aldri kan brukes som bruker-cookie.
+type Kind = "store" | "user";
+
+function createToken(kind: Kind, subject: string): string {
   const expires = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
-  const payload = `${Buffer.from(shop).toString("base64url")}.${expires}`;
+  const payload = `${kind}.${Buffer.from(subject).toString("base64url")}.${expires}`;
   return `${payload}.${sign(payload)}`;
 }
 
-function readToken(token: string | undefined): string | null {
+function readToken(kind: Kind, token: string | undefined): string | null {
   if (!token) return null;
-  const [shopB64, expires, signature] = token.split(".");
-  if (!shopB64 || !expires || !signature) return null;
-  if (!safeEqual(signature, sign(`${shopB64}.${expires}`))) return null;
+  const [tokenKind, subjectB64, expires, signature] = token.split(".");
+  if (tokenKind !== kind || !subjectB64 || !expires || !signature) return null;
+  if (!safeEqual(signature, sign(`${tokenKind}.${subjectB64}.${expires}`))) return null;
   if (Date.now() > Number(expires)) return null;
-  return Buffer.from(shopB64, "base64url").toString();
+  return Buffer.from(subjectB64, "base64url").toString();
 }
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: SESSION_DAYS * 24 * 60 * 60,
+};
 
 // Hvilken butikk er logget inn? null hvis ingen.
 export async function getSessionShop(): Promise<string | null> {
   const store = await cookies();
-  return readToken(store.get(SESSION_COOKIE)?.value);
+  return readToken("store", store.get(SESSION_COOKIE)?.value);
 }
 
 export function setSessionCookie(response: NextResponse, shop: string) {
-  response.cookies.set(SESSION_COOKIE, createToken(shop), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_DAYS * 24 * 60 * 60,
-  });
+  response.cookies.set(SESSION_COOKIE, createToken("store", shop), cookieOptions);
+}
+
+// --- Vanlige brukere (ikke bedrifter) ---
+
+export const USER_COOKIE = "scavenger_user";
+
+// Id-en til innlogget bruker, eller null.
+export async function getSessionUserId(): Promise<string | null> {
+  const store = await cookies();
+  return readToken("user", store.get(USER_COOKIE)?.value);
+}
+
+export function setUserCookie(response: NextResponse, userId: string) {
+  response.cookies.set(USER_COOKIE, createToken("user", userId), cookieOptions);
+}
+
+export function clearUserCookie(response: NextResponse) {
+  response.cookies.delete(USER_COOKIE);
+}
+
+export function hashLoginCode(email: string, code: string): string {
+  return sign(`login-code.${email}.${code}`);
 }
 
 export function clearSessionCookie(response: NextResponse) {
