@@ -94,6 +94,41 @@ const PRICE_RANGES: PriceRangeDef[] = [
   { key: "over2000", label: "Over 2000 kr", min: 2000 },
 ];
 
+async function detectVisitorCurrency(): Promise<string> {
+  try {
+    const res = await fetch("https://ipapi.co/json/");
+    const data = await res.json();
+    return data.currency || "USD";
+  } catch {
+    return "USD";
+  }
+}
+
+async function getRatesToCurrency(fromCurrencies: string[], toCurrency: string): Promise<Record<string, number>> {
+  const unique = Array.from(new Set(fromCurrencies)).filter((c) => c && c !== toCurrency);
+  const rates: Record<string, number> = { [toCurrency]: 1 };
+  await Promise.all(
+    unique.map(async (from) => {
+      try {
+        const res = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${toCurrency}`);
+        const data = await res.json();
+        rates[from] = data.rates?.[toCurrency] ?? 1;
+      } catch {
+        rates[from] = 1;
+      }
+    })
+  );
+  return rates;
+}
+
+function formatPrice(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
+}
+
 export default function KategoriPage() {
   const params = useParams();
   const slug = String(params.slug);
@@ -105,6 +140,12 @@ export default function KategoriPage() {
   const [gender, setGender] = useState<Gender | "alle">("alle");
   const [priceRange, setPriceRange] = useState("alle");
   const [results, setResults] = useState<Product[]>([]);
+  const [visitorCurrency, setVisitorCurrency] = useState("USD");
+  const [rates, setRates] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    detectVisitorCurrency().then(setVisitorCurrency);
+  }, []);
 
   useEffect(() => {
     fetch("/api/products")
@@ -117,6 +158,12 @@ export default function KategoriPage() {
         setLoading(false);
       });
   }, [slug]);
+
+  useEffect(() => {
+    if (results.length === 0) return;
+    const currencies = results.map((p) => p.currency);
+    getRatesToCurrency(currencies, visitorCurrency).then(setRates);
+  }, [results, visitorCurrency]);
 
   function runSearch() {
     const { cleanedQuery, filters } = extractFilters(query);
@@ -267,11 +314,16 @@ export default function KategoriPage() {
               target: "_blank",
               rel: "noopener noreferrer",
             };
+            const rate = rates[p.currency] ?? (p.currency === visitorCurrency ? 1 : undefined);
+            const priceLabel =
+              rate !== undefined
+                ? formatPrice(p.price * rate, visitorCurrency)
+                : `${p.price} ${p.currency}`;
             return (
               <a key={p.id} {...linkProps} className="flex flex-col items-center gap-2 rounded-lg border p-3 text-left" style={{ borderColor: "var(--border)" }}>
                 {p.image ? <img src={p.image} alt={p.title} className="h-32 w-full rounded object-cover" /> : null}
                 <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{p.title}</p>
-                <p className="text-sm" style={{ opacity: 0.6 }}>{p.price} {p.currency}</p>
+                <p className="text-sm" style={{ opacity: 0.6 }}>{priceLabel}</p>
               </a>
             );
           })}
