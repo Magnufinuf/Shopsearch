@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchSession } from "@/lib/session-client";
 
 export default function LastOppAdvert() {
   const [domain, setDomain] = useState("");
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState("");
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("shopsearch_business_domain");
-    if (saved) setDomain(saved);
+    fetchSession().then((s) => {
+      if (s.shop) setDomain(s.shop);
+      setSessionChecked(true);
+    });
   }, []);
 
   async function handleUpload() {
@@ -21,7 +25,6 @@ export default function LastOppAdvert() {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("storeDomain", domain);
     formData.append("caption", caption);
 
     const res = await fetch("/api/adverts/upload", {
@@ -38,6 +41,10 @@ export default function LastOppAdvert() {
     } else {
       setMessage("Noe gikk galt: " + (data.error || "ukjent feil"));
     }
+  }
+
+  if (!sessionChecked) {
+    return <p style={{ padding: 24, opacity: 0.6 }}>Laster...</p>;
   }
 
   if (!domain) {

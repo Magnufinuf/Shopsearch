@@ -47,10 +47,10 @@ export default function Registrer() {
             Produktene dine vil nå dukke opp i søket automatisk.
           </p>
           <a
-            href="/"
+            href="/admin"
             className="mt-6 inline-block rounded-full bg-black px-6 py-3 text-white dark:bg-white dark:text-black"
           >
-            Gå til søket
+            Gå til administrasjon
           </a>
         </div>
       </div>
@@ -122,6 +122,11 @@ export default function Registrer() {
             {status === "loading" ? "Kobler til..." : "Koble til butikken"}
           </button>
 
+          <p className="text-xs text-zinc-500">
+            Ved å koble til godtar du <a href="/vilkar" className="underline">vilkårene</a> og{" "}
+            <a href="/personvern" className="underline">personvernerklæringen</a>.
+          </p>
+
           {status === "error" && (
             <p className="text-sm text-red-500">{errorMsg}</p>
           )}
@@ -130,6 +135,7 @@ export default function Registrer() {
         <p className="mt-6 text-center text-xs text-zinc-400">
           Du finner Klient-ID og Hemmelighet i Shopify sitt Dev Dashboard,
           under din app sine Appinnstillinger.
+          Ta vare på hemmeligheten – du bruker den til å logge inn senere.
         </p>
       </main>
     </div>

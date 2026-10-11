@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { isAdminPassword } from "@/lib/session";
 
 export async function POST(request: Request) {
   const { password } = await request.json();
 
-  if (password !== process.env.ADMIN_PASSWORD) {
+  if (!isAdminPassword(password)) {
     return NextResponse.json({ error: "Feil passord" }, { status: 401 });
   }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { fetchSession } from "@/lib/session-client";
 
 type Product = {
   id: string;
@@ -13,13 +14,16 @@ type Product = {
 
 export default function AlleProdukterPage() {
   const [domain, setDomain] = useState("");
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("shopsearch_business_domain");
-    if (saved) setDomain(saved);
+    fetchSession().then((s) => {
+      if (s.shop) setDomain(s.shop);
+      setSessionChecked(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -42,15 +46,19 @@ export default function AlleProdukterPage() {
     await fetch("/api/admin/hide-product", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storeDomain: domain, productId: shopifyProductId }),
+      body: JSON.stringify({ productId: shopifyProductId }),
     });
     setProducts((prev) => prev.filter((p) => p.shopifyProductId !== shopifyProductId));
+  }
+
+  if (!sessionChecked) {
+    return <p style={{ padding: 24, opacity: 0.6 }}>Laster...</p>;
   }
 
   if (!domain) {
     return (
       <main style={{ padding: "48px 24px", maxWidth: 720, margin: "0 auto" }}>
-        <p style={{ opacity: 0.75 }}>Du må logge inn som bedrift for å se dette.</p>
+        <p style={{ opacity: 0.75 }}>Du må <Link href="/logg-inn-bedrift" style={{ color: "var(--primary)" }}>logge inn som bedrift</Link> for å se dette.</p>
       </main>
     );
   }

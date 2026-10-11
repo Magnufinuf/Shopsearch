@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { isAdminPassword } from "@/lib/session";
 
 type Store = {
   store_domain: string;
@@ -43,7 +44,12 @@ async function fetchOrdersForStore(store: Store) {
   }
 }
 
-export async function GET() {
+// Kun for Magnus: send ADMIN_PASSWORD i headeren x-admin-password.
+export async function GET(request: Request) {
+  if (!isAdminPassword(request.headers.get("x-admin-password"))) {
+    return NextResponse.json({ error: "Feil passord" }, { status: 401 });
+  }
+
   const { data: stores, error } = await supabase
     .from("stores")
     .select("store_domain, client_id, client_secret, display_name");

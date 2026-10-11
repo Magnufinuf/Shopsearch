@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { fetchSession, logout } from "@/lib/session-client";
 
 const navItems = [
   { href: "/", label: "Søk" },
@@ -15,9 +16,10 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const saved = localStorage.getItem("shopsearch_business_domain");
-    setBusinessDomain(saved);
-  }, []);
+    // Gammel innlogging (før cookies) ryddes bort.
+    localStorage.removeItem("shopsearch_business_domain");
+    fetchSession().then((s) => setBusinessDomain(s.shop));
+  }, [pathname]);
 
   const items = businessDomain
     ? [...navItems, { href: "/admin", label: "Administrasjon" }]
@@ -83,10 +85,22 @@ export default function Sidebar() {
       })}
 
       <div style={{ marginTop: "auto", paddingTop: 24 }}>
+        <div style={{ display: "flex", gap: 12, fontSize: 12, opacity: 0.55, marginBottom: 12 }}>
+          <Link href="/personvern">Personvern</Link>
+          <Link href="/vilkar">Vilkår</Link>
+        </div>
         {businessDomain ? (
-          <span style={{ fontSize: 12, opacity: 0.6 }}>
-            Innlogget som: {businessDomain}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontSize: 12, opacity: 0.6 }}>
+              Innlogget som: {businessDomain}
+            </span>
+            <button
+              onClick={logout}
+              style={{ alignSelf: "flex-start", padding: 0, border: "none", background: "none", color: "var(--primary)", fontSize: 13, cursor: "pointer" }}
+            >
+              Logg ut
+            </button>
+          </div>
         ) : (
           <Link
             href="/logg-inn-bedrift"
