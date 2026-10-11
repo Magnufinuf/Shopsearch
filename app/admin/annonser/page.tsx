@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { fetchSession } from "@/lib/session-client";
 
 type Advert = {
   id: string;
@@ -14,12 +15,15 @@ type Advert = {
 
 export default function MineAnnonserPage() {
   const [domain, setDomain] = useState("");
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [adverts, setAdverts] = useState<Advert[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("shopsearch_business_domain");
-    if (saved) setDomain(saved);
+    fetchSession().then((s) => {
+      if (s.shop) setDomain(s.shop);
+      setSessionChecked(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -40,15 +44,19 @@ export default function MineAnnonserPage() {
     await fetch("/api/adverts/delete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, storeDomain: domain }),
+      body: JSON.stringify({ id }),
     });
     setAdverts((prev) => prev.filter((a) => a.id !== id));
+  }
+
+  if (!sessionChecked) {
+    return <p style={{ padding: 24, opacity: 0.6 }}>Laster...</p>;
   }
 
   if (!domain) {
     return (
       <main style={{ padding: "48px 24px", maxWidth: 720, margin: "0 auto" }}>
-        <p style={{ opacity: 0.75 }}>Du må logge inn som bedrift for å se dette.</p>
+        <p style={{ opacity: 0.75 }}>Du må <Link href="/logg-inn-bedrift" style={{ color: "var(--primary)" }}>logge inn som bedrift</Link> for å se dette.</p>
       </main>
     );
   }

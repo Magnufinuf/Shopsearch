@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
+import { isAdminPassword } from "@/lib/session";
 
 export async function POST(request: Request) {
-  const { to, subject, body, fromName } = await request.json();
+  const { to, subject, body, fromName, password } = await request.json();
+
+  if (!isAdminPassword(password)) {
+    return NextResponse.json({ error: "Feil passord" }, { status: 401 });
+  }
 
   if (!to || !body) {
     return NextResponse.json({ error: "Mangler mottaker eller svar" }, { status: 400 });

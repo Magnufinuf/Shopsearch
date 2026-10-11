@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function KontaktPage() {
   const [name, setName] = useState("");
@@ -89,6 +90,10 @@ export default function KontaktPage() {
           >
             {sending ? "Sender..." : "Send melding"}
           </button>
+          <p style={{ fontSize: 12, opacity: 0.6, marginTop: 12 }}>
+            Vi lagrer navn, e-post og meldingen din for å kunne svare. Les mer i{" "}
+            <Link href="/personvern" style={{ color: "var(--primary)" }}>personvernerklæringen</Link>.
+          </p>
         </form>
       )}
     </main>

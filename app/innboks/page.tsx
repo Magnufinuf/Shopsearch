@@ -10,7 +10,7 @@ type Message = {
   created_at: string;
 };
 
-function ReplyBox({ message }: { message: Message }) {
+function ReplyBox({ message, password }: { message: Message; password: string }) {
   const [open, setOpen] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
@@ -27,6 +27,7 @@ function ReplyBox({ message }: { message: Message }) {
         to: message.email,
         subject: "Svar fra Scavenger",
         body: reply,
+        password,
       }),
     });
     setSending(false);
@@ -215,7 +216,7 @@ export default function InnboksPage() {
           </div>
           <p style={{ fontSize: 13, opacity: 0.6, marginBottom: 10 }}>{m.email}</p>
           <p style={{ fontSize: 14, lineHeight: 1.5, marginBottom: 14, whiteSpace: "pre-wrap" }}>{m.messages}</p>
-          <ReplyBox message={m} />
+          <ReplyBox message={m} password={password} />
         </div>
       ))}
     </main>

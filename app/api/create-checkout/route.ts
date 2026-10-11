@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getSessionShop, notLoggedIn } from "@/lib/session";
 import { getFreePeriod } from "@/lib/pricing";
 
 const SALES_LIMIT = 300;
@@ -39,12 +40,9 @@ async function countScavengerSalesThisMonth(storeDomain: string, accessToken: st
   }
 }
 
-export async function POST(request: Request) {
-  const { storeDomain } = await request.json();
-
-  if (!storeDomain) {
-    return NextResponse.json({ error: "Mangler storeDomain" }, { status: 400 });
-  }
+export async function POST() {
+  const storeDomain = await getSessionShop();
+  if (!storeDomain) return notLoggedIn();
 
   if (getFreePeriod().free) {
     return NextResponse.json(

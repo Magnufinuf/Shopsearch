@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { fetchSession } from "@/lib/session-client";
 
 type Product = {
   id: string;
@@ -34,6 +35,7 @@ function Panel({ title, titleColor, children }: { title: string; titleColor?: st
 
 function AdminContent() {
   const [domain, setDomain] = useState("");
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -43,8 +45,10 @@ function AdminContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const saved = localStorage.getItem("shopsearch_business_domain");
-    if (saved) setDomain(saved);
+    fetchSession().then((s) => {
+      if (s.shop) setDomain(s.shop);
+      setSessionChecked(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -68,12 +72,7 @@ function AdminContent() {
   }, [domain]);
 
   async function checkSubscription() {
-    const res = await fetch("/api/verify-store", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storeDomain: domain }),
-    });
-    const data = await res.json();
+    const data = await fetchSession();
     setSubscribed(!!data.subscribed);
     setFreePeriod({ free: !!data.free, freeUntil: data.freeUntil ?? null });
   }
@@ -93,7 +92,7 @@ function AdminContent() {
     await fetch("/api/admin/hide-product", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storeDomain: domain, productId: shopifyProductId }),
+      body: JSON.stringify({ productId: shopifyProductId }),
     });
     setProducts((prev) => prev.filter((p) => p.shopifyProductId !== shopifyProductId));
   }
@@ -101,27 +100,26 @@ function AdminContent() {
   async function disconnectStore() {
     const confirmed = confirm("Er du sikker på at du vil koble fra hele butikken? Alle produktene dine vil forsvinne fra Scavenger.");
     if (!confirmed) return;
-    await fetch("/api/admin/disconnect-store", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storeDomain: domain }),
-    });
-    localStorage.removeItem("shopsearch_business_domain");
-    setProducts([]);
-    setMessage("Butikken er nå koblet fra Scavenger.");
+    const res = await fetch("/api/admin/disconnect-store", { method: "POST" });
+    if (!res.ok) {
+      alert("Noe gikk galt, prøv igjen.");
+      return;
+    }
+    alert("Butikken er nå koblet fra Scavenger.");
+    window.location.href = "/";
   }
 
   async function startCheckout() {
     setCheckoutLoading(true);
-    const res = await fetch("/api/create-checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storeDomain: domain }),
-    });
+    const res = await fetch("/api/create-checkout", { method: "POST" });
     const data = await res.json();
     setCheckoutLoading(false);
     if (data.url) window.location.href = data.url;
     else alert("Noe gikk galt: " + (data.error || "ukjent feil"));
+  }
+
+  if (!sessionChecked) {
+    return <p style={{ padding: 24, opacity: 0.6 }}>Laster...</p>;
   }
 
   if (!domain) {
@@ -130,7 +128,7 @@ function AdminContent() {
         <h1 style={{ fontFamily: "var(--font-heading), Georgia, serif", fontSize: 28, fontWeight: 600, marginBottom: 16 }}>
           Butikkadministrasjon
         </h1>
-        <p style={{ opacity: 0.75 }}>Du må logge inn som bedrift for å se dette. Bruk lenken i sidebaren.</p>
+        <p style={{ opacity: 0.75 }}>Du må <Link href="/logg-inn-bedrift" style={{ color: "var(--primary)" }}>logge inn som bedrift</Link> for å se dette.</p>
       </main>
     );
   }

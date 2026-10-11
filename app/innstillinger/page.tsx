@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchSession } from "@/lib/session-client";
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -37,18 +38,15 @@ export default function InnstillingerPage() {
     const savedTheme = localStorage.getItem("shopsearch_theme");
     setDarkMode(savedTheme === "dark");
 
-    const savedDomain = localStorage.getItem("shopsearch_business_domain");
-    if (savedDomain) setDomain(savedDomain);
+    fetchSession().then((s) => {
+      if (s.shop) setDomain(s.shop);
+    });
   }, []);
 
   useEffect(() => {
     if (!domain) return;
     setLoading(true);
-    fetch("/api/store-info", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storeDomain: domain }),
-    })
+    fetch("/api/store-info", { method: "POST" })
       .then((res) => res.json())
       .then((data) => {
         setDisplayName(data.displayName || "");
@@ -70,7 +68,7 @@ export default function InnstillingerPage() {
     const res = await fetch("/api/update-store-info", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storeDomain: domain, displayName, contactEmail }),
+      body: JSON.stringify({ displayName, contactEmail }),
     });
     setSaving(false);
     setMessage(res.ok ? "Lagret!" : "Noe gikk galt, prøv igjen.");

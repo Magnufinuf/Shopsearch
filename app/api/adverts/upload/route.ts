@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getSessionShop, notLoggedIn } from "@/lib/session";
 
 export async function POST(request: Request) {
+  const storeDomain = await getSessionShop();
+  if (!storeDomain) return notLoggedIn();
+
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
-  const storeDomain = formData.get("storeDomain") as string | null;
   const caption = formData.get("caption") as string | null;
 
-  if (!file || !storeDomain) {
+  if (!file) {
     return NextResponse.json(
-      { error: "Mangler fil eller storeDomain" },
+      { error: "Mangler fil" },
       { status: 400 }
     );
   }

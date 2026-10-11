@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getSessionShop, notLoggedIn } from "@/lib/session";
 
 export async function POST(request: Request) {
-  const { storeDomain, productId } = await request.json();
+  const storeDomain = await getSessionShop();
+  if (!storeDomain) return notLoggedIn();
+  const { productId } = await request.json();
 
-  if (!storeDomain || !productId) {
-    return NextResponse.json(
-      { error: "Mangler storeDomain eller productId" },
-      { status: 400 }
-    );
+  if (!productId) {
+    return NextResponse.json({ error: "Mangler productId" }, { status: 400 });
   }
 
   const { error } = await supabase
