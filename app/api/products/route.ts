@@ -26,44 +26,41 @@ type Store = {
   display_name: string | null;
 };
 
-async function getAccessToken(domain: string, clientId: string, clientSecret: string) {
-  const res = await fetch(`https://${domain}/admin/oauth/access_token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: "client_credentials",
-    }),
-    cache: "no-store",
-  });
-
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.access_token as string;
+async function getShopCurrency(domain: string, token: string): Promise<string> {
+  try {
+    const res = await fetch(`https://${domain}/admin/api/2024-10/shop.json`, {
+      headers: { "X-Shopify-Access-Token": token },
+      cache: "no-store",
+    });
+    if (!res.ok) return "USD";
+    const data = await res.json();
+    return data.shop?.currency || "USD";
+  } catch {
+    return "USD";
+  }
 }
 
 async function fetchProductsForStore(store: Store) {
   try {
-    // client_secret-feltet inneholder nå selve tilgangsnøkkelen fra OAuth-installasjonen
     const token = store.client_secret;
     if (!token) return [];
 
-    const res = await fetch(
-      `https://${store.store_domain}/admin/api/2024-10/products.json?limit=50`,
-      {
+    const [productsRes, currency] = await Promise.all([
+      fetch(`https://${store.store_domain}/admin/api/2024-10/products.json?limit=50`, {
         headers: { "X-Shopify-Access-Token": token },
         cache: "no-store",
-      }
-    );
-    if (!res.ok) return [];
+      }),
+      getShopCurrency(store.store_domain, token),
+    ]);
 
-    const data = await res.json();
+    if (!productsRes.ok) return [];
+
+    const data = await productsRes.json();
     return (data.products as ShopifyProduct[]).map((p) => ({
       id: `${store.store_domain}-${p.id}`,
       title: p.title,
       price: parseFloat(p.variants[0]?.price ?? "0"),
-      currency: "USD",
+      currency,
       category: p.product_type,
       vendor: store.display_name || p.vendor,
       tags: p.tags ? p.tags.split(",").map((t) => t.trim()) : [],
