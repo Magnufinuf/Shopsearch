@@ -16,8 +16,19 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://shopsearch-gamma.vercel.app"),
   title: "Scavenger",
   description: "Finn det du leter etter.",
+  // Standard forhåndsvisning når noen deler en lenke til Scavenger.
+  openGraph: {
+    siteName: "Scavenger",
+    title: "Scavenger – Don't search. Ask.",
+    description: "Finn det du leter etter fra mange nettbutikker på ett sted.",
+    images: ["/logo.png"],
+    locale: "nb_NO",
+    type: "website",
+  },
+  twitter: { card: "summary" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
