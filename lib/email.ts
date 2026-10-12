@@ -18,3 +18,12 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     return false;
   }
 }
+
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}

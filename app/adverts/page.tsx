@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Advert, shareAdvert, storeUrl } from "@/lib/adverts";
 import { fetchUser, setSaved } from "@/lib/user-client";
+import SendAdvertDialog from "../components/SendAdvertDialog";
 
 function ActionButton({
   icon,
@@ -29,10 +30,12 @@ function AdvertSlide({
   advert,
   saved,
   onToggleSave,
+  onSend,
 }: {
   advert: Advert;
   saved: boolean;
   onToggleSave: () => void;
+  onSend: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -84,6 +87,7 @@ function AdvertSlide({
       <div style={{ position: "absolute", right: 12, bottom: 40, display: "flex", flexDirection: "column", gap: 20 }}>
         <ActionButton icon={saved ? "❤️" : "♡"} label={saved ? "Lagret" : "Lagre"} onClick={onToggleSave} />
         <ActionButton icon="💬" label="Kommentarer" onClick={handleComments} />
+        <ActionButton icon="✉️" label="Send" onClick={onSend} />
         <ActionButton icon="↗" label="Del" onClick={() => shareAdvert(advert)} />
       </div>
     </div>
@@ -95,6 +99,7 @@ export default function AdvertsPage() {
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   useEffect(() => {
     // ?annonse=ID (fra en delt lenke): vis den annonsen først.
@@ -113,11 +118,18 @@ export default function AdvertsPage() {
     });
   }, []);
 
+  function requireLogin(advert: Advert): boolean {
+    if (loggedIn) return true;
+    window.location.assign(`/logg-inn?neste=${encodeURIComponent(`/adverts?annonse=${advert.id}`)}`);
+    return false;
+  }
+
+  function openSend(advert: Advert) {
+    if (requireLogin(advert)) setSendingId(String(advert.id));
+  }
+
   async function toggleSave(advert: Advert) {
-    if (!loggedIn) {
-      window.location.assign(`/logg-inn?neste=${encodeURIComponent(`/adverts?annonse=${advert.id}`)}`);
-      return;
-    }
+    if (!requireLogin(advert)) return;
     const id = String(advert.id);
     const nowSaved = !savedIds.has(id);
     const update = (save: boolean) =>
@@ -158,8 +170,10 @@ export default function AdvertsPage() {
           advert={advert}
           saved={savedIds.has(String(advert.id))}
           onToggleSave={() => toggleSave(advert)}
+          onSend={() => openSend(advert)}
         />
       ))}
+      {sendingId && <SendAdvertDialog advertId={sendingId} onClose={() => setSendingId(null)} />}
     </main>
   );
 }

@@ -1,12 +1,12 @@
 // Vanlige brukere (ikke bedrifter), brukt fra sidene i nettleseren.
-export type UserInfo = { loggedIn: boolean; email: string | null; savedIds: string[] };
+export type UserInfo = { loggedIn: boolean; email: string | null; savedIds: string[]; unread: number };
 
 export async function fetchUser(): Promise<UserInfo> {
   try {
     const res = await fetch("/api/user/me", { cache: "no-store" });
     return (await res.json()) as UserInfo;
   } catch {
-    return { loggedIn: false, email: null, savedIds: [] };
+    return { loggedIn: false, email: null, savedIds: [], unread: 0 };
   }
 }
 

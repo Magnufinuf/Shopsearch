@@ -17,6 +17,7 @@ const navItems = [
 export default function Sidebar() {
   const [businessDomain, setBusinessDomain] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [unread, setUnread] = useState(0);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -26,7 +27,10 @@ export default function Sidebar() {
       setBusinessDomain(s.shop);
       if (s.shop) rememberAccount({ shop: s.shop, name: s.displayName || s.shop.replace(".myshopify.com", "") });
     });
-    fetchUser().then((u) => setUserEmail(u.email));
+    fetchUser().then((u) => {
+      setUserEmail(u.email);
+      setUnread(u.unread);
+    });
   }, [pathname]);
 
   const items = businessDomain
@@ -88,6 +92,11 @@ export default function Sidebar() {
             }}
           >
             {item.label}
+            {item.href === "/min-side" && unread > 0 && (
+              <span style={{ marginLeft: 8, backgroundColor: "#e05252", color: "white", borderRadius: 999, fontSize: 11, padding: "1px 7px", fontWeight: 600 }}>
+                {unread}
+              </span>
+            )}
           </Link>
         );
       })}
