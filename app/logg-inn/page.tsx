@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchUser } from "@/lib/user-client";
+import UsernameForm from "../components/UsernameForm";
 
 const input: React.CSSProperties = {
   width: "100%",
@@ -34,7 +35,7 @@ function nextPath(): string {
 }
 
 export default function LoggInn() {
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [step, setStep] = useState<"email" | "code" | "username">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -43,7 +44,8 @@ export default function LoggInn() {
 
   useEffect(() => {
     fetchUser().then((u) => {
-      if (u.loggedIn) window.location.assign(nextPath());
+      if (u.loggedIn && u.username) window.location.assign(nextPath());
+      else if (u.loggedIn) setStep("username");
     });
   }, []);
 
@@ -77,6 +79,11 @@ export default function LoggInn() {
       body: JSON.stringify({ email, code }),
     });
     const data = await res.json();
+    if (res.ok && data.needsUsername) {
+      setLoading(false);
+      setStep("username");
+      return;
+    }
     if (res.ok) {
       window.location.assign(nextPath());
       return;
@@ -90,11 +97,20 @@ export default function LoggInn() {
       <div style={{ width: "100%", maxWidth: 380 }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <img src="/logo.png" alt="" style={{ width: 48, height: 48, objectFit: "contain", margin: "0 auto 12px", display: "block" }} />
-          <h1 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px" }}>Logg inn</h1>
-          <p style={{ margin: 0, opacity: 0.65, fontSize: 15 }}>Lagre annonser og finn dem igjen senere</p>
+          <h1 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px" }}>{step === "username" ? "Nesten ferdig!" : "Logg inn"}</h1>
+          {step !== "username" && <p style={{ margin: 0, opacity: 0.65, fontSize: 15 }}>Lagre annonser og finn dem igjen senere</p>}
         </div>
 
-        {step === "email" ? (
+        {step === "username" ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <p style={{ margin: 0, fontSize: 15, textAlign: "center" }}>
+              <strong>Velg et brukernavn</strong>
+              <br />
+              <span style={{ opacity: 0.7, fontSize: 14 }}>Det vises på kommentarene dine, og venner kan sende deg annonser med det.</span>
+            </p>
+            <UsernameForm buttonLabel="Ferdig" onSaved={() => window.location.assign(nextPath())} />
+          </div>
+        ) : step === "email" ? (
           <form onSubmit={sendCode} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input
               type="email"

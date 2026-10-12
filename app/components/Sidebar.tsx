@@ -32,6 +32,10 @@ export default function Sidebar() {
     fetchUser().then((u) => {
       setUserEmail(u.username || u.email);
       setUnread(u.unread);
+      // Innlogget uten brukernavn (laget konto før brukernavn fantes): be om det først.
+      if (u.loggedIn && !u.username && pathname !== "/logg-inn") {
+        window.location.assign(`/logg-inn?neste=${encodeURIComponent(pathname)}`);
+      }
     });
   }, [pathname]);
 

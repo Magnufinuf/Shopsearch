@@ -1,9 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getSessionShop, getSessionUserId } from "@/lib/session";
+import { escapeHtml, sendEmail } from "@/lib/email";
+import { findMentions } from "@/lib/mentions";
+import { APP_URL } from "@/lib/app-url";
 
 const MAX_LENGTH = 300;
 const MAX_PER_HOUR = 30;
+const MAX_MENTIONS = 5;
+
+// Sender e-post til de som ble tagget (@brukernavn) i en kommentar.
+async function notifyMentions(text: string, author: string, authorId: string, advertId: string) {
+  const names = findMentions(text).filter((n) => n !== author).slice(0, MAX_MENTIONS);
+  if (names.length === 0) return;
+
+  const { data: tagged } = await supabase.from("users").select("id, email, username").in("username", names);
+  const link = `${APP_URL}/adverts?annonse=${advertId}&kommentarer=1`;
+
+  await Promise.all(
+    (tagged || [])
+      .filter((u) => u.id !== authorId)
+      .map((u) =>
+        sendEmail(
+          u.email,
+          `${author} nevnte deg i en kommentar på Scavenger`,
+          `<div style="font-family:Arial,sans-serif;font-size:16px;color:#3A2A1F;line-height:1.5">
+            <p><strong>${escapeHtml(author)}</strong> nevnte deg i en kommentar:</p>
+            <p style="padding:12px 16px;background:#FBF3EC;border-radius:12px">«${escapeHtml(text)}»</p>
+            <p><a href="${link}" style="display:inline-block;padding:12px 24px;background:#C1502E;color:white;border-radius:12px;text-decoration:none;font-weight:bold">Se kommentaren</a></p>
+          </div>`
+        )
+      )
+  );
+}
 
 type CommentRow = {
   id: number;
@@ -58,7 +87,8 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/adverts
 
   const { data: user } = await supabase.from("users").select("username").eq("id", userId).maybeSingle();
   if (!user) return NextResponse.json({ error: "Logg inn for å kommentere." }, { status: 401 });
-  if (!user.username) {
+  const username = user.username;
+  if (!username) {
     return NextResponse.json({ error: "Velg et brukernavn først.", needsUsername: true }, { status: 400 });
   }
 
@@ -81,8 +111,10 @@ export async function POST(request: NextRequest, ctx: RouteContext<"/api/adverts
     return NextResponse.json({ error: "Noe gikk galt, prøv igjen." }, { status: 500 });
   }
 
+  await notifyMentions(text, username, userId, id);
+
   return NextResponse.json({
-    comment: { id: String(data.id), text, createdAt: data.created_at, username: user.username, canDelete: true },
+    comment: { id: String(data.id), text, createdAt: data.created_at, username, canDelete: true },
   });
 }
 
