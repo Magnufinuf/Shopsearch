@@ -18,6 +18,8 @@ export default function Sidebar() {
   const [businessDomain, setBusinessDomain] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
+  // Mobil: menyen er skjult bak ☰-knappen og glir inn fra venstre.
+  const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -37,41 +39,42 @@ export default function Sidebar() {
     ? [...navItems, { href: "/admin", label: "Administrasjon" }]
     : navItems;
 
+  const close = () => setOpen(false);
+
+  const logo = (
+    <Link href="/" onClick={close} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <img src="/logo.png" alt="Scavenger" style={{ width: 32, height: 32, objectFit: "contain" }} />
+      <span style={{ fontFamily: "var(--font-heading), Georgia, serif", fontSize: 22, fontWeight: 600, color: "var(--primary)" }}>
+        Scavenger
+      </span>
+    </Link>
+  );
+
   return (
-    <nav
-      style={{
-        width: 220,
-        minHeight: "100vh",
-        borderRight: "1px solid var(--border)",
-        padding: 24,
-        display: "flex",
-        flexDirection: "column",
-        gap: 4,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 24,
-        }}
+    <>
+    {/* Toppstripe – vises bare på mobil */}
+    <header className="sc-topbar">
+      {logo}
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Åpne meny"
+        style={{ position: "relative", background: "none", border: "none", color: "var(--foreground)", padding: 8, cursor: "pointer" }}
       >
-        <img
-          src="/logo.png"
-          alt="Scavenger"
-          style={{ width: 32, height: 32, objectFit: "contain" }}
-        />
-        <span
-          style={{
-            fontFamily: "var(--font-heading), Georgia, serif",
-            fontSize: 22,
-            fontWeight: 600,
-            color: "var(--primary)",
-          }}
-        >
-          Scavenger
-        </span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+        {unread > 0 && (
+          <span style={{ position: "absolute", top: 4, right: 4, width: 10, height: 10, borderRadius: 999, backgroundColor: "#e05252" }} />
+        )}
+      </button>
+    </header>
+
+    <div className={`sc-backdrop${open ? " open" : ""}`} onClick={close} />
+
+    <nav className={`sc-sidebar${open ? " open" : ""}`}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        {logo}
+        <button className="sc-close" onClick={close} aria-label="Lukk meny" style={{ background: "none", border: "none", color: "var(--foreground)", fontSize: 26, lineHeight: 1, cursor: "pointer", padding: 4 }}>
+          ×
+        </button>
       </div>
 
       {items.map((item) => {
@@ -80,6 +83,7 @@ export default function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={close}
             style={{
               padding: "10px 14px",
               borderRadius: 10,
@@ -103,8 +107,8 @@ export default function Sidebar() {
 
       <div style={{ marginTop: "auto", paddingTop: 24 }}>
         <div style={{ display: "flex", gap: 12, fontSize: 12, opacity: 0.55, marginBottom: 12 }}>
-          <Link href="/personvern">Personvern</Link>
-          <Link href="/vilkar">Vilkår</Link>
+          <Link href="/personvern" onClick={close}>Personvern</Link>
+          <Link href="/vilkar" onClick={close}>Vilkår</Link>
         </div>
         {businessDomain ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -124,15 +128,16 @@ export default function Sidebar() {
           </span>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <Link href="/logg-inn" style={{ fontSize: 14, color: "var(--primary)", fontWeight: 600 }}>
+            <Link href="/logg-inn" onClick={close} style={{ fontSize: 14, color: "var(--primary)", fontWeight: 600 }}>
               Logg inn
             </Link>
-            <Link href="/logg-inn-bedrift" style={{ fontSize: 12, opacity: 0.6 }}>
+            <Link href="/logg-inn-bedrift" onClick={close} style={{ fontSize: 12, opacity: 0.6 }}>
               Logg inn som bedrift
             </Link>
           </div>
         )}
       </div>
     </nav>
+    </>
   );
 }

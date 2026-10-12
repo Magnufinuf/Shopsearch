@@ -63,7 +63,7 @@ function AdvertSlide({
 
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100vh", scrollSnapAlign: "start", backgroundColor: "black", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+    <div style={{ position: "relative", width: "100%", height: "var(--page-h)", scrollSnapAlign: "start", backgroundColor: "black", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
       {advert.media_type === "video" ? (
         <video ref={videoRef} src={advert.media_url} loop muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       ) : (
@@ -144,7 +144,7 @@ export default function AdvertsPage() {
 
   if (loading) {
     return (
-      <main style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--foreground)" }}>
+      <main style={{ height: "var(--page-h)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--foreground)" }}>
         <p>Laster annonser...</p>
       </main>
     );
@@ -152,14 +152,14 @@ export default function AdvertsPage() {
 
   if (adverts.length === 0) {
     return (
-      <main style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--foreground)", textAlign: "center", padding: 24 }}>
+      <main style={{ height: "var(--page-h)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--foreground)", textAlign: "center", padding: 24 }}>
         <p>Ingen annonser ennå. Bedrifter kan laste opp via administrasjonssiden.</p>
       </main>
     );
   }
 
   return (
-    <main style={{ height: "100vh", overflowY: "scroll", scrollSnapType: "y mandatory" }}>
+    <main style={{ height: "var(--page-h)", overflowY: "scroll", scrollSnapType: "y mandatory" }}>
       {adverts.map((advert) => (
         <AdvertSlide
           key={advert.id}
