@@ -3,6 +3,7 @@ import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "./components/Sidebar";
 import ThemeInit from "./components/ThemeInit";
+import { APP_URL } from "@/lib/app-url";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -16,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://shopsearch-gamma.vercel.app"),
+  metadataBase: new URL(APP_URL),
   title: "Scavenger",
   description: "Finn det du leter etter.",
   // Standard forhåndsvisning når noen deler en lenke til Scavenger.
