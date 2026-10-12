@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Advert, shareAdvert, storeUrl } from "@/lib/adverts";
+import { Advert, storeUrl } from "@/lib/adverts";
 import { fetchUser, setSaved } from "@/lib/user-client";
-import SendAdvertDialog from "../components/SendAdvertDialog";
+import ShareSheet from "../components/ShareSheet";
 
 function ActionButton({
   icon,
@@ -30,12 +30,12 @@ function AdvertSlide({
   advert,
   saved,
   onToggleSave,
-  onSend,
+  onShare,
 }: {
   advert: Advert;
   saved: boolean;
   onToggleSave: () => void;
-  onSend: () => void;
+  onShare: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -87,8 +87,7 @@ function AdvertSlide({
       <div style={{ position: "absolute", right: 12, bottom: 40, display: "flex", flexDirection: "column", gap: 20 }}>
         <ActionButton icon={saved ? "❤️" : "♡"} label={saved ? "Lagret" : "Lagre"} onClick={onToggleSave} />
         <ActionButton icon="💬" label="Kommentarer" onClick={handleComments} />
-        <ActionButton icon="✉️" label="Send" onClick={onSend} />
-        <ActionButton icon="↗" label="Del" onClick={() => shareAdvert(advert)} />
+        <ActionButton icon="↗" label="Del" onClick={onShare} />
       </div>
     </div>
   );
@@ -99,7 +98,7 @@ export default function AdvertsPage() {
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [sharing, setSharing] = useState<Advert | null>(null);
 
   useEffect(() => {
     // ?annonse=ID (fra en delt lenke): vis den annonsen først.
@@ -124,9 +123,6 @@ export default function AdvertsPage() {
     return false;
   }
 
-  function openSend(advert: Advert) {
-    if (requireLogin(advert)) setSendingId(String(advert.id));
-  }
 
   async function toggleSave(advert: Advert) {
     if (!requireLogin(advert)) return;
@@ -170,10 +166,10 @@ export default function AdvertsPage() {
           advert={advert}
           saved={savedIds.has(String(advert.id))}
           onToggleSave={() => toggleSave(advert)}
-          onSend={() => openSend(advert)}
+          onShare={() => setSharing(advert)}
         />
       ))}
-      {sendingId && <SendAdvertDialog advertId={sendingId} onClose={() => setSendingId(null)} />}
+      {sharing && <ShareSheet advert={sharing} onClose={() => setSharing(null)} />}
     </main>
   );
 }
