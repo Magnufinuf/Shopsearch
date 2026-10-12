@@ -20,10 +20,12 @@ export type SmartQuery = {
 
 // Produkttyper. label = flertall som vises i oppsummeringen.
 const TYPES: { label: string; words: string[]; exclude?: string[] }[] = [
-  { label: "gensere", words: ["genser", "sweater", "strikk", "strikkegenser", "pullover", "crewneck", "halfzip", "half-zip", "quarter zip", "cardigan"] },
+  // Hettegensere før gensere, så «hoodie» gir bare hoodies, mens «genser» også tar med hoodies.
   { label: "hettegensere", words: ["hoodie", "hettegenser", "hettejakke", "zip hoodie"] },
+  { label: "gensere", words: ["genser", "sweater", "sweatshirt", "collegegenser", "strikk", "strikkegenser", "pullover", "crewneck", "halfzip", "half-zip", "quarter zip", "quarter-zip", "cardigan", "hoodie"] },
   { label: "jakker", words: ["jakke", "jacket", "coat", "kåpe", "frakk", "dunjakke", "puffer", "parkas", "bomberjakke", "vest"] },
-  { label: "t-skjorter", words: ["t-skjorte", "tskjorte", "t-shirt", "tshirt", "tee"] },
+  // «sweatshirt» inneholder «tshirt», så den holdes utenfor.
+  { label: "t-skjorter", words: ["t-skjorte", "tskjorte", "t-shirt", "tshirt", "tee"], exclude: ["sweatshirt"] },
   // «shirt» står også i «t-shirt», så t-skjorter holdes utenfor.
   { label: "skjorter", words: ["skjorte", "shirt", "oxford", "flanell", "overshirt"], exclude: ["t-shirt", "tshirt", "t-skjorte", "tskjorte", "sweatshirt"] },
   { label: "poloer", words: ["polo", "piké", "pique"] },
@@ -66,6 +68,11 @@ const CONCEPTS: { triggers: string[]; label: string; words: string[]; style?: st
     label: "treningsklær",
     words: ["shorts", "tights", "t-skjorte", "t-shirt", "tee", "track", "jogger", "sports"],
     style: "sporty",
+  },
+  {
+    triggers: ["bil", "biler", "bilen", "bilklær", "motor", "racing", "rally"],
+    label: "bilmotiver",
+    words: ["car", "cars", "bil", "porsche", "bmw", "audi", "ferrari", "mercedes", "nissan", "toyota", "racing", "speed", "motor", "gt"],
   },
   {
     triggers: ["regn", "regnvær", "vått", "vind"],
@@ -171,7 +178,8 @@ function formatKr(n: number) {
 // ---------- Tolking ----------
 
 export function parseSmartQuery(input: string): SmartQuery {
-  let q = ` ${input.toLowerCase()} `;
+  // «t skjorte» / «t shirt» -> «t-skjorte» / «t-shirt»
+  let q = ` ${input.toLowerCase().replace(/\bt\s+(skjorte|skjorter|shirt|shirts)\b/g, "t-$1")} `;
   const result: SmartQuery = { groups: [], colors: [], styles: [], minPrice: null, maxPrice: null, sizes: [], gender: null, summary: "" };
 
   // Pris

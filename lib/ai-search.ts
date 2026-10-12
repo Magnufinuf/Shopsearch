@@ -21,6 +21,8 @@ export async function fetchAiFilters(query: string): Promise<AiFilters | null> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query }),
+      // Søket skal aldri henge på AI-en: etter 4 sekunder brukes vanlig søk.
+      signal: AbortSignal.timeout(4000),
     });
     if (!res.ok) return null;
     return (await res.json()).filters ?? null;
