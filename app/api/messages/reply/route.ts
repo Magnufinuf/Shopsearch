@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminPassword } from "@/lib/session";
+import { EMAIL_DOMAIN } from "@/lib/email";
 
 export async function POST(request: Request) {
   const { to, subject, body, fromName, password } = await request.json();
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `${fromName || "Scavenger"} <svar@auco.store>`,
+      from: `${fromName || "Scavenger"} <svar@${EMAIL_DOMAIN}>`,
       to,
       subject: subject || "Svar fra Scavenger",
       html: body.replace(/\n/g, "<br/>"),

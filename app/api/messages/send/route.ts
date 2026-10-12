@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { EMAIL_DOMAIN } from "@/lib/email";
 
 async function sendNotificationEmail(name: string, email: string, messageText: string) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -13,7 +14,7 @@ async function sendNotificationEmail(name: string, email: string, messageText: s
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Scavenger <noreply@auco.store>",
+        from: `Scavenger <noreply@${EMAIL_DOMAIN}>`,
         to: "magnus.l.fredriksen@icloud.com",
         subject: `Ny melding fra ${name || "noen"} på Scavenger`,
         html: `<p><strong>Navn:</strong> ${name || "Ikke oppgitt"}</p><p><strong>E-post:</strong> ${email}</p><p><strong>Melding:</strong></p><p>${messageText.replace(/\n/g, "<br/>")}</p>`,
