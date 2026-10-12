@@ -11,6 +11,16 @@ export default function Registrer() {
     "idle"
   );
   const [errorMsg, setErrorMsg] = useState("");
+  const [shop, setShop] = useState("");
+  const [showManual, setShowManual] = useState(false);
+
+  // "dinbutikk" eller "https://dinbutikk.myshopify.com/" -> "dinbutikk.myshopify.com"
+  function connectWithShopify(e: React.FormEvent) {
+    e.preventDefault();
+    let domain = shop.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+    if (!domain.includes(".")) domain = `${domain}.myshopify.com`;
+    window.location.assign(`/api/auth/start?shop=${encodeURIComponent(domain)}`);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,17 +68,64 @@ export default function Registrer() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-zinc-50 px-6 py-16 dark:bg-black">
+    <div className="flex flex-col items-center px-6 py-16" style={{ minHeight: "var(--page-h)" }}>
       <main className="w-full max-w-md">
-        <h1 className="text-center text-3xl font-semibold text-black dark:text-white">
-          Registrer butikken din
+        <h1 className="text-center text-3xl font-semibold" style={{ color: "var(--foreground)" }}>
+          Koble til butikken din
         </h1>
-        <p className="mt-3 text-center text-zinc-600 dark:text-zinc-400">
-          Koble til Shopify-butikken din, og produktene dine blir søkbare med
-          en gang.
+        <p className="mt-3 text-center" style={{ color: "var(--foreground)", opacity: 0.7 }}>
+          Produktene dine blir søkbare på Scavenger med en gang. Gratis i lanseringsperioden.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
+        <ul className="mt-6 flex flex-col gap-2 text-sm" style={{ color: "var(--foreground)", opacity: 0.85 }}>
+          <li>✓ Ett klikk – ingen nøkler å finne frem</li>
+          <li>✓ Du bestemmer selv hvilke produkter som vises</li>
+          <li>✓ Koble fra når du vil under Administrasjon</li>
+        </ul>
+
+        <form onSubmit={connectWithShopify} className="mt-8 flex flex-col gap-3">
+          <label className="text-sm" style={{ color: "var(--foreground)", opacity: 0.7 }} htmlFor="shop">
+            Butikkens Shopify-adresse
+          </label>
+          <input
+            id="shop"
+            type="text"
+            required
+            value={shop}
+            onChange={(e) => setShop(e.target.value)}
+            placeholder="dinbutikk.myshopify.com"
+            autoCapitalize="none"
+            autoCorrect="off"
+            className="rounded-xl border px-4 py-3 text-base"
+            style={{ borderColor: "var(--border)", backgroundColor: "transparent", color: "var(--foreground)" }}
+          />
+          <button
+            type="submit"
+            disabled={!shop.trim()}
+            className="rounded-xl px-6 py-3 font-semibold text-white disabled:opacity-60"
+            style={{ backgroundColor: "#5E8E3E" }}
+          >
+            Koble til med Shopify
+          </button>
+          <p className="text-center text-xs" style={{ color: "var(--foreground)", opacity: 0.6 }}>
+            Ved å koble til godtar du <a href="/vilkar" className="underline">vilkårene</a> og{" "}
+            <a href="/personvern" className="underline">personvernerklæringen</a>.
+          </p>
+        </form>
+
+        <div className="mt-8 text-center">
+          <button
+            type="button"
+            onClick={() => setShowManual((v) => !v)}
+            className="text-sm underline"
+            style={{ color: "var(--foreground)", opacity: 0.6 }}
+          >
+            {showManual ? "Skjul manuell oppkobling" : "Har du laget en egen app i Shopify? Koble til manuelt"}
+          </button>
+        </div>
+
+        {showManual && (
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm text-zinc-700 dark:text-zinc-300">
             Butikknavn (valgfritt)
             <input
@@ -131,12 +188,15 @@ export default function Registrer() {
             <p className="text-sm text-red-500">{errorMsg}</p>
           )}
         </form>
+        )}
 
-        <p className="mt-6 text-center text-xs text-zinc-400">
-          Du finner Klient-ID og Hemmelighet i Shopify sitt Dev Dashboard,
-          under din app sine Appinnstillinger.
-          Ta vare på hemmeligheten – du bruker den til å logge inn senere.
-        </p>
+        {showManual && (
+          <p className="mt-6 text-center text-xs text-zinc-400">
+            Du finner Klient-ID og Hemmelighet i Shopify sitt Dev Dashboard,
+            under din app sine Appinnstillinger.
+            Ta vare på hemmeligheten – du bruker den til å logge inn senere.
+          </p>
+        )}
       </main>
     </div>
   );

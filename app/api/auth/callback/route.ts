@@ -3,6 +3,7 @@ import { createHmac } from "crypto";
 import { supabase } from "@/lib/supabase";
 import { safeEqual, setSessionCookie } from "@/lib/session";
 import { APP_URL } from "@/lib/app-url";
+import { revalidateTag } from "next/cache";
 
 // Sjekker at svaret faktisk kommer fra Shopify (hmac) og hører til innloggingen vi startet (state).
 function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean {
@@ -62,6 +63,7 @@ export async function GET(req: NextRequest) {
     },
     { onConflict: "store_domain" }
   );
+  revalidateTag("products", { expire: 0 });
 
   const isLogin = req.cookies.get("shopify_oauth_login")?.value === "1";
   const response = NextResponse.redirect(`${APP_URL}${isLogin ? "/admin" : "/registrer/suksess"}`);

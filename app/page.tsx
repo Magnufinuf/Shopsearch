@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
+import { STYLES, extractStyle } from "@/lib/styles";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
 
 type Product = {
@@ -15,6 +16,7 @@ type Product = {
   image: string;
   url: string;
   sizes?: string[];
+  styles?: string[];
 };
 
 function withTracking(url: string) {
@@ -99,6 +101,16 @@ export default function Home() {
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    await runSearch(query);
+  }
+
+  // Stil-knappene: fyll inn stilen i søkefeltet og søk.
+  function searchStyle(label: string) {
+    setQuery(label);
+    runSearch(label);
+  }
+
+  async function runSearch(query: string) {
     setLoading(true);
     setSearched(true);
     const res = await fetch("/api/products");
@@ -107,7 +119,9 @@ export default function Home() {
     const info = currencyInfo ?? (await fetchCurrencyInfo(all.map((p) => p.currency)));
     setCurrencyInfo(info);
 
-    const { cleanedQuery, filters } = extractFilters(query);
+    // «old money skjorte» -> stil = old money, resten søkes som vanlig.
+    const { style, rest } = extractStyle(query);
+    const { cleanedQuery, filters } = extractFilters(rest);
     const words = cleanedQuery.toLowerCase().split(" ").filter(Boolean);
 
     const filtered = all.filter((p) => {
@@ -121,7 +135,8 @@ export default function Home() {
         (p.sizes || []).some((s) =>
           filters.sizeOptions!.some((opt) => s.toLowerCase().includes(opt.toLowerCase()))
         );
-      return matchesWords && matchesMin && matchesMax && matchesSize;
+      const matchesStyle = !style || (p.styles || []).includes(style.slug);
+      return matchesWords && matchesMin && matchesMax && matchesSize && matchesStyle;
     });
 
     setResults(filtered);
@@ -150,7 +165,7 @@ export default function Home() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="F.eks. svarte sneakers str. 43 under 2000 kr"
+            placeholder="F.eks. old money skjorte str. M under 800 kr"
             className="flex-1 rounded-full border px-5 py-3 text-base outline-none"
             style={{
               borderColor: "var(--border)",
@@ -184,6 +199,30 @@ export default function Home() {
               {c.label}
             </Link>
           ))}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: -16 }}>
+          <span style={{ fontSize: 12, opacity: 0.55, textTransform: "uppercase", letterSpacing: 1 }}>Stiler</span>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+            {STYLES.map((s) => (
+              <button
+                key={s.slug}
+                type="button"
+                onClick={() => searchStyle(s.label)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  border: "1px solid var(--primary)",
+                  backgroundColor: "transparent",
+                  color: "var(--primary)",
+                  fontSize: 13,
+                  cursor: "pointer",
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading && <p style={{ opacity: 0.6 }}>Søker...</p>}
