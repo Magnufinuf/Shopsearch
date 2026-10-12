@@ -5,6 +5,7 @@ export type Advert = {
   media_type: "video" | "image";
   caption: string;
   created_at: string;
+  comment_count?: number;
 };
 
 // Lenke til butikken, merket så salget kan spores tilbake til Scavenger.

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Advert, storeUrl } from "@/lib/adverts";
 import { fetchUser, setSaved } from "@/lib/user-client";
 import ShareSheet from "../components/ShareSheet";
+import CommentsSheet from "../components/CommentsSheet";
 
 function ActionButton({
   icon,
@@ -31,11 +32,13 @@ function AdvertSlide({
   saved,
   onToggleSave,
   onShare,
+  onComments,
 }: {
   advert: Advert;
   saved: boolean;
   onToggleSave: () => void;
   onShare: () => void;
+  onComments: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -57,9 +60,6 @@ function AdvertSlide({
     return () => observer.disconnect();
   }, []);
 
-  function handleComments() {
-    alert("Kommentarer kommer snart");
-  }
 
 
   return (
@@ -74,7 +74,7 @@ function AdvertSlide({
 
       <div style={{ position: "absolute", left: 16, right: 90, bottom: 24, color: "white" }}>
         <p style={{ fontWeight: 600, marginBottom: 4 }}>
-          {advert.store_domain}
+          {advert.store_domain.replace(".myshopify.com", "")}
         </p>
         {advert.caption && (
           <p style={{ fontSize: 14, opacity: 0.9 }}>{advert.caption}</p>
@@ -86,7 +86,7 @@ function AdvertSlide({
 
       <div style={{ position: "absolute", right: 12, bottom: 40, display: "flex", flexDirection: "column", gap: 20 }}>
         <ActionButton icon={saved ? "❤️" : "♡"} label={saved ? "Lagret" : "Lagre"} onClick={onToggleSave} />
-        <ActionButton icon="💬" label="Kommentarer" onClick={handleComments} />
+        <ActionButton icon="💬" label={advert.comment_count ? String(advert.comment_count) : "Kommenter"} onClick={onComments} />
         <ActionButton icon="↗" label="Del" onClick={onShare} />
       </div>
     </div>
@@ -99,6 +99,7 @@ export default function AdvertsFeed() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [sharing, setSharing] = useState<Advert | null>(null);
+  const [commenting, setCommenting] = useState<Advert | null>(null);
 
   useEffect(() => {
     // ?annonse=ID (fra en delt lenke): vis den annonsen først.
@@ -167,9 +168,19 @@ export default function AdvertsFeed() {
           saved={savedIds.has(String(advert.id))}
           onToggleSave={() => toggleSave(advert)}
           onShare={() => setSharing(advert)}
+          onComments={() => setCommenting(advert)}
         />
       ))}
       {sharing && <ShareSheet advert={sharing} onClose={() => setSharing(null)} />}
+      {commenting && (
+        <CommentsSheet
+          advertId={String(commenting.id)}
+          onClose={() => setCommenting(null)}
+          onCountChange={(count) =>
+            setAdverts((prev) => prev.map((a) => (a.id === commenting.id ? { ...a, comment_count: count } : a)))
+          }
+        />
+      )}
     </main>
   );
 }
