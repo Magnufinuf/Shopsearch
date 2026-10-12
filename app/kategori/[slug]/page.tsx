@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
-import { matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
+import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
 import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
 import {
   Product,
@@ -68,7 +68,7 @@ export default function KategoriPage() {
       aiCache.current = { query, filters: await fetchAiFilters(query) };
     }
     const ai = query.trim() ? aiCache.current?.filters ?? null : null;
-    const smart = parseSmartQuery(query);
+    const smart = parseSmartQuery(query, buildVocabulary(everyProduct));
     const rangeDef = PRICE_RANGES.find((r) => r.key === priceRange);
     const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo);
     const passesButtons = (p: Product) => {

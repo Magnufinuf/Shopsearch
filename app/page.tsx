@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
 import { STYLES } from "@/lib/styles";
-import { matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
+import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
 import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
 
@@ -73,7 +73,7 @@ export default function Home() {
 
     // Smart søk (gratis, uten AI): forstår «noe varmt», synonymer, skrivefeil, farger, pris og stil.
     // Gir det null treff, prøves det uten farge, størrelse og vage ønsker.
-    const smart = parseSmartQuery(query);
+    const smart = parseSmartQuery(query, buildVocabulary(all));
     const priceOf = (p: Product) => convertPrice(p.price, p.currency, info);
     let hits = all.filter((p) => matchesSmartQuery(p, smart, priceOf(p)));
     let summary = smart.summary;

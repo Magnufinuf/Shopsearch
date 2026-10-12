@@ -19,86 +19,139 @@ export type SmartQuery = {
 // ---------- Ordlister ----------
 
 // Produkttyper. label = flertall som vises i oppsummeringen.
-const TYPES: { label: string; words: string[]; exclude?: string[] }[] = [
+// words = ord vi leter etter i produktene. also = flere ord (andre språk) som betyr det samme i søket.
+const TYPES: { label: string; words: string[]; also?: string[]; exclude?: string[] }[] = [
   // Hettegensere før gensere, så «hoodie» gir bare hoodies, mens «genser» også tar med hoodies.
-  { label: "hettegensere", words: ["hoodie", "hettegenser", "hettejakke", "zip hoodie"] },
-  { label: "gensere", words: ["genser", "sweater", "sweatshirt", "collegegenser", "strikk", "strikkegenser", "pullover", "crewneck", "halfzip", "half-zip", "quarter zip", "quarter-zip", "cardigan", "hoodie"] },
-  { label: "jakker", words: ["jakke", "jacket", "coat", "kåpe", "frakk", "dunjakke", "puffer", "parkas", "bomberjakke", "vest"] },
-  // «sweatshirt» inneholder «tshirt», så den holdes utenfor.
-  { label: "t-skjorter", words: ["t-skjorte", "tskjorte", "t-shirt", "tshirt", "tee"], exclude: ["sweatshirt"] },
-  // «shirt» står også i «t-shirt», så t-skjorter holdes utenfor.
-  { label: "skjorter", words: ["skjorte", "shirt", "oxford", "flanell", "overshirt"], exclude: ["t-shirt", "tshirt", "t-skjorte", "tskjorte", "sweatshirt"] },
-  { label: "poloer", words: ["polo", "piké", "pique"] },
-  { label: "bukser", words: ["bukse", "pants", "trousers", "chinos", "chino", "jeans", "cargo", "joggebukse", "jogger", "sweatpants"] },
-  { label: "jeans", words: ["jeans", "dongeri", "denim"] },
-  { label: "shorts", words: ["shorts"] },
-  { label: "sko", words: ["sko", "shoes", "sneakers", "sneaker", "joggesko", "boots", "støvel", "støvler", "loafers", "loafer"] },
-  { label: "luer og caps", words: ["caps", "cap", "lue", "lua", "beanie", "hatt", "hat", "bøttehatt", "bucket hat"] },
-  { label: "kjoler", words: ["kjole", "dress"] },
-  { label: "skjørt", words: ["skjørt", "skirt"] },
-  { label: "vesker", words: ["veske", "bag", "sekk", "ryggsekk", "tote", "bæreveske"] },
-  { label: "sokker", words: ["sokker", "sokk", "socks"] },
-  { label: "undertøy", words: ["undertøy", "boxer", "truse", "underwear", "bh"] },
-  { label: "smykker", words: ["smykke", "kjede", "halskjede", "armbånd", "øredobber", "jewelry", "necklace", "bracelet"] },
-  { label: "skjerf", words: ["skjerf", "scarf"] },
-  { label: "hansker", words: ["hansker", "votter", "gloves"] },
-  { label: "belter", words: ["belte", "belt"] },
-  { label: "tights", words: ["tights", "leggings"] },
+  {
+    label: "hettegensere",
+    words: ["hoodie", "hettegenser", "hettejakke", "zip hoodie"],
+    also: ["hoody", "luvtröja", "huvtröja", "hættetrøje", "kapuzenpullover", "kapuzenjacke", "sudadera con capucha", "capucha", "sweat à capuche", "felpa con cappuccio"],
+  },
+  {
+    label: "gensere",
+    words: ["genser", "sweater", "sweatshirt", "collegegenser", "strikk", "strikkegenser", "pullover", "crewneck", "halfzip", "half-zip", "quarter zip", "quarter-zip", "cardigan", "hoodie"],
+    also: ["tröja", "tröjor", "trøje", "trøjer", "pulli", "pullunder", "strickpullover", "suéter", "sueter", "sudadera", "jersey", "pull", "maglione", "jumper", "knit", "knitwear"],
+  },
+  {
+    label: "jakker",
+    words: ["jakke", "jacket", "coat", "kåpe", "frakk", "dunjakke", "puffer", "parkas", "bomberjakke", "vest"],
+    also: ["jacka", "jackor", "jakker", "jacke", "jacken", "mantel", "chaqueta", "abrigo", "veste", "blouson", "manteau", "giacca", "cappotto", "overcoat", "windbreaker"],
+  },
+  {
+    label: "t-skjorter",
+    words: ["t-skjorte", "tskjorte", "t-shirt", "tshirt", "tee"],
+    also: ["t-tröja", "tröja kortärmad", "camiseta", "maglietta", "tee-shirt", "t shirt", "tees"],
+    // «sweatshirt» inneholder «tshirt», så den holdes utenfor.
+    exclude: ["sweatshirt"],
+  },
+  {
+    label: "skjorter",
+    words: ["skjorte", "shirt", "oxford", "flanell", "overshirt"],
+    also: ["skjorta", "skjortor", "hemd", "hemden", "camisa", "chemise", "camicia", "button-down", "button down"],
+    // «shirt» står også i «t-shirt», så t-skjorter holdes utenfor.
+    exclude: ["t-shirt", "tshirt", "t-skjorte", "tskjorte", "sweatshirt"],
+  },
+  { label: "poloer", words: ["polo", "piké", "pique"], also: ["poloshirt", "pikétröja", "polohemd", "polo shirt"] },
+  {
+    label: "bukser",
+    words: ["bukse", "pants", "trousers", "chinos", "chino", "jeans", "cargo", "joggebukse", "jogger", "sweatpants"],
+    also: ["byxor", "byxa", "bukser", "hose", "hosen", "pantalones", "pantalón", "pantalon", "pantaloni", "slacks"],
+  },
+  { label: "jeans", words: ["jeans", "dongeri", "denim"], also: ["vaqueros", "jean"] },
+  { label: "shorts", words: ["shorts"], also: ["kortbyxor", "kurze hose", "pantalones cortos", "bermuda", "pantaloncini"] },
+  {
+    label: "sko",
+    words: ["sko", "shoes", "sneakers", "sneaker", "joggesko", "boots", "støvel", "støvler", "loafers", "loafer"],
+    also: ["skor", "skon", "schuhe", "schuh", "zapatos", "zapatillas", "chaussures", "baskets", "scarpe", "trainers", "kicks", "footwear"],
+  },
+  {
+    label: "luer og caps",
+    words: ["caps", "cap", "lue", "lua", "beanie", "hatt", "hat", "bøttehatt", "bucket hat"],
+    also: ["keps", "mössa", "hue", "kasket", "mütze", "kappe", "gorra", "gorro", "casquette", "bonnet", "cappello", "berretto"],
+  },
+  { label: "kjoler", words: ["kjole", "dress"], also: ["klänning", "kleid", "vestido", "robe", "vestito", "abito"] },
+  { label: "skjørt", words: ["skjørt", "skirt"], also: ["kjol", "nederdel", "rock", "falda", "jupe", "gonna"] },
+  {
+    label: "vesker",
+    words: ["veske", "bag", "sekk", "ryggsekk", "tote", "bæreveske"],
+    also: ["väska", "ryggsäck", "taske", "rygsæk", "tasche", "rucksack", "bolso", "mochila", "sac", "sac à dos", "borsa", "zaino", "backpack"],
+  },
+  { label: "sokker", words: ["sokker", "sokk", "socks"], also: ["strumpor", "strømper", "socken", "calcetines", "chaussettes", "calzini"] },
+  { label: "undertøy", words: ["undertøy", "boxer", "truse", "underwear", "bh"], also: ["underkläder", "undertøj", "unterwäsche", "ropa interior", "sous-vêtements", "boxershorts"] },
+  {
+    label: "smykker",
+    words: ["smykke", "kjede", "halskjede", "armbånd", "øredobber", "jewelry", "necklace", "bracelet"],
+    also: ["smycke", "smykker", "schmuck", "kette", "joyas", "collar", "bijoux", "collier", "gioielli", "jewellery", "ring", "earrings"],
+  },
+  { label: "skjerf", words: ["skjerf", "scarf"], also: ["halsduk", "tørklæde", "schal", "bufanda", "écharpe", "sciarpa"] },
+  { label: "hansker", words: ["hansker", "votter", "gloves"], also: ["handskar", "vanter", "handschuhe", "guantes", "gants", "guanti"] },
+  { label: "belter", words: ["belte", "belt"], also: ["bälte", "bælte", "gürtel", "cinturón", "ceinture", "cintura"] },
+  { label: "tights", words: ["tights", "leggings"], also: ["mallas", "leggins"] },
+  { label: "plakater", words: ["poster", "plakat", "canvas", "print"], also: ["affisch", "tavla", "cartel", "affiche", "wall art"] },
 ];
 
 // Vage ønsker -> produkttyper/ord. soft = kan droppes hvis søket gir null treff.
 const CONCEPTS: { triggers: string[]; label: string; words: string[]; style?: string }[] = [
   {
-    triggers: ["varm", "varmt", "varme", "vinter", "vinteren", "kald", "kaldt", "kulde", "vinterklær"],
+    triggers: [
+      "varm", "varmt", "varme", "vinter", "vinteren", "kald", "kaldt", "kulde", "vinterklær",
+      "warm", "winter", "cold", "cozy", "cosy", "vintern", "kallt", "varma", "kalt", "winterlich", "caliente", "abrigado", "invierno", "frío", "chaud", "hiver", "froid", "caldo", "inverno", "freddo",
+    ],
     label: "varme plagg",
-    words: ["genser", "sweater", "strikk", "hoodie", "hettegenser", "jakke", "jacket", "dunjakke", "puffer", "fleece", "ull", "wool", "lue", "beanie", "skjerf", "hansker", "votter", "cardigan"],
+    words: ["genser", "sweater", "sweatshirt", "strikk", "hoodie", "hettegenser", "jakke", "jacket", "dunjakke", "puffer", "fleece", "ull", "wool", "lue", "beanie", "skjerf", "hansker", "votter", "cardigan"],
   },
   {
-    triggers: ["sommer", "sommeren", "sol", "strand", "ferie", "sommerklær"],
+    triggers: ["sommer", "sommeren", "sol", "strand", "ferie", "sommerklær", "summer", "beach", "holiday", "sommar", "verano", "playa", "été", "plage", "estate", "spiaggia"],
     label: "sommerklær",
     words: ["t-skjorte", "t-shirt", "tee", "shorts", "singlet", "polo", "lin", "linen", "caps", "cap"],
   },
   {
-    triggers: ["fest", "festlig", "pent", "pen", "pene", "bryllup", "date", "julebord", "konfirmasjon", "bursdag", "middag"],
+    triggers: ["fest", "festlig", "pent", "pen", "pene", "bryllup", "date", "julebord", "konfirmasjon", "bursdag", "middag", "party", "wedding", "formal", "dinner", "elegant", "bröllop", "feier", "hochzeit", "fiesta", "boda", "fête", "soirée", "mariage", "festa", "matrimonio"],
     label: "pene klær",
     words: ["skjorte", "shirt", "kjole", "blazer", "polo", "loafers", "chinos", "oxford"],
   },
   {
-    triggers: ["trening", "trene", "gym", "løping", "løpe", "sport", "treningsklær"],
+    triggers: ["trening", "trene", "gym", "løping", "løpe", "sport", "treningsklær", "training", "workout", "running", "fitness", "träning", "löpning", "laufen", "deporte", "entrenamiento", "correr", "sportif", "allenamento"],
     label: "treningsklær",
     words: ["shorts", "tights", "t-skjorte", "t-shirt", "tee", "track", "jogger", "sports"],
     style: "sporty",
   },
   {
-    triggers: ["bil", "biler", "bilen", "bilklær", "motor", "racing", "rally"],
+    triggers: ["bil", "biler", "bilen", "bilklær", "motor", "racing", "rally", "car", "cars", "auto", "bilar", "coche", "coches", "voiture", "macchina"],
     label: "bilmotiver",
     words: ["car", "cars", "bil", "porsche", "bmw", "audi", "ferrari", "mercedes", "nissan", "toyota", "racing", "speed", "motor", "gt"],
   },
   {
-    triggers: ["regn", "regnvær", "vått", "vind"],
+    triggers: ["regn", "regnvær", "vått", "vind", "rain", "rainy", "wind", "regnet", "regen", "lluvia", "pluie", "pioggia"],
     label: "regntøy",
     words: ["regnjakke", "skalljakke", "shell", "gore-tex", "anorak", "vindjakke"],
   },
 ];
 
-const COLORS: { label: string; words: string[] }[] = [
-  { label: "svart", words: ["svart", "svarte", "sort", "sorte", "black"] },
-  { label: "hvit", words: ["hvit", "hvite", "hvitt", "white", "offwhite", "off-white"] },
-  { label: "grå", words: ["grå", "grått", "grey", "gray"] },
-  { label: "blå", words: ["blå", "blått", "blue", "navy", "marine", "marineblå"] },
-  { label: "rød", words: ["rød", "røde", "rødt", "red", "burgunder", "bordeaux"] },
-  { label: "grønn", words: ["grønn", "grønne", "grønt", "green", "oliven", "olive"] },
-  { label: "beige", words: ["beige", "sand", "creme", "krem", "cream", "khaki"] },
-  { label: "brun", words: ["brun", "brune", "brunt", "brown"] },
-  { label: "rosa", words: ["rosa", "pink"] },
-  { label: "gul", words: ["gul", "gule", "gult", "yellow"] },
-  { label: "lilla", words: ["lilla", "purple"] },
-  { label: "oransje", words: ["oransje", "orange"] },
+const COLORS: { label: string; words: string[]; also?: string[] }[] = [
+  { label: "svart", words: ["svart", "svarte", "sort", "sorte", "black"], also: ["svarta", "schwarz", "negro", "negra", "noir", "noire", "nero"] },
+  { label: "hvit", words: ["hvit", "hvite", "hvitt", "white", "offwhite", "off-white"], also: ["vit", "vita", "hvid", "weiß", "weiss", "blanco", "blanca", "blanc", "blanche", "bianco"] },
+  { label: "grå", words: ["grå", "grått", "grey", "gray"], also: ["grau", "gris", "grigio"] },
+  { label: "blå", words: ["blå", "blått", "blue", "navy", "marine", "marineblå"], also: ["blåa", "blau", "azul", "bleu", "blu"] },
+  { label: "rød", words: ["rød", "røde", "rødt", "red", "burgunder", "bordeaux"], also: ["röd", "röda", "rot", "rojo", "roja", "rouge", "rosso"] },
+  { label: "grønn", words: ["grønn", "grønne", "grønt", "green", "oliven", "olive"], also: ["grön", "gröna", "grøn", "grün", "verde", "vert"] },
+  { label: "beige", words: ["beige", "sand", "creme", "krem", "cream", "khaki"], also: ["crème"] },
+  { label: "brun", words: ["brun", "brune", "brunt", "brown"], also: ["bruna", "braun", "marrón", "marron", "marrone"] },
+  { label: "rosa", words: ["rosa", "pink"], also: ["rose"] },
+  { label: "gul", words: ["gul", "gule", "gult", "yellow"], also: ["gula", "gelb", "amarillo", "jaune", "giallo"] },
+  { label: "lilla", words: ["lilla", "purple"], also: ["lila", "violett", "morado", "violet", "viola"] },
+  { label: "oransje", words: ["oransje", "orange"], also: ["naranja", "arancione"] },
 ];
 
 const GENDERS: { gender: "herre" | "dame"; words: string[] }[] = [
-  { gender: "herre", words: ["herre", "herrer", "mann", "menn", "gutt", "gutter", "gutta", "kjæreste-han", "men", "mens"] },
-  { gender: "dame", words: ["dame", "damer", "kvinne", "kvinner", "jente", "jenter", "jentene", "women", "womens"] },
+  {
+    gender: "herre",
+    words: ["herre", "herrer", "mann", "menn", "gutt", "gutter", "gutta", "men", "mens", "man", "male", "guy", "guys", "boy", "boys", "herr", "herrar", "kille", "killar", "dreng", "herren", "männer", "hombre", "hombres", "chico", "homme", "hommes", "uomo"],
+  },
+  {
+    gender: "dame",
+    words: ["dame", "damer", "kvinne", "kvinner", "jente", "jenter", "jentene", "women", "womens", "woman", "female", "girl", "girls", "dam", "damen", "tjej", "tjejer", "pige", "piger", "frauen", "mädchen", "mujer", "mujeres", "chica", "femme", "femmes", "donna"],
+  },
 ];
 
 const STOPWORDS = new Set([
@@ -106,6 +159,12 @@ const STOPWORDS = new Set([
   "ser", "leter", "trenger", "kul", "kule", "fin", "fine", "nice", "litt", "helst", "gjerne", "the", "a", "and", "of",
   "min", "mitt", "mine", "meg", "kan", "skal", "være", "er", "det", "den", "de", "av", "bra", "god", "gode", "ny", "nye",
   "kr", "kroner", "nok", "pris", "eller", "også", "veldig", "type", "slags", "sånn", "sånne", "ting", "klær", "plagg",
+  // engelsk
+  "something", "some", "want", "need", "looking", "look", "with", "to", "an", "my", "me", "please", "good", "new", "clothes", "clothing", "in", "on", "that", "is", "are", "or",
+  // svensk / dansk
+  "något", "nogen", "noget", "och", "att", "jag", "vill", "har", "söker", "kläder", "tøj", "med", "til",
+  // tysk / spansk / fransk
+  "etwas", "für", "ich", "möchte", "suche", "mit", "und", "kleidung", "algo", "para", "quiero", "busco", "con", "y", "ropa", "un", "una", "quelque", "chose", "pour", "je", "veux", "cherche", "avec", "et", "vêtements", "une",
 ]);
 
 const LETTER_SIZES = ["xxxl", "xxl", "xl", "xs", "s", "m", "l"];
@@ -155,7 +214,7 @@ function closestType(word: string): (typeof TYPES)[number] | undefined {
   const maxDist = word.length >= 7 ? 2 : 1;
   let best: { type: (typeof TYPES)[number]; dist: number } | undefined;
   for (const type of TYPES) {
-    for (const w of type.words) {
+    for (const w of [...type.words, ...(type.also || [])]) {
       if (w.length < 4) continue;
       const dist = Math.min(...stems(word).map((f) => editDistance(f, w)));
       if (dist <= maxDist && (!best || dist < best.dist)) best = { type, dist };
@@ -177,7 +236,30 @@ function formatKr(n: number) {
 
 // ---------- Tolking ----------
 
-export function parseSmartQuery(input: string): SmartQuery {
+// Ordforråd fra produktene (titler, tagger, kategorier), brukes til å rette skrivefeil som «porshe» -> «porsche».
+export function buildVocabulary(products: Product[]): string[] {
+  const words = new Set<string>();
+  for (const p of products) {
+    for (const w of `${p.title} ${p.category} ${p.tags.join(" ")}`.toLowerCase().split(/[^a-zæøåäöüéèàáíóúñç0-9-]+/)) {
+      if (w.length >= 4 && !/^\d+$/.test(w)) words.add(w);
+    }
+  }
+  return Array.from(words);
+}
+
+// Nærmeste ord i produktenes ordforråd, eller null hvis ingen ligner nok.
+function closestVocabWord(word: string, vocab: string[]): string | null {
+  if (word.length < 4) return null;
+  const maxDist = word.length >= 7 ? 2 : 1;
+  let best: { w: string; d: number } | null = null;
+  for (const w of vocab) {
+    const d = editDistance(word, w);
+    if (d <= maxDist && (!best || d < best.d)) best = { w, d };
+  }
+  return best?.w ?? null;
+}
+
+export function parseSmartQuery(input: string, vocab: string[] = []): SmartQuery {
   // «t skjorte», «t shirt» og skrivefeil som «t shorte» -> «t-skjorte»
   let q = ` ${input.toLowerCase().replace(/(^|\s)t[\s-]+([a-zæøå]+)/g, (match, pre: string, word: string) =>
     ["skjorte", "skjorter", "shirt", "shirts"].some((w) => editDistance(word, w) <= 2) ? `${pre}t-skjorte` : match
@@ -185,29 +267,30 @@ export function parseSmartQuery(input: string): SmartQuery {
   const result: SmartQuery = { groups: [], colors: [], styles: [], minPrice: null, maxPrice: null, sizes: [], gender: null, summary: "" };
 
   // Pris
-  const between = q.match(/mellom\s+(\d+)\s*(?:kr)?\s+og\s+(\d+)/);
+  const between = q.match(/(?:mellom|between|zwischen|entre|mellan)\s+(\d+)\s*(?:kr|nok)?\s+(?:og|and|und|y|et|och)\s+(\d+)/);
   if (between) {
     result.minPrice = +between[1];
     result.maxPrice = +between[2];
     q = q.replace(between[0], " ");
   }
-  const under = q.match(/(?:under|maks(?:imum)?|mindre enn|opptil|billigere enn)\s+(\d+)/);
+  const under = q.match(/(?:under|maks(?:imum)?|mindre enn|opptil|billigere enn|below|less than|max|cheaper than|unter|bis|menos de|moins de|sotto|högst)\s+(\d+)/);
   if (under) {
     result.maxPrice = +under[1];
     q = q.replace(under[0], " ");
   }
-  const over = q.match(/(?:over|minst|mer enn|dyrere enn)\s+(\d+)/);
+  const over = q.match(/(?:over|minst|mer enn|dyrere enn|above|more than|at least|über|ab|más de|plus de|sopra|minst)\s+(\d+)/);
   if (over) {
     result.minPrice = +over[1];
     q = q.replace(over[0], " ");
   }
-  if (/\b(billig|billige|billigst|rimelig|rimelige|budsjett)\b/.test(q)) {
+  const CHEAP = /(^|\s)(billig|billige|billigst|rimelig|rimelige|budsjett|cheap|cheapest|budget|affordable|billiga|billigt|günstig|barato|barata|económico|pas cher|economico)(?=\s)/g;
+  if (CHEAP.test(q)) {
     if (result.maxPrice === null) result.maxPrice = 500;
-    q = q.replace(/\b(billig|billige|billigst|rimelig|rimelige|budsjett)\b/g, " ");
+    q = q.replace(CHEAP, " ");
   }
 
   // Størrelse
-  const size = q.match(/\s(?:str\.?|størrelse|size)\s*(xxxl|xxl|xl|xs|s|m|l|\d{1,2}(?:[.,]5)?)(?=\s)/);
+  const size = q.match(/\s(?:str\.?|størrelse|size|storlek|größe|grösse|talla|taille|taglia)\s*(xxxl|xxl|xl|xs|s|m|l|\d{1,2}(?:[.,]5)?)(?=\s)/);
   if (size) {
     const raw = size[1].replace(",", ".");
     result.sizes = /^\d+(\.\d+)?$/.test(raw) ? SHOE_SIZE_TABLE.find((r) => r.includes(raw)) ?? [raw] : [raw];
@@ -227,9 +310,22 @@ export function parseSmartQuery(input: string): SmartQuery {
     q = ` ${rest} `;
   }
 
-  // Ord for ord
-  const words = q.replace(/[^a-zæøå0-9\- ]/g, " ").split(/\s+/).filter(Boolean);
+  // Produkttyper på flere ord («bucket hat», «sudadera con capucha»)
   const usedTypes = new Set<string>();
+  for (const type of TYPES) {
+    for (const phrase of [...type.words, ...(type.also || [])].filter((w) => w.includes(" "))) {
+      if (q.includes(` ${phrase} `)) {
+        q = q.replace(` ${phrase} `, " ");
+        if (!usedTypes.has(type.label)) {
+          usedTypes.add(type.label);
+          result.groups.push({ label: type.label, words: type.words, soft: false, exclude: type.exclude });
+        }
+      }
+    }
+  }
+
+  // Ord for ord
+  const words = q.replace(/[^a-zæøåäöüéèàáíóúñç0-9\- ]/g, " ").split(/\s+/).filter(Boolean);
   for (const word of words) {
     if (STOPWORDS.has(word) || /^\d+$/.test(word)) continue;
 
@@ -238,9 +334,11 @@ export function parseSmartQuery(input: string): SmartQuery {
       result.gender = gender.gender;
       continue;
     }
-    const color = COLORS.find((c) => c.words.includes(word));
+    const color = COLORS.find((c) => c.words.includes(word) || (c.also || []).includes(word));
     if (color) {
-      if (!result.colors.includes(color)) result.colors.push(color);
+      if (!result.colors.some((c) => c.label === color.label)) {
+        result.colors.push({ label: color.label, words: [...color.words, ...(color.also || [])] });
+      }
       continue;
     }
     const concept = CONCEPTS.find((c) => exactIn(word, c.triggers));
@@ -251,7 +349,7 @@ export function parseSmartQuery(input: string): SmartQuery {
       }
       continue;
     }
-    const type = TYPES.find((t) => exactIn(word, t.words)) ?? closestType(word);
+    const type = TYPES.find((t) => exactIn(word, [...t.words, ...(t.also || [])])) ?? closestType(word);
     if (type) {
       if (!usedTypes.has(type.label)) {
         usedTypes.add(type.label);
@@ -260,7 +358,10 @@ export function parseSmartQuery(input: string): SmartQuery {
       continue;
     }
     // Ukjent ord (merke, motiv, «porsche» …): må finnes i produktet.
-    result.groups.push({ label: word, words: stems(word), soft: false });
+    // Finnes det ikke, men ligner et ord i produktene («porshe»), brukes det ordet.
+    const known = stems(word).some((f) => vocab.some((v) => v.includes(f)));
+    const corrected = !known && vocab.length ? closestVocabWord(word, vocab) : null;
+    result.groups.push(corrected ? { label: corrected, words: [corrected], soft: false } : { label: word, words: stems(word), soft: false });
   }
 
   // Flere produkttyper («gensere og jakker») = ett av dem, ikke alle.
