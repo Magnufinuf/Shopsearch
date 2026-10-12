@@ -64,7 +64,7 @@ export default function Home() {
       let hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p)));
       if (hits.length === 0) hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p), false));
       if (hits.length > 0) {
-        setAiSummary(ai.summary);
+        setAiSummary(`✨ ${ai.summary}`);
         setResults(hits);
         setLoading(false);
         return;
@@ -82,7 +82,7 @@ export default function Home() {
       summary = "Ingen helt like treff – her er det nærmeste vi fant";
     }
 
-    setAiSummary(hits.length > 0 && summary ? summary : null);
+    setAiSummary(hits.length > 0 && summary ? `🔎 ${summary}` : null);
     setResults(hits);
     setLoading(false);
   }
@@ -172,7 +172,7 @@ export default function Home() {
         {loading && <p style={{ opacity: 0.6 }}>Søker...</p>}
 
         {!loading && aiSummary && (
-          <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>🔎 {aiSummary}</p>
+          <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>{aiSummary}</p>
         )}
 
         {!loading && searched && results.length === 0 && (
