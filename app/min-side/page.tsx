@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Advert, shareAdvert, storeUrl } from "@/lib/adverts";
 import { fetchUser, logoutUser, setSaved, UserInfo } from "@/lib/user-client";
+import SendAdvertDialog from "../components/SendAdvertDialog";
+
+type InboxItem = {
+  id: string;
+  message: string | null;
+  seen: boolean;
+  createdAt: string;
+  from: string;
+  advert: Advert;
+};
 
 const smallButton: React.CSSProperties = {
   padding: "6px 12px",
@@ -15,10 +25,52 @@ const smallButton: React.CSSProperties = {
   cursor: "pointer",
 };
 
+const grid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 };
+
+function AdvertCard({
+  advert: a,
+  header,
+  onSend,
+  children,
+}: {
+  advert: Advert;
+  header?: React.ReactNode;
+  onSend: () => void;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div style={{ border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      {header && <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)" }}>{header}</div>}
+      <Link href={`/adverts?annonse=${a.id}`} style={{ display: "block", aspectRatio: "9 / 12", backgroundColor: "black" }}>
+        {a.media_type === "video" ? (
+          <video src={a.media_url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <img src={a.media_url} alt={a.caption} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        )}
+      </Link>
+      <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{a.store_domain.replace(".myshopify.com", "")}</p>
+        {a.caption && <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>{a.caption}</p>}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: "auto" }}>
+          <a href={storeUrl(a.store_domain)} target="_blank" rel="noopener noreferrer" style={{ ...smallButton, backgroundColor: "var(--primary)", color: "white", border: "none" }}>
+            Kjøp
+          </a>
+          <button onClick={onSend} style={smallButton}>Send</button>
+          <button onClick={() => shareAdvert(a)} style={smallButton}>Del</button>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MinSide() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [adverts, setAdverts] = useState<Advert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inbox, setInbox] = useState<InboxItem[]>([]);
+  const [tab, setTab] = useState<"mottatt" | "lagret">("lagret");
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUser().then((u) => {
@@ -27,12 +79,15 @@ export default function MinSide() {
         setLoading(false);
         return;
       }
-      fetch("/api/user/saved")
-        .then((res) => res.json())
-        .then((data) => {
-          setAdverts(data.adverts || []);
-          setLoading(false);
-        });
+      if (u.unread > 0) setTab("mottatt");
+      Promise.all([
+        fetch("/api/user/saved").then((res) => res.json()),
+        fetch("/api/user/inbox").then((res) => (res.ok ? res.json() : { items: [] })),
+      ]).then(([saved, received]) => {
+        setAdverts(saved.adverts || []);
+        setInbox(received.items || []);
+        setLoading(false);
+      });
     });
   }, []);
 
@@ -43,6 +98,13 @@ export default function MinSide() {
       alert("Noe gikk galt, prøv igjen.");
     }
   }
+
+  // Når innboksen vises, regnes alt som lest.
+  useEffect(() => {
+    if (tab === "mottatt" && inbox.some((i) => !i.seen)) {
+      fetch("/api/user/inbox", { method: "POST" });
+    }
+  }, [tab, inbox]);
 
   async function deleteAccount() {
     if (!confirm("Slette kontoen din? Alle lagrede annonser forsvinner. Dette kan ikke angres.")) return;
@@ -80,39 +142,80 @@ export default function MinSide() {
         <button onClick={logoutUser} style={smallButton}>Logg ut</button>
       </div>
 
-      <h2 style={{ fontSize: 19, fontWeight: 600, marginBottom: 12 }}>Lagrede annonser ({adverts.length})</h2>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {(
+          [
+            ["lagret", `Lagret (${adverts.length})`, 0],
+            ["mottatt", `Mottatt (${inbox.length})`, inbox.filter((i) => !i.seen).length],
+          ] as const
+        ).map(([key, label, badge]) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 999,
+              border: "1px solid var(--border)",
+              backgroundColor: tab === key ? "var(--primary)" : "transparent",
+              color: tab === key ? "white" : "var(--foreground)",
+              fontWeight: 600,
+              fontSize: 14,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            {label}
+            {badge > 0 && (
+              <span style={{ backgroundColor: "#e05252", color: "white", borderRadius: 999, fontSize: 11, padding: "1px 7px" }}>{badge}</span>
+            )}
+          </button>
+        ))}
+      </div>
 
-      {adverts.length === 0 ? (
-        <p style={{ opacity: 0.7 }}>
-          Du har ikke lagret noe ennå. Trykk ♡ på en annonse under{" "}
-          <Link href="/adverts" style={{ color: "var(--primary)" }}>Annonser</Link> for å lagre den her.
-        </p>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-          {adverts.map((a) => (
-            <div key={a.id} style={{ border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-              <Link href={`/adverts?annonse=${a.id}`} style={{ display: "block", aspectRatio: "9 / 12", backgroundColor: "black" }}>
-                {a.media_type === "video" ? (
-                  <video src={a.media_url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <img src={a.media_url} alt={a.caption} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                )}
-              </Link>
-              <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{a.store_domain.replace(".myshopify.com", "")}</p>
-                {a.caption && <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>{a.caption}</p>}
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: "auto" }}>
-                  <a href={storeUrl(a.store_domain)} target="_blank" rel="noopener noreferrer" style={{ ...smallButton, backgroundColor: "var(--primary)", color: "white", border: "none" }}>
-                    Kjøp
-                  </a>
-                  <button onClick={() => shareAdvert(a)} style={smallButton}>Del</button>
-                  <button onClick={() => remove(a)} style={smallButton}>Fjern</button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {tab === "lagret" &&
+        (adverts.length === 0 ? (
+          <p style={{ opacity: 0.7 }}>
+            Du har ikke lagret noe ennå. Trykk ♡ på en annonse under{" "}
+            <Link href="/adverts" style={{ color: "var(--primary)" }}>Annonser</Link> for å lagre den her.
+          </p>
+        ) : (
+          <div style={grid}>
+            {adverts.map((a) => (
+              <AdvertCard key={a.id} advert={a} onSend={() => setSendingId(String(a.id))}>
+                <button onClick={() => remove(a)} style={smallButton}>Fjern</button>
+              </AdvertCard>
+            ))}
+          </div>
+        ))}
+
+      {tab === "mottatt" &&
+        (inbox.length === 0 ? (
+          <p style={{ opacity: 0.7 }}>
+            Ingen har sendt deg noe ennå. Når noen sender deg en annonse, dukker den opp her.
+          </p>
+        ) : (
+          <div style={grid}>
+            {inbox.map((item) => (
+              <AdvertCard
+                key={item.id}
+                advert={item.advert}
+                onSend={() => setSendingId(String(item.advert.id))}
+                header={
+                  <div style={{ fontSize: 12 }}>
+                    <span style={{ opacity: 0.6 }}>Fra </span>
+                    <strong style={{ wordBreak: "break-all" }}>{item.from}</strong>
+                    {!item.seen && <span style={{ marginLeft: 6, color: "#e05252", fontWeight: 600 }}>Ny</span>}
+                    {item.message && <p style={{ margin: "6px 0 0", fontStyle: "italic", opacity: 0.85 }}>«{item.message}»</p>}
+                  </div>
+                }
+              />
+            ))}
+          </div>
+        ))}
+
+      {sendingId && <SendAdvertDialog advertId={sendingId} onClose={() => setSendingId(null)} />}
 
       <div style={{ marginTop: 56, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
         <button onClick={deleteAccount} style={{ ...smallButton, color: "#e05252", borderColor: "#e05252" }}>
