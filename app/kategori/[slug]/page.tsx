@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
 import { matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
+import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
 import {
   Product,
   CATEGORIES,
@@ -37,6 +38,8 @@ export default function KategoriPage() {
   // Alle produkter (alle kategorier), brukes når søket ikke finner noe i denne kategorien.
   const [everyProduct, setEveryProduct] = useState<Product[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
+  // AI-tolkningen av siste søk, så knappene (kjønn/pris) ikke spør AI-en på nytt.
+  const aiCache = useRef<{ query: string; filters: AiFilters | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [gender, setGender] = useState<Gender | "alle">("alle");
@@ -58,8 +61,13 @@ export default function KategoriPage() {
       });
   }, [slug]);
 
-  function runSearch() {
-    // Samme smarte søk som på forsiden, pluss knappene for kjønn og pris.
+  async function runSearch() {
+    // AI-søk hvis det er satt opp (ANTHROPIC_API_KEY), ellers samme smarte søk som på forsiden.
+    // Knappene for kjønn og pris gjelder uansett.
+    if (query.trim() && aiCache.current?.query !== query) {
+      aiCache.current = { query, filters: await fetchAiFilters(query) };
+    }
+    const ai = query.trim() ? aiCache.current?.filters ?? null : null;
     const smart = parseSmartQuery(query);
     const rangeDef = PRICE_RANGES.find((r) => r.key === priceRange);
     const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo);
@@ -71,7 +79,11 @@ export default function KategoriPage() {
       return matchesRangeMin && matchesRangeMax && matchesGender;
     };
     const search = (list: Product[], strict: boolean) =>
-      list.filter((p) => passesButtons(p) && matchesSmartQuery(p, smart, priceOf(p), strict));
+      list.filter(
+        (p) =>
+          passesButtons(p) &&
+          (ai ? matchesAiFilters(p, ai, priceOf(p), strict) : matchesSmartQuery(p, smart, priceOf(p), strict))
+      );
 
     let hits = search(allProducts, true);
     if (hits.length === 0) hits = search(allProducts, false);
