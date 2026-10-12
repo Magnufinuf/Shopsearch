@@ -36,19 +36,75 @@ function Person({ contact, selected, onClick }: { contact: Contact; selected: bo
 }
 
 function AppButton({ label, color, icon, onClick }: { label: string; color: string; icon: React.ReactNode; onClick: () => void }) {
+  // color kan være en farge eller en gradient.
   return (
     <button
       type="button"
       onClick={onClick}
       style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: 72, flexShrink: 0, background: "none", border: "none", color: "var(--foreground)", cursor: "pointer", padding: 0 }}
     >
-      <span style={{ width: 56, height: 56, borderRadius: 999, backgroundColor: color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700 }}>
+      <span style={{ width: 56, height: 56, borderRadius: 999, background: color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700 }}>
         {icon}
       </span>
       <span style={{ fontSize: 12 }}>{label}</span>
     </button>
   );
 }
+
+// Enkle ikoner for delingsknappene (tegnet selv, ikke offisielle logoer).
+const svg = { width: 28, height: 28, viewBox: "0 0 24 24", fill: "none", stroke: "white", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+const ICONS = {
+  snapchat: (
+    <svg {...svg} stroke="black" strokeWidth={1.6} fill="white">
+      <path d="M12 3c3 0 5 2.2 5 5.2v2.3l1.6-.6c.6-.2 1 .5.5.9l-1.8 1.2c.6 1.6 1.9 2.8 3.4 3.2-.3.8-1.6 1-2.6 1.2-.2.6-.3 1.2-.6 1.2-.6 0-1.4-.3-2.4 0-1.2.4-1.8 1.4-3.1 1.4s-1.9-1-3.1-1.4c-1-.3-1.8 0-2.4 0-.3 0-.4-.6-.6-1.2-1-.2-2.3-.4-2.6-1.2 1.5-.4 2.8-1.6 3.4-3.2L4.9 10.8c-.5-.4-.1-1.1.5-.9l1.6.6V8.2C7 5.2 9 3 12 3Z" />
+    </svg>
+  ),
+  instagram: (
+    <svg {...svg}>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="0.6" fill="white" />
+    </svg>
+  ),
+  messages: (
+    <svg {...svg} fill="white" stroke="none">
+      <path d="M12 3.5c-5 0-9 3.3-9 7.4 0 2.3 1.3 4.4 3.3 5.8-.2 1.4-.9 2.6-1.9 3.6 2 0 3.7-.8 4.9-1.9.9.2 1.8.3 2.7.3 5 0 9-3.3 9-7.4S17 3.5 12 3.5Z" />
+    </svg>
+  ),
+  messenger: (
+    <svg {...svg} fill="white" stroke="none">
+      <path d="M12 2.5C6.6 2.5 2.5 6.5 2.5 11.6c0 2.7 1.1 5 3 6.6v3.3l3-1.7c1.1.3 2.2.5 3.5.5 5.4 0 9.5-4 9.5-9.1S17.4 2.5 12 2.5Zm1 12.1-2.4-2.6-4.7 2.6 5.2-5.5 2.5 2.6 4.6-2.6-5.2 5.5Z" />
+    </svg>
+  ),
+  whatsapp: (
+    <svg {...svg}>
+      <path d="M3.5 20.5 5 16.3A8.5 8.5 0 1 1 8 19.2l-4.5 1.3Z" />
+      <path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.6-2-1-1 1c-1.2-.5-2.4-1.7-2.9-2.9l1-1-1-2L9 8.5Z" fill="white" stroke="none" />
+    </svg>
+  ),
+  facebook: (
+    <svg {...svg} fill="white" stroke="none">
+      <path d="M13.5 21v-7.5H16l.4-3h-2.9V8.7c0-.9.3-1.5 1.5-1.5h1.5V4.5c-.3 0-1.2-.1-2.2-.1-2.2 0-3.8 1.4-3.8 3.9v2.2H8v3h2.5V21h3Z" />
+    </svg>
+  ),
+  chatgpt: (
+    <svg {...svg} strokeWidth={1.7}>
+      <path d="M12 3.2a4.3 4.3 0 0 1 4.2 3.4 4.3 4.3 0 0 1 3 6.5 4.3 4.3 0 0 1-4.1 7.1 4.3 4.3 0 0 1-7.2-.6 4.3 4.3 0 0 1-3-6.5 4.3 4.3 0 0 1 4.1-7.1A4.3 4.3 0 0 1 12 3.2Z" />
+      <path d="M9 9.5 12 7.8l3 1.7v3.5l-3 1.7-3-1.7Z" />
+    </svg>
+  ),
+  copy: (
+    <svg {...svg}>
+      <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" />
+      <path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+    </svg>
+  ),
+  more: (
+    <svg {...svg} fill="white" stroke="none">
+      <circle cx="6" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="18" cy="12" r="1.8" />
+    </svg>
+  ),
+};
 
 const row: React.CSSProperties = { display: "flex", gap: 12, overflowX: "auto", padding: "4px 2px 8px", scrollbarWidth: "none" };
 
@@ -63,7 +119,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const url = advertShareUrl(advert.id);
   const text = advert.caption ? `${advert.caption} – se den på Scavenger` : "Se denne på Scavenger";
@@ -128,14 +184,33 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
     window.open(href, "_blank", "noopener,noreferrer");
   }
 
-  async function copyLink() {
+  function flash(textToShow: string) {
+    setNotice(textToShow);
+    setTimeout(() => setNotice(""), 2500);
+  }
+
+  async function copyLink(): Promise<boolean> {
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      return true;
     } catch {
       prompt("Kopier lenken:", url);
+      return false;
     }
+  }
+
+  const isPhone = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const canNativeShare = typeof navigator !== "undefined" && "share" in navigator;
+
+  // Instagram, TikTok o.l. har ingen «del lenke»-adresse. På mobil åpner vi telefonens delingsmeny
+  // (der appen ligger), ellers kopierer vi lenken og åpner appen så man kan lime den inn.
+  async function shareViaApp(appName: string, fallbackUrl: string) {
+    if (isPhone && canNativeShare) {
+      navigator.share({ title: text, url }).catch(() => {});
+      return;
+    }
+    if (await copyLink()) flash(`Lenken er kopiert – lim den inn i ${appName}`);
+    openApp(fallbackUrl);
   }
 
   const e = encodeURIComponent;
@@ -241,17 +316,58 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
 
         <div style={{ height: 1, backgroundColor: "var(--border)", margin: "6px -16px 14px" }} />
 
+        {notice && (
+          <p style={{ textAlign: "center", fontSize: 13, fontWeight: 600, margin: "0 0 10px", color: "var(--primary)" }}>{notice}</p>
+        )}
+
         {/* Andre apper */}
         <div style={row}>
-          <AppButton label={copied ? "Kopiert!" : "Kopier"} color="#3478F6" icon="🔗" onClick={copyLink} />
-          <AppButton label="WhatsApp" color="#25D366" icon="W" onClick={() => openApp(`https://wa.me/?text=${e(`${text} ${url}`)}`)} />
-          <AppButton label="Facebook" color="#1877F2" icon="f" onClick={() => openApp(`https://www.facebook.com/sharer/sharer.php?u=${e(url)}`)} />
-          <AppButton label="Telegram" color="#29A9EB" icon="✈" onClick={() => openApp(`https://t.me/share/url?url=${e(url)}&text=${e(text)}`)} />
-          <AppButton label="X" color="#000000" icon="𝕏" onClick={() => openApp(`https://x.com/intent/post?url=${e(url)}&text=${e(text)}`)} />
-          <AppButton label="SMS" color="#34C759" icon="💬" onClick={() => window.location.assign(`sms:?&body=${e(`${text} ${url}`)}`)} />
-          <AppButton label="E-post" color="#8E8E93" icon="✉" onClick={() => window.location.assign(`mailto:?subject=${e(text)}&body=${e(url)}`)} />
-          {typeof navigator !== "undefined" && "share" in navigator && (
-            <AppButton label="Mer" color="#636366" icon="•••" onClick={() => navigator.share({ title: text, url }).catch(() => {})} />
+          <AppButton
+            label="Snapchat"
+            color="#FFFC00"
+            icon={ICONS.snapchat}
+            onClick={() => openApp(`https://www.snapchat.com/scan?attachmentUrl=${e(url)}`)}
+          />
+          <AppButton
+            label="Instagram"
+            color="linear-gradient(45deg, #FEDA75, #FA7E1E 25%, #D62976 50%, #962FBF 75%, #4F5BD5)"
+            icon={ICONS.instagram}
+            onClick={() => shareViaApp("Instagram", "https://www.instagram.com/direct/inbox/")}
+          />
+          <AppButton
+            label="Meldinger"
+            color="#34C759"
+            icon={ICONS.messages}
+            onClick={() => window.location.assign(`sms:?&body=${e(`${text} ${url}`)}`)}
+          />
+          <AppButton
+            label="Messenger"
+            color="linear-gradient(45deg, #0099FF, #A033FF 60%, #FF5280 90%)"
+            icon={ICONS.messenger}
+            onClick={() =>
+              isPhone
+                ? window.location.assign(`fb-messenger://share/?link=${e(url)}`)
+                : shareViaApp("Messenger", "https://www.messenger.com/")
+            }
+          />
+          <AppButton label="WhatsApp" color="#25D366" icon={ICONS.whatsapp} onClick={() => openApp(`https://wa.me/?text=${e(`${text} ${url}`)}`)} />
+          <AppButton
+            label="ChatGPT"
+            color="#10A37F"
+            icon={ICONS.chatgpt}
+            onClick={() => openApp(`https://chatgpt.com/?q=${e(`Hva synes du om dette produktet? ${url}`)}`)}
+          />
+          <AppButton label="Facebook" color="#1877F2" icon={ICONS.facebook} onClick={() => openApp(`https://www.facebook.com/sharer/sharer.php?u=${e(url)}`)} />
+          <AppButton
+            label="Kopier"
+            color="#3478F6"
+            icon={ICONS.copy}
+            onClick={async () => {
+              if (await copyLink()) flash("Lenken er kopiert!");
+            }}
+          />
+          {canNativeShare && (
+            <AppButton label="Mer" color="#636366" icon={ICONS.more} onClick={() => navigator.share({ title: text, url }).catch(() => {})} />
           )}
         </div>
       </div>
