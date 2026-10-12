@@ -26,9 +26,9 @@ export default function PersonvernPage() {
       <H2>Når du lager en konto</H2>
       <p>
         Logger du inn for å lagre annonser, lagrer vi e-postadressen din og hvilke annonser du har lagret. For å logge
-        inn sender vi en engangskode til e-posten din. Grunnlaget er avtalen med deg om å levere tjenesten. Sender du en
-        annonse til noen, lagrer vi mottakerens e-postadresse og hilsenen din, og mottakeren får en e-post som viser
-        din e-postadresse. Du kan slette kontoen din når som helst på Min side, og da slettes alt vi har lagret om deg.
+        inn sender vi en engangskode til e-posten din. Grunnlaget er avtalen med deg om å levere tjenesten. Velger du et
+        brukernavn, kan andre brukere se det og sende annonser til deg med det. Sender du en annonse til noen, lagrer vi
+        mottakerens e-postadresse og hilsenen din, og mottakeren ser brukernavnet ditt (ikke e-postadressen din). Du kan slette kontoen din når som helst på Min side, og da slettes alt vi har lagret om deg.
       </p>
 
       <H2>Når du kontakter oss</H2>

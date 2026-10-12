@@ -15,19 +15,3 @@ export function storeUrl(storeDomain: string): string {
 export function advertShareUrl(id: string): string {
   return `${window.location.origin}/adverts?annonse=${encodeURIComponent(id)}`;
 }
-
-// Åpner telefonens delingsmeny (Snap, SMS, Messenger …), eller kopierer lenken på PC.
-export async function shareAdvert(advert: Advert) {
-  const url = advertShareUrl(advert.id);
-  const title = advert.caption || "Se denne på Scavenger";
-  if (navigator.share) {
-    await navigator.share({ title, url }).catch(() => {});
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(url);
-    alert("Lenken er kopiert! Lim den inn der du vil dele den.");
-  } catch {
-    prompt("Kopier lenken:", url);
-  }
-}

@@ -7,7 +7,7 @@ export async function GET() {
   if (!userId) return NextResponse.json({ loggedIn: false, email: null, savedIds: [], unread: 0 });
 
   const [{ data: user }, { data: saved }] = await Promise.all([
-    supabase.from("users").select("email").eq("id", userId).maybeSingle(),
+    supabase.from("users").select("email, username").eq("id", userId).maybeSingle(),
     supabase.from("saved_adverts").select("advert_id").eq("user_id", userId),
   ]);
 
@@ -24,6 +24,7 @@ export async function GET() {
     unread: unread ?? 0,
     loggedIn: true,
     email: user.email,
+    username: user.username ?? null,
     savedIds: (saved || []).map((s) => String(s.advert_id)),
   });
 }

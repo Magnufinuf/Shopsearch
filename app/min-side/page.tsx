@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Advert, shareAdvert, storeUrl } from "@/lib/adverts";
+import { Advert, storeUrl } from "@/lib/adverts";
 import { fetchUser, logoutUser, setSaved, UserInfo } from "@/lib/user-client";
-import SendAdvertDialog from "../components/SendAdvertDialog";
+import ShareSheet from "../components/ShareSheet";
+import UsernameForm from "../components/UsernameForm";
 
 type InboxItem = {
   id: string;
   message: string | null;
   seen: boolean;
   createdAt: string;
-  from: string;
+  from: string | null;
   advert: Advert;
 };
 
@@ -30,12 +31,12 @@ const grid: React.CSSProperties = { display: "grid", gridTemplateColumns: "repea
 function AdvertCard({
   advert: a,
   header,
-  onSend,
+  onShare,
   children,
 }: {
   advert: Advert;
   header?: React.ReactNode;
-  onSend: () => void;
+  onShare: () => void;
   children?: React.ReactNode;
 }) {
   return (
@@ -55,8 +56,7 @@ function AdvertCard({
           <a href={storeUrl(a.store_domain)} target="_blank" rel="noopener noreferrer" style={{ ...smallButton, backgroundColor: "var(--primary)", color: "white", border: "none" }}>
             Kjøp
           </a>
-          <button onClick={onSend} style={smallButton}>Send</button>
-          <button onClick={() => shareAdvert(a)} style={smallButton}>Del</button>
+          <button onClick={onShare} style={smallButton}>Del</button>
           {children}
         </div>
       </div>
@@ -70,7 +70,8 @@ export default function MinSide() {
   const [loading, setLoading] = useState(true);
   const [inbox, setInbox] = useState<InboxItem[]>([]);
   const [tab, setTab] = useState<"mottatt" | "lagret">("lagret");
-  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [sharing, setSharing] = useState<Advert | null>(null);
+  const [editingUsername, setEditingUsername] = useState(false);
 
   useEffect(() => {
     fetchUser().then((u) => {
@@ -137,10 +138,30 @@ export default function MinSide() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 4px" }}>Min side</h1>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>{user.email}</p>
+          <p style={{ margin: 0, fontSize: 14 }}>
+            {user.username ? <strong>{user.username}</strong> : <span style={{ opacity: 0.6 }}>Ingen brukernavn ennå</span>}
+            {!editingUsername && (
+              <button onClick={() => setEditingUsername(true)} style={{ marginLeft: 8, background: "none", border: "none", color: "var(--primary)", fontSize: 13, cursor: "pointer", padding: 0 }}>
+                {user.username ? "Endre" : "Velg brukernavn"}
+              </button>
+            )}
+          </p>
+          <p style={{ margin: "2px 0 0", fontSize: 13, opacity: 0.6 }}>{user.email}</p>
         </div>
         <button onClick={logoutUser} style={smallButton}>Logg ut</button>
       </div>
+
+      {editingUsername && (
+        <div style={{ maxWidth: 420, marginBottom: 24 }}>
+          <UsernameForm
+            initial={user.username || ""}
+            onSaved={(username) => {
+              setUser({ ...user, username });
+              setEditingUsername(false);
+            }}
+          />
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         {(
@@ -183,7 +204,7 @@ export default function MinSide() {
         ) : (
           <div style={grid}>
             {adverts.map((a) => (
-              <AdvertCard key={a.id} advert={a} onSend={() => setSendingId(String(a.id))}>
+              <AdvertCard key={a.id} advert={a} onShare={() => setSharing(a)}>
                 <button onClick={() => remove(a)} style={smallButton}>Fjern</button>
               </AdvertCard>
             ))}
@@ -201,11 +222,11 @@ export default function MinSide() {
               <AdvertCard
                 key={item.id}
                 advert={item.advert}
-                onSend={() => setSendingId(String(item.advert.id))}
+                onShare={() => setSharing(item.advert)}
                 header={
                   <div style={{ fontSize: 12 }}>
                     <span style={{ opacity: 0.6 }}>Fra </span>
-                    <strong style={{ wordBreak: "break-all" }}>{item.from}</strong>
+                    <strong style={{ wordBreak: "break-all" }}>{item.from || "en venn"}</strong>
                     {!item.seen && <span style={{ marginLeft: 6, color: "#e05252", fontWeight: 600 }}>Ny</span>}
                     {item.message && <p style={{ margin: "6px 0 0", fontStyle: "italic", opacity: 0.85 }}>«{item.message}»</p>}
                   </div>
@@ -215,7 +236,7 @@ export default function MinSide() {
           </div>
         ))}
 
-      {sendingId && <SendAdvertDialog advertId={sendingId} onClose={() => setSendingId(null)} />}
+      {sharing && <ShareSheet advert={sharing} onClose={() => setSharing(null)} />}
 
       <div style={{ marginTop: 56, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
         <button onClick={deleteAccount} style={{ ...smallButton, color: "#e05252", borderColor: "#e05252" }}>

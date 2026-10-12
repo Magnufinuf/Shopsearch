@@ -16,7 +16,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("shared_adverts")
-    .select("id, message, seen_at, created_at, users!shared_adverts_from_user_fkey (email), adverts (*)")
+    .select("id, message, seen_at, created_at, users!shared_adverts_from_user_fkey (username), adverts (*)")
     .eq("to_email", email)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -30,7 +30,7 @@ export async function GET() {
       message: row.message,
       seen: !!row.seen_at,
       createdAt: row.created_at,
-      from: (row.users as unknown as { email: string } | null)?.email ?? "Ukjent",
+      from: (row.users as unknown as { username: string | null } | null)?.username ?? null,
       advert: row.adverts,
     }));
 

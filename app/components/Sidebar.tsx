@@ -28,7 +28,7 @@ export default function Sidebar() {
       if (s.shop) rememberAccount({ shop: s.shop, name: s.displayName || s.shop.replace(".myshopify.com", "") });
     });
     fetchUser().then((u) => {
-      setUserEmail(u.email);
+      setUserEmail(u.username || u.email);
       setUnread(u.unread);
     });
   }, [pathname]);
