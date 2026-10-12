@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { supabase } from "@/lib/supabase";
 import { safeEqual, setSessionCookie } from "@/lib/session";
+import { APP_URL } from "@/lib/app-url";
 
 // Sjekker at svaret faktisk kommer fra Shopify (hmac) og hører til innloggingen vi startet (state).
 function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean {
@@ -62,9 +63,8 @@ export async function GET(req: NextRequest) {
     { onConflict: "store_domain" }
   );
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://shopsearch-gamma.vercel.app";
   const isLogin = req.cookies.get("shopify_oauth_login")?.value === "1";
-  const response = NextResponse.redirect(`${appUrl}${isLogin ? "/admin" : "/registrer/suksess"}`);
+  const response = NextResponse.redirect(`${APP_URL}${isLogin ? "/admin" : "/registrer/suksess"}`);
   response.cookies.delete("shopify_oauth_state");
   response.cookies.delete("shopify_oauth_login");
   setSessionCookie(response, shop);

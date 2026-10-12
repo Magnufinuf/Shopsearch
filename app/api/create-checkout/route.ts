@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getSessionShop, notLoggedIn } from "@/lib/session";
 import { getFreePeriod } from "@/lib/pricing";
+import { APP_URL } from "@/lib/app-url";
 
 const SALES_LIMIT = 300;
 
@@ -66,7 +67,6 @@ export async function POST() {
     );
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   const priceId = process.env.STRIPE_PRICE_ID;
   const secretKey = process.env.STRIPE_SECRET_KEY;
 
@@ -76,9 +76,9 @@ export async function POST() {
   params.append("line_items[0][quantity]", "1");
   params.append(
     "success_url",
-    `${appUrl}/admin?abonnement=suksess&session_id={CHECKOUT_SESSION_ID}`
+    `${APP_URL}/admin?abonnement=suksess&session_id={CHECKOUT_SESSION_ID}`
   );
-  params.append("cancel_url", `${appUrl}/admin`);
+  params.append("cancel_url", `${APP_URL}/admin`);
   params.append("client_reference_id", storeDomain);
 
   const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { getSessionUserId } from "@/lib/session";
 import { escapeHtml, sendEmail } from "@/lib/email";
 import { normalizeUsername } from "@/lib/username";
+import { APP_URL } from "@/lib/app-url";
 
 const MAX_PER_DAY = 20;
 const MAX_MESSAGE = 300;
@@ -73,8 +74,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Noe gikk galt, prøv igjen." }, { status: 500 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://shopsearch-gamma.vercel.app";
-  const link = `${appUrl}/adverts?annonse=${advert.id}`;
+  const link = `${APP_URL}/adverts?annonse=${advert.id}`;
   const store = advert.store_domain.replace(".myshopify.com", "");
 
   await sendEmail(

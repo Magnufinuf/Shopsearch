@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
+import { APP_URL } from "@/lib/app-url";
 
 export async function GET(req: NextRequest) {
   const shop = req.nextUrl.searchParams.get("shop");
@@ -8,11 +9,10 @@ export async function GET(req: NextRequest) {
   }
 
   const clientId = process.env.SHOPIFY_CLIENT_ID;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://shopsearch-gamma.vercel.app";
   if (!clientId || !process.env.SHOPIFY_CLIENT_SECRET) {
-    return NextResponse.redirect(`${appUrl}/logg-inn-bedrift?feil=shopify`);
+    return NextResponse.redirect(`${APP_URL}/logg-inn-bedrift?feil=shopify`);
   }
-  const redirectUri = `${appUrl}/api/auth/callback`;
+  const redirectUri = `${APP_URL}/api/auth/callback`;
   const state = randomBytes(16).toString("hex");
   const scope = "read_products";
 
