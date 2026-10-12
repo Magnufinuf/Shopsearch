@@ -87,14 +87,17 @@ export default function KategoriPage() {
 
     let hits = search(allProducts, true);
     if (hits.length === 0) hits = search(allProducts, false);
-    let message: string | null = null;
+    // ✨ = AI-en tolket søket, 🔎 = det gratis smarte søket.
+    const icon = ai ? "✨" : "🔎";
+    const summary = ai ? ai.summary : smart.summary;
+    let message: string | null = query.trim() && hits.length > 0 && summary ? `${icon} ${summary}` : null;
 
     // Ingenting i denne kategorien? Søk i alle kategorier og si fra.
     if (hits.length === 0 && query.trim()) {
       hits = search(everyProduct, true);
       if (hits.length === 0) hits = search(everyProduct, false);
       if (hits.length > 0) {
-        message = `Ingen treff i ${categoryDef?.label ?? "denne kategorien"} – viser treff fra alle kategorier`;
+        message = `${icon} Ingen treff i ${categoryDef?.label ?? "denne kategorien"} – viser treff fra alle kategorier`;
       }
     }
 
@@ -210,7 +213,7 @@ export default function KategoriPage() {
         </form>
 
         {loading && <p style={{ opacity: 0.6 }}>Laster produkter...</p>}
-        {!loading && notice && <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>🔎 {notice}</p>}
+        {!loading && notice && <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>{notice}</p>}
         {!loading && results.length === 0 && (
           <p style={{ opacity: 0.6 }}>{query.trim() ? "Fant ingen produkter som passer søket." : "Fant ingen produkter i denne kategorien."}</p>
         )}
