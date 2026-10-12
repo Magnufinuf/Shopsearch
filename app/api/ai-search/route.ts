@@ -53,8 +53,8 @@ async function interpret(query: string): Promise<AiFilters | null> {
     // Enkel tolkeoppgave: lav innsats holder, og gjør det raskt og billig.
     output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
     // Hvis modellen avslår et søk, prøver API-et automatisk en annen modell.
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
+    // Finnes ikke for Haiku – der faller vi bare tilbake til det vanlige søket.
+    ...(MODEL.includes("haiku") ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }),
     system: SYSTEM,
     messages: [{ role: "user", content: query }],
   });
