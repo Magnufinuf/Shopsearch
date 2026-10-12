@@ -110,6 +110,8 @@ export default function AdvertsFeed() {
         const all: Advert[] = data.adverts || [];
         const shared = all.find((a) => String(a.id) === sharedId);
         setAdverts(shared ? [shared, ...all.filter((a) => a !== shared)] : all);
+        // ?kommentarer=1 (fra «nevnt i en kommentar»-e-post): åpne kommentarene med en gang.
+        if (shared && new URLSearchParams(window.location.search).get("kommentarer") === "1") setCommenting(shared);
         setLoading(false);
       });
     fetchUser().then((u) => {

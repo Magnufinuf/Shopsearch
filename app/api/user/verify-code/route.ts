@@ -32,14 +32,15 @@ export async function POST(request: Request) {
   const { data: user, error } = await supabase
     .from("users")
     .upsert({ email }, { onConflict: "email" })
-    .select("id")
+    .select("id, username")
     .single();
   if (error || !user) {
     console.error("Kunne ikke lage bruker:", error?.message);
     return NextResponse.json({ error: "Noe gikk galt, prøv igjen." }, { status: 500 });
   }
 
-  const response = NextResponse.json({ success: true });
+  // Nye brukere (og gamle uten brukernavn) må velge brukernavn før de er ferdige.
+  const response = NextResponse.json({ success: true, needsUsername: !user.username });
   setUserCookie(response, user.id);
   return response;
 }

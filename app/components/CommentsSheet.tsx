@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { fetchUser } from "@/lib/user-client";
-import UsernameForm from "./UsernameForm";
+
 
 type Comment = { id: string; text: string; createdAt: string; username: string; canDelete: boolean };
 
@@ -11,6 +11,21 @@ function avatarColor(name: string) {
   let h = 0;
   for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
+// Viser @brukernavn uthevet i kommentarteksten.
+function CommentText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(@[a-z0-9._]{3,20})/gi).map((part, i) =>
+        part.startsWith("@") ? (
+          <strong key={i} style={{ color: "var(--primary)" }}>{part}</strong>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
 }
 
 // "nå", "5 min", "3 t", "2 d", ellers dato.
@@ -38,7 +53,12 @@ export default function CommentsSheet({
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [searchResults, setSearchResults] = useState<string[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // "@ol" på slutten av teksten = brukeren holder på å tagge noen.
+  const mentionQuery = text.match(/@([a-z0-9._]*)$/i)?.[1].toLowerCase() ?? null;
 
   useEffect(() => {
     fetch(`/api/adverts/${advertId}/comments`)
@@ -46,6 +66,29 @@ export default function CommentsSheet({
       .then((data) => setComments(data.comments || []));
     fetchUser().then((u) => setUser({ loggedIn: u.loggedIn, username: u.username ?? null }));
   }, [advertId]);
+
+  // Forslag mens man tagger: folk i tråden først, så søketreff blant alle brukere.
+  useEffect(() => {
+    if (mentionQuery === null || mentionQuery.length < 2) return;
+    const timer = setTimeout(() => {
+      fetch(`/api/user/search?q=${encodeURIComponent(mentionQuery)}`)
+        .then((res) => (res.ok ? res.json() : { users: [] }))
+        .then((data) => setSearchResults(data.users || []));
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [mentionQuery]);
+
+  const suggestions =
+    mentionQuery === null
+      ? []
+      : Array.from(new Set([...(comments || []).map((c) => c.username), ...searchResults]))
+          .filter((n) => n !== user?.username && n.startsWith(mentionQuery))
+          .slice(0, 6);
+
+  function pickMention(name: string) {
+    setText((t) => t.replace(/@([a-z0-9._]*)$/i, `@${name} `));
+    inputRef.current?.focus();
+  }
 
   // Scroll til bunnen når nye kommentarer kommer.
   useEffect(() => {
@@ -65,7 +108,6 @@ export default function CommentsSheet({
     const data = await res.json();
     setSending(false);
     if (!res.ok) {
-      if (data.needsUsername && user) setUser({ ...user, username: null });
       setError(data.error || "Noe gikk galt, prøv igjen.");
       return;
     }
@@ -122,10 +164,13 @@ export default function CommentsSheet({
                   {c.username[0]?.toUpperCase()}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>
-                    <strong style={{ opacity: 1 }}>{c.username}</strong> · {timeAgo(c.createdAt)}
+                  <p style={{ margin: 0, display: "flex", alignItems: "baseline", gap: 8 }}>
+                    <strong style={{ fontSize: 15, fontWeight: 700 }}>{c.username}</strong>
+                    <span style={{ fontSize: 12, opacity: 0.5 }}>{timeAgo(c.createdAt)}</span>
                   </p>
-                  <p style={{ margin: "2px 0 0", fontSize: 15, lineHeight: 1.4, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{c.text}</p>
+                  <p style={{ margin: "2px 0 0", fontSize: 15, lineHeight: 1.4, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>
+                    <CommentText text={c.text} />
+                  </p>
                 </div>
                 {c.canDelete && (
                   <button onClick={() => remove(c)} aria-label="Slett kommentar" style={{ alignSelf: "flex-start", background: "none", border: "none", color: "var(--foreground)", opacity: 0.4, cursor: "pointer", fontSize: 13 }}>
@@ -143,17 +188,32 @@ export default function CommentsSheet({
               <a href={loginHref} style={{ color: "var(--primary)", fontWeight: 600 }}>Logg inn</a>
               <span style={{ opacity: 0.7 }}> for å kommentere</span>
             </p>
-          ) : !user.username ? (
-            <>
-              <p style={{ margin: "0 0 8px", fontSize: 14, opacity: 0.8 }}>Velg et brukernavn for å kommentere.</p>
-              <UsernameForm buttonLabel="Fortsett" onSaved={(username) => { setUser({ ...user, username }); setError(""); }} />
-            </>
           ) : (
+            <>
+            {suggestions.length > 0 && (
+              <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 10 }}>
+                {suggestions.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => pickMention(name)}
+                    style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px 6px 6px", borderRadius: 999, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 14, cursor: "pointer" }}
+                  >
+                    <span style={{ width: 24, height: 24, borderRadius: 999, backgroundColor: avatarColor(name), color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600 }}>
+                      {name[0]?.toUpperCase()}
+                    </span>
+                    {name}
+                  </button>
+                ))}
+              </div>
+            )}
             <form onSubmit={send} style={{ display: "flex", gap: 8 }}>
               <input
+                ref={inputRef}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Legg til en kommentar..."
+                placeholder="Legg til en kommentar... (@ for å tagge)"
+                autoCapitalize="sentences"
                 maxLength={300}
                 style={{ flex: 1, minWidth: 0, padding: "11px 14px", borderRadius: 999, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 16 }}
               />
@@ -165,6 +225,7 @@ export default function CommentsSheet({
                 {sending ? "..." : "Send"}
               </button>
             </form>
+            </>
           )}
           {error && <p style={{ color: "#e05252", fontSize: 13, margin: "8px 0 0" }}>{error}</p>}
         </div>

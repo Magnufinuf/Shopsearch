@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Advert, advertShareUrl } from "@/lib/adverts";
 import { fetchUser } from "@/lib/user-client";
-import UsernameForm from "./UsernameForm";
 
 type Contact = { value: string; label: string };
 
@@ -272,11 +271,6 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
           <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
             <a href={loginHref} style={{ color: "var(--primary)", fontWeight: 600 }}>Logg inn</a>
             <span style={{ opacity: 0.7 }}> for å sende til venner i Scavenger</span>
-          </div>
-        ) : !user.username ? (
-          <div style={{ paddingBottom: 12 }}>
-            <p style={{ margin: "0 0 10px", fontSize: 14, opacity: 0.8 }}>Velg et brukernavn, så kan du sende til venner og de kan sende til deg.</p>
-            <UsernameForm buttonLabel="Fortsett" onSaved={(username) => setUser({ ...user, username })} />
           </div>
         ) : people.length === 0 ? (
           <p style={{ textAlign: "center", fontSize: 14, opacity: 0.65, margin: "8px 0 18px" }}>
