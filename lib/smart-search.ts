@@ -178,8 +178,10 @@ function formatKr(n: number) {
 // ---------- Tolking ----------
 
 export function parseSmartQuery(input: string): SmartQuery {
-  // «t skjorte» / «t shirt» -> «t-skjorte» / «t-shirt»
-  let q = ` ${input.toLowerCase().replace(/\bt\s+(skjorte|skjorter|shirt|shirts)\b/g, "t-$1")} `;
+  // «t skjorte», «t shirt» og skrivefeil som «t shorte» -> «t-skjorte»
+  let q = ` ${input.toLowerCase().replace(/(^|\s)t[\s-]+([a-zæøå]+)/g, (match, pre: string, word: string) =>
+    ["skjorte", "skjorter", "shirt", "shirts"].some((w) => editDistance(word, w) <= 2) ? `${pre}t-skjorte` : match
+  )} `;
   const result: SmartQuery = { groups: [], colors: [], styles: [], minPrice: null, maxPrice: null, sizes: [], gender: null, summary: "" };
 
   // Pris
