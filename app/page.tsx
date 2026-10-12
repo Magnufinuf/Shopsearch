@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
 import { STYLES, extractStyle } from "@/lib/styles";
+import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
 
 type Product = {
@@ -98,6 +99,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [currencyInfo, setCurrencyInfo] = useState<CurrencyInfo | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -113,11 +115,28 @@ export default function Home() {
   async function runSearch(query: string) {
     setLoading(true);
     setSearched(true);
-    const res = await fetch("/api/products");
-    const data = await res.json();
+    setAiSummary(null);
+    // Henter produkter og AI-tolkning samtidig.
+    const [data, ai]: [{ products?: Product[] }, AiFilters | null] = await Promise.all([
+      fetch("/api/products").then((res) => res.json()),
+      fetchAiFilters(query),
+    ]);
     const all: Product[] = data.products || [];
     const info = currencyInfo ?? (await fetchCurrencyInfo(all.map((p) => p.currency)));
     setCurrencyInfo(info);
+
+    // AI-søk først. Gir det ingen treff, prøv uten farge/størrelse, og til slutt vanlig søk.
+    if (ai) {
+      const priceOf = (p: Product) => convertPrice(p.price, p.currency, info);
+      let hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p)));
+      if (hits.length === 0) hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p), false));
+      if (hits.length > 0) {
+        setAiSummary(ai.summary);
+        setResults(hits);
+        setLoading(false);
+        return;
+      }
+    }
 
     // «old money skjorte» -> stil = old money, resten søkes som vanlig.
     const { style, rest } = extractStyle(query);
@@ -226,6 +245,10 @@ export default function Home() {
         </div>
 
         {loading && <p style={{ opacity: 0.6 }}>Søker...</p>}
+
+        {!loading && aiSummary && (
+          <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>✨ {aiSummary}</p>
+        )}
 
         {!loading && searched && results.length === 0 && (
           <p style={{ opacity: 0.6 }}>Fant ingen produkter.</p>
