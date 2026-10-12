@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
-import { extractStyle } from "@/lib/styles";
+import { matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
 import {
   Product,
   CATEGORIES,
@@ -16,74 +16,6 @@ import {
 function withTracking(url: string) {
   const separator = url.includes("?") ? "&" : "?";
   return `${url}${separator}ref=shopsearch&utm_source=shopsearch&utm_medium=referral`;
-}
-
-type ParsedFilters = { min?: number; max?: number; sizeOptions?: string[] };
-
-const LETTER_SIZES = ["xxxl", "xxl", "xl", "xs", "s", "m", "l"];
-
-const SHOE_SIZE_TABLE: string[][] = [
-  ["35", "4", "2.5", "2"],
-  ["36", "4.5", "3", "3.5"],
-  ["37", "5", "4", "4.5"],
-  ["38", "5.5", "4.5", "5"],
-  ["39", "6", "5", "6"],
-  ["40", "6.5", "5.5", "6.5"],
-  ["41", "7.5", "6.5", "7.5"],
-  ["42", "8", "7", "8"],
-  ["43", "9", "8", "9"],
-  ["44", "9.5", "8.5", "9.5"],
-  ["45", "10.5", "9.5", "10.5"],
-  ["46", "11", "10", "11"],
-  ["47", "11.5", "10.5", "12"],
-  ["48", "12.5", "11.5", "13"],
-];
-
-function expandShoeSize(value: string): string[] {
-  const row = SHOE_SIZE_TABLE.find((r) => r.includes(value));
-  return row ? row : [value];
-}
-
-function extractFilters(query: string): { cleanedQuery: string; filters: ParsedFilters } {
-  let cleaned = query;
-  const filters: ParsedFilters = {};
-
-  const betweenMatch = cleaned.match(/mellom\s+(\d+)\s*(?:kr)?\s+og\s+(\d+)\s*(?:kr)?/i);
-  if (betweenMatch) {
-    filters.min = parseInt(betweenMatch[1], 10);
-    filters.max = parseInt(betweenMatch[2], 10);
-    cleaned = cleaned.replace(betweenMatch[0], " ");
-  }
-
-  const underMatch = cleaned.match(/(?:under|maks(?:imum)?|mindre enn)\s+(\d+)\s*(?:kr)?/i);
-  if (underMatch) {
-    filters.max = parseInt(underMatch[1], 10);
-    cleaned = cleaned.replace(underMatch[0], " ");
-  }
-
-  const overMatch = cleaned.match(/(?:over|minst|mer enn)\s+(\d+)\s*(?:kr)?/i);
-  if (overMatch) {
-    filters.min = parseInt(overMatch[1], 10);
-    cleaned = cleaned.replace(overMatch[0], " ");
-  }
-
-  cleaned = cleaned.replace(/\bkr\b/gi, " ");
-
-  const sizeMatch = cleaned.match(/(?:str\.?|størrelse|size)\s*([a-zA-Z0-9.]+)/i);
-  if (sizeMatch) {
-    const raw = sizeMatch[1];
-    filters.sizeOptions = /^\d+(\.\d+)?$/.test(raw) ? expandShoeSize(raw) : [raw];
-    cleaned = cleaned.replace(sizeMatch[0], " ");
-  } else {
-    const words = cleaned.split(/\s+/);
-    const found = words.find((w) => LETTER_SIZES.includes(w.toLowerCase()));
-    if (found) {
-      filters.sizeOptions = [found];
-      cleaned = cleaned.replace(new RegExp(`\\b${found}\\b`, "i"), " ");
-    }
-  }
-
-  return { cleanedQuery: cleaned.replace(/\s+/g, " ").trim(), filters };
 }
 
 type PriceRangeDef = { key: string; label: string; min?: number; max?: number };
@@ -102,6 +34,9 @@ export default function KategoriPage() {
   const categoryDef = getCategoryBySlug(slug);
 
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  // Alle produkter (alle kategorier), brukes når søket ikke finner noe i denne kategorien.
+  const [everyProduct, setEveryProduct] = useState<Product[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [gender, setGender] = useState<Gender | "alle">("alle");
@@ -116,46 +51,43 @@ export default function KategoriPage() {
         const products: Product[] = data.products || [];
         const inCategory = products.filter((p) => categorizeProduct(p) === slug);
         setAllProducts(inCategory);
+        setEveryProduct(products);
         setResults(inCategory);
         setLoading(false);
-        fetchCurrencyInfo(inCategory.map((p) => p.currency)).then(setCurrencyInfo);
+        fetchCurrencyInfo(products.map((p) => p.currency)).then(setCurrencyInfo);
       });
   }, [slug]);
 
   function runSearch() {
-    const { style, rest } = extractStyle(query);
-    const { cleanedQuery, filters } = extractFilters(rest);
-    const words = cleanedQuery.toLowerCase().split(" ").filter(Boolean);
+    // Samme smarte søk som på forsiden, pluss knappene for kjønn og pris.
+    const smart = parseSmartQuery(query);
     const rangeDef = PRICE_RANGES.find((r) => r.key === priceRange);
-
-    const filtered = allProducts.filter((p) => {
-      const text = `${p.title} ${p.category} ${p.vendor} ${p.tags.join(" ")}`.toLowerCase();
-      const matchesWords = words.every((w) => text.includes(w));
-      const price = convertPrice(p.price, p.currency, currencyInfo);
-      const matchesMin = filters.min === undefined || price >= filters.min;
-      const matchesMax = filters.max === undefined || price <= filters.max;
+    const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo);
+    const passesButtons = (p: Product) => {
+      const price = priceOf(p);
       const matchesRangeMin = !rangeDef || rangeDef.min === undefined || price >= rangeDef.min;
       const matchesRangeMax = !rangeDef || rangeDef.max === undefined || price <= rangeDef.max;
-      const matchesSize =
-        !filters.sizeOptions ||
-        (p.sizes || []).some((s) =>
-          filters.sizeOptions!.some((opt) => s.toLowerCase().includes(opt.toLowerCase()))
-        );
       const matchesGender = gender === "alle" || detectGender(p) === gender;
-      const matchesStyle = !style || (p.styles || []).includes(style.slug);
-      return (
-        matchesWords &&
-        matchesMin &&
-        matchesMax &&
-        matchesRangeMin &&
-        matchesRangeMax &&
-        matchesSize &&
-        matchesGender &&
-        matchesStyle
-      );
-    });
+      return matchesRangeMin && matchesRangeMax && matchesGender;
+    };
+    const search = (list: Product[], strict: boolean) =>
+      list.filter((p) => passesButtons(p) && matchesSmartQuery(p, smart, priceOf(p), strict));
 
-    setResults(filtered);
+    let hits = search(allProducts, true);
+    if (hits.length === 0) hits = search(allProducts, false);
+    let message: string | null = null;
+
+    // Ingenting i denne kategorien? Søk i alle kategorier og si fra.
+    if (hits.length === 0 && query.trim()) {
+      hits = search(everyProduct, true);
+      if (hits.length === 0) hits = search(everyProduct, false);
+      if (hits.length > 0) {
+        message = `Ingen treff i ${categoryDef?.label ?? "denne kategorien"} – viser treff fra alle kategorier`;
+      }
+    }
+
+    setNotice(message);
+    setResults(hits);
   }
 
   useEffect(() => {
@@ -266,7 +198,10 @@ export default function KategoriPage() {
         </form>
 
         {loading && <p style={{ opacity: 0.6 }}>Laster produkter...</p>}
-        {!loading && results.length === 0 && <p style={{ opacity: 0.6 }}>Fant ingen produkter i denne kategorien.</p>}
+        {!loading && notice && <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>🔎 {notice}</p>}
+        {!loading && results.length === 0 && (
+          <p style={{ opacity: 0.6 }}>{query.trim() ? "Fant ingen produkter som passer søket." : "Fant ingen produkter i denne kategorien."}</p>
+        )}
 
         <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
           {results.map((p) => {
