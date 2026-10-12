@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
+import { extractStyle } from "@/lib/styles";
 import {
   Product,
   CATEGORIES,
@@ -122,7 +123,8 @@ export default function KategoriPage() {
   }, [slug]);
 
   function runSearch() {
-    const { cleanedQuery, filters } = extractFilters(query);
+    const { style, rest } = extractStyle(query);
+    const { cleanedQuery, filters } = extractFilters(rest);
     const words = cleanedQuery.toLowerCase().split(" ").filter(Boolean);
     const rangeDef = PRICE_RANGES.find((r) => r.key === priceRange);
 
@@ -140,6 +142,7 @@ export default function KategoriPage() {
           filters.sizeOptions!.some((opt) => s.toLowerCase().includes(opt.toLowerCase()))
         );
       const matchesGender = gender === "alle" || detectGender(p) === gender;
+      const matchesStyle = !style || (p.styles || []).includes(style.slug);
       return (
         matchesWords &&
         matchesMin &&
@@ -147,7 +150,8 @@ export default function KategoriPage() {
         matchesRangeMin &&
         matchesRangeMax &&
         matchesSize &&
-        matchesGender
+        matchesGender &&
+        matchesStyle
       );
     });
 

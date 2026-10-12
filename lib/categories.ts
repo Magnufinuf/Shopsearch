@@ -9,6 +9,7 @@ export type Product = {
   image: string;
   url: string;
   sizes?: string[];
+  styles?: string[];
 };
 
 export type CategoryDef = {

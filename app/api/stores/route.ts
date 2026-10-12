@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { normalizeDomain, setSessionCookie } from "@/lib/session";
+import { revalidateTag } from "next/cache";
 
 export async function POST(req: Request) {
   try {
@@ -21,6 +22,9 @@ export async function POST(req: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Ny butikk: hent produktlista på nytt, så produktene dukker opp med en gang.
+    revalidateTag("products", { expire: 0 });
 
     // Logg butikken inn med en gang, så de slipper å gjøre det selv.
     const response = NextResponse.json({ success: true });
