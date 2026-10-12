@@ -2,7 +2,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
-import { STYLES, extractStyle } from "@/lib/styles";
+import { STYLES } from "@/lib/styles";
+import { matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
 import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
 
@@ -23,74 +24,6 @@ type Product = {
 function withTracking(url: string) {
   const separator = url.includes("?") ? "&" : "?";
   return `${url}${separator}ref=shopsearch&utm_source=shopsearch&utm_medium=referral`;
-}
-
-type ParsedFilters = { min?: number; max?: number; sizeOptions?: string[] };
-
-const LETTER_SIZES = ["xxxl", "xxl", "xl", "xs", "s", "m", "l"];
-
-const SHOE_SIZE_TABLE: string[][] = [
-  ["35", "4", "2.5", "2"],
-  ["36", "4.5", "3", "3.5"],
-  ["37", "5", "4", "4.5"],
-  ["38", "5.5", "4.5", "5"],
-  ["39", "6", "5", "6"],
-  ["40", "6.5", "5.5", "6.5"],
-  ["41", "7.5", "6.5", "7.5"],
-  ["42", "8", "7", "8"],
-  ["43", "9", "8", "9"],
-  ["44", "9.5", "8.5", "9.5"],
-  ["45", "10.5", "9.5", "10.5"],
-  ["46", "11", "10", "11"],
-  ["47", "11.5", "10.5", "12"],
-  ["48", "12.5", "11.5", "13"],
-];
-
-function expandShoeSize(value: string): string[] {
-  const row = SHOE_SIZE_TABLE.find((r) => r.includes(value));
-  return row ? row : [value];
-}
-
-function extractFilters(query: string): { cleanedQuery: string; filters: ParsedFilters } {
-  let cleaned = query;
-  const filters: ParsedFilters = {};
-
-  const betweenMatch = cleaned.match(/mellom\s+(\d+)\s*(?:kr)?\s+og\s+(\d+)\s*(?:kr)?/i);
-  if (betweenMatch) {
-    filters.min = parseInt(betweenMatch[1], 10);
-    filters.max = parseInt(betweenMatch[2], 10);
-    cleaned = cleaned.replace(betweenMatch[0], " ");
-  }
-
-  const underMatch = cleaned.match(/(?:under|maks(?:imum)?|mindre enn)\s+(\d+)\s*(?:kr)?/i);
-  if (underMatch) {
-    filters.max = parseInt(underMatch[1], 10);
-    cleaned = cleaned.replace(underMatch[0], " ");
-  }
-
-  const overMatch = cleaned.match(/(?:over|minst|mer enn)\s+(\d+)\s*(?:kr)?/i);
-  if (overMatch) {
-    filters.min = parseInt(overMatch[1], 10);
-    cleaned = cleaned.replace(overMatch[0], " ");
-  }
-
-  cleaned = cleaned.replace(/\bkr\b/gi, " ");
-
-  const sizeMatch = cleaned.match(/(?:str\.?|størrelse|size)\s*([a-zA-Z0-9.]+)/i);
-  if (sizeMatch) {
-    const raw = sizeMatch[1];
-    filters.sizeOptions = /^\d+(\.\d+)?$/.test(raw) ? expandShoeSize(raw) : [raw];
-    cleaned = cleaned.replace(sizeMatch[0], " ");
-  } else {
-    const words = cleaned.split(/\s+/);
-    const found = words.find((w) => LETTER_SIZES.includes(w.toLowerCase()));
-    if (found) {
-      filters.sizeOptions = [found];
-      cleaned = cleaned.replace(new RegExp(`\\b${found}\\b`, "i"), " ");
-    }
-  }
-
-  return { cleanedQuery: cleaned.replace(/\s+/g, " ").trim(), filters };
 }
 
 export default function Home() {
@@ -138,27 +71,19 @@ export default function Home() {
       }
     }
 
-    // «old money skjorte» -> stil = old money, resten søkes som vanlig.
-    const { style, rest } = extractStyle(query);
-    const { cleanedQuery, filters } = extractFilters(rest);
-    const words = cleanedQuery.toLowerCase().split(" ").filter(Boolean);
+    // Smart søk (gratis, uten AI): forstår «noe varmt», synonymer, skrivefeil, farger, pris og stil.
+    // Gir det null treff, prøves det uten farge, størrelse og vage ønsker.
+    const smart = parseSmartQuery(query);
+    const priceOf = (p: Product) => convertPrice(p.price, p.currency, info);
+    let hits = all.filter((p) => matchesSmartQuery(p, smart, priceOf(p)));
+    let summary = smart.summary;
+    if (hits.length === 0) {
+      hits = all.filter((p) => matchesSmartQuery(p, smart, priceOf(p), false));
+      summary = "Ingen helt like treff – her er det nærmeste vi fant";
+    }
 
-    const filtered = all.filter((p) => {
-      const text = `${p.title} ${p.category} ${p.vendor} ${p.tags.join(" ")}`.toLowerCase();
-      const matchesWords = words.every((w) => text.includes(w));
-      const price = convertPrice(p.price, p.currency, info);
-      const matchesMin = filters.min === undefined || price >= filters.min;
-      const matchesMax = filters.max === undefined || price <= filters.max;
-      const matchesSize =
-        !filters.sizeOptions ||
-        (p.sizes || []).some((s) =>
-          filters.sizeOptions!.some((opt) => s.toLowerCase().includes(opt.toLowerCase()))
-        );
-      const matchesStyle = !style || (p.styles || []).includes(style.slug);
-      return matchesWords && matchesMin && matchesMax && matchesSize && matchesStyle;
-    });
-
-    setResults(filtered);
+    setAiSummary(hits.length > 0 && summary ? summary : null);
+    setResults(hits);
     setLoading(false);
   }
 
@@ -184,7 +109,7 @@ export default function Home() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="F.eks. old money skjorte str. M under 800 kr"
+            placeholder="F.eks. noe varmt til vinteren under 1000 kr"
             className="flex-1 rounded-full border px-5 py-3 text-base outline-none"
             style={{
               borderColor: "var(--border)",
@@ -247,7 +172,7 @@ export default function Home() {
         {loading && <p style={{ opacity: 0.6 }}>Søker...</p>}
 
         {!loading && aiSummary && (
-          <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>✨ {aiSummary}</p>
+          <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>🔎 {aiSummary}</p>
         )}
 
         {!loading && searched && results.length === 0 && (
