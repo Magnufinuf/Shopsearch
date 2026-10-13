@@ -11,6 +11,11 @@ export type Advert = {
   // Satt når annonsen gjelder ett produkt; ellers er det hele butikken.
   product_url?: string | null;
   product_title?: string | null;
+  // Hentet fra produktet av /api/adverts (bare produktannonser).
+  product_price?: number;
+  product_currency?: string;
+  styles?: string[];
+  gender?: "herre" | "dame" | "unisex";
   comment_count?: number;
 };
 

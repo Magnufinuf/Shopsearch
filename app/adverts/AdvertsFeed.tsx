@@ -6,7 +6,9 @@ import { trackClick } from "@/lib/track";
 import { fetchUser, setSaved } from "@/lib/user-client";
 import ShareSheet from "../components/ShareSheet";
 import CommentsSheet from "../components/CommentsSheet";
-import { BagIcon, CommentIcon, HeartIcon, ShareIcon, SoundOffIcon, SoundOnIcon } from "../components/Icons";
+import { BagIcon, CommentIcon, FilterIcon, HeartIcon, ShareIcon, SoundOffIcon, SoundOnIcon } from "../components/Icons";
+import { CurrencyInfo, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
+import AdvertFilters, { Filters, NO_FILTERS, activeFilterCount, matchesFilters } from "./AdvertFilters";
 
 const iconShadow = "drop-shadow(0 1px 3px rgba(0,0,0,0.45))";
 
@@ -39,6 +41,7 @@ function storeName(domain: string): string {
 
 function AdvertSlide({
   advert,
+  currency,
   saved,
   muted,
   onToggleMute,
@@ -47,6 +50,7 @@ function AdvertSlide({
   onComments,
 }: {
   advert: Advert;
+  currency: CurrencyInfo | null;
   saved: boolean;
   muted: boolean;
   onToggleMute: () => void;
@@ -111,7 +115,12 @@ function AdvertSlide({
           </a>
         </div>
         {isProduct && advert.product_title && (
-          <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, opacity: 0.95, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{advert.product_title}</p>
+          <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, opacity: 0.95, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {advert.product_title}
+            {advert.product_price !== undefined && (
+              <span style={{ fontWeight: 400, opacity: 0.85 }}> · {priceLabel(advert.product_price, advert.product_currency || "NOK", currency)}</span>
+            )}
+          </p>
         )}
         {advert.caption && (
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.4, opacity: 0.95, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
@@ -179,6 +188,9 @@ export default function AdvertsFeed() {
   const [commenting, setCommenting] = useState<Advert | null>(null);
   const [category, setCategory] = useState("alle");
   const [muted, setMuted] = useState(true);
+  const [filters, setFilters] = useState<Filters>(NO_FILTERS);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [currency, setCurrency] = useState<CurrencyInfo | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -190,6 +202,7 @@ export default function AdvertsFeed() {
         const all: Advert[] = data.adverts || [];
         const shared = all.find((a) => String(a.id) === sharedId);
         setAdverts(shared ? [shared, ...all.filter((a) => a !== shared)] : all);
+        fetchCurrencyInfo(all.map((a) => a.product_currency || "")).then(setCurrency);
         // ?kommentarer=1 (fra «nevnt i en kommentar»-e-post): åpne kommentarene med en gang.
         if (shared && new URLSearchParams(window.location.search).get("kommentarer") === "1") setCommenting(shared);
         setLoading(false);
@@ -206,7 +219,14 @@ export default function AdvertsFeed() {
     return ADVERT_CATEGORIES.filter((c) => used.has(c.slug));
   }, [adverts]);
 
-  const visible = category === "alle" ? adverts : adverts.filter((a) => advertCategory(a) === category);
+  const byCategory = category === "alle" ? adverts : adverts.filter((a) => advertCategory(a) === category);
+  const visible = byCategory.filter((a) => matchesFilters(a, filters, currency));
+  const filterCount = activeFilterCount(filters);
+
+  function changeFilters(f: Filters) {
+    setFilters(f);
+    scrollerRef.current?.scrollTo({ top: 0 });
+  }
 
   function chooseCategory(slug: string) {
     setCategory(slug);
@@ -258,6 +278,14 @@ export default function AdvertsFeed() {
       <div style={{ position: "relative", height: "100%", maxWidth: 520, margin: "0 auto" }}>
         {categories.length > 0 && (
           <div className="sc-no-scrollbar" style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 5, display: "flex", gap: 8, padding: "14px 16px", overflowX: "auto" }}>
+            <button
+              onClick={() => setFilterOpen(true)}
+              aria-label="Filter"
+              style={{ position: "relative", flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 999, border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer", backgroundColor: filterCount ? "white" : "rgba(255,255,255,0.18)", color: filterCount ? "#111" : "white", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
+            >
+              <FilterIcon size={16} strokeWidth={2.2} />
+              Filter{filterCount ? ` (${filterCount})` : ""}
+            </button>
             <CategoryChip label="Alle" active={category === "alle"} onClick={() => chooseCategory("alle")} />
             {categories.map((c) => (
               <CategoryChip key={c.slug} label={c.label} active={category === c.slug} onClick={() => chooseCategory(c.slug)} />
@@ -266,10 +294,19 @@ export default function AdvertsFeed() {
         )}
 
         <div ref={scrollerRef} className="sc-no-scrollbar" style={{ height: "100%", overflowY: "scroll", scrollSnapType: "y mandatory" }}>
+          {visible.length === 0 && (
+            <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, color: "white", textAlign: "center", padding: 24 }}>
+              <p style={{ margin: 0, opacity: 0.8 }}>Ingen annonser passer filteret ditt.</p>
+              <button onClick={() => changeFilters(NO_FILTERS)} style={{ padding: "9px 18px", borderRadius: 999, border: "none", backgroundColor: "white", color: "#111", fontWeight: 600, cursor: "pointer" }}>
+                Nullstill filter
+              </button>
+            </div>
+          )}
           {visible.map((advert) => (
             <AdvertSlide
               key={advert.id}
               advert={advert}
+              currency={currency}
               saved={savedIds.has(String(advert.id))}
               muted={muted}
               onToggleMute={() => setMuted((m) => !m)}
@@ -281,6 +318,16 @@ export default function AdvertsFeed() {
         </div>
       </div>
 
+      {filterOpen && (
+        <AdvertFilters
+          adverts={byCategory}
+          filters={filters}
+          currency={currency?.currency || "NOK"}
+          onChange={changeFilters}
+          onClose={() => setFilterOpen(false)}
+          resultCount={visible.length}
+        />
+      )}
       {sharing && <ShareSheet advert={sharing} onClose={() => setSharing(null)} />}
       {commenting && (
         <CommentsSheet
