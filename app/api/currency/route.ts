@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DEFAULT_CURRENCY, countryFromLocale, currencyForCountry } from "@/lib/currency";
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, countryFromLocale, currencyForCountry } from "@/lib/currency";
 
 // Finner besøkerens valuta og henter kurser fra butikk-valutaene til den.
 // Kjøres på serveren så vi slipper ipapi.co (rate-limit/CORS/adblock) i nettleseren.
@@ -29,7 +29,10 @@ async function fetchRate(from: string, to: string): Promise<number | null> {
 export async function GET(request: NextRequest) {
   const ipCountry = request.headers.get("x-vercel-ip-country");
   const acceptLanguage = request.headers.get("accept-language")?.split(",")[0];
+  // Valgt i Innstillinger -> Valuta (?valuta=EUR), ellers gjettet fra landet.
+  const chosen = request.nextUrl.searchParams.get("valuta")?.toUpperCase();
   const currency =
+    (chosen && SUPPORTED_CURRENCIES.includes(chosen) ? chosen : null) ??
     currencyForCountry(ipCountry) ??
     currencyForCountry(countryFromLocale(acceptLanguage)) ??
     DEFAULT_CURRENCY;

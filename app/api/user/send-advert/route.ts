@@ -4,6 +4,7 @@ import { getSessionUserId } from "@/lib/session";
 import { escapeHtml, sendEmail } from "@/lib/email";
 import { normalizeUsername } from "@/lib/username";
 import { APP_URL } from "@/lib/app-url";
+import { wantsEmail } from "@/lib/notify-prefs";
 
 const MAX_PER_DAY = 20;
 const MAX_MESSAGE = 300;
@@ -77,7 +78,8 @@ export async function POST(request: Request) {
   const link = `${APP_URL}/adverts?annonse=${advert.id}`;
   const store = advert.store_domain.replace(".myshopify.com", "");
 
-  await sendEmail(
+  // Mottakere med konto kan ha skrudd av e-post for tilsendte annonser (Innstillinger -> Varsler).
+  if (await wantsEmail("notify_shares", { email })) await sendEmail(
     email,
     `${sender.username} sendte deg noe på Scavenger`,
     `<div style="font-family:Arial,sans-serif;font-size:16px;color:#3A2A1F;line-height:1.5">

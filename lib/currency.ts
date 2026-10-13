@@ -35,6 +35,10 @@ const COUNTRY_TO_CURRENCY: Record<string, string> = {
 
 export const DEFAULT_CURRENCY = "NOK";
 
+// Valutaer man kan velge i Innstillinger.
+export const SUPPORTED_CURRENCIES = ["NOK", "SEK", "DKK", "EUR", "USD", "GBP", "CHF", "PLN", "ISK"];
+export const CURRENCY_KEY = "scavenger_currency";
+
 export function currencyForCountry(country: string | null | undefined): string | null {
   if (!country) return null;
   return COUNTRY_TO_CURRENCY[country.toUpperCase()] ?? null;
@@ -68,7 +72,13 @@ export type CurrencyInfo = {
 export async function fetchCurrencyInfo(fromCurrencies: string[]): Promise<CurrencyInfo> {
   const from = Array.from(new Set(fromCurrencies.filter(Boolean)));
   try {
-    const res = await fetch(`/api/currency?from=${encodeURIComponent(from.join(","))}`);
+    let chosen = "";
+    try {
+      chosen = localStorage.getItem(CURRENCY_KEY) || "";
+    } catch {}
+    const res = await fetch(
+      `/api/currency?from=${encodeURIComponent(from.join(","))}${chosen ? `&valuta=${encodeURIComponent(chosen)}` : ""}`
+    );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as CurrencyInfo;
   } catch (err) {
