@@ -108,7 +108,7 @@ export default function AdvertForm({ existing }: { existing?: Advert }) {
     setMessage("");
 
     const formData = new FormData();
-    if (file) formData.append("file", file);
+    if (file && !editing) formData.append("file", file);
     if (existing) formData.append("id", String(existing.id));
     formData.append("caption", caption);
     formData.append("kind", kind);
@@ -250,22 +250,29 @@ export default function AdvertForm({ existing }: { existing?: Advert }) {
 
       {kind && (
         <>
-          <span style={label}>{editing ? "Video eller bilde (valgfritt å bytte)" : "Video eller bilde"}</span>
-          {editing && existing && !file && (
-            <div style={{ width: 96, aspectRatio: "9 / 14", borderRadius: 10, overflow: "hidden", backgroundColor: "black", marginBottom: 8 }}>
-              {existing.media_type === "video" ? (
-                <video src={existing.media_url} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                <img src={existing.media_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              )}
-            </div>
+          {/* Videoen/bildet kan ikke byttes etter at annonsen er lagt ut. */}
+          {editing && existing ? (
+            <>
+              <span style={label}>Video eller bilde</span>
+              <div style={{ width: 96, aspectRatio: "9 / 14", borderRadius: 10, overflow: "hidden", backgroundColor: "black" }}>
+                {existing.media_type === "video" ? (
+                  <video src={existing.media_url} muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <img src={existing.media_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <span style={label}>Video eller bilde</span>
+              <label style={{ ...field, display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                <span style={{ padding: "6px 12px", borderRadius: 8, backgroundColor: "var(--border)", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>Velg fil</span>
+                <span style={{ fontSize: 14, opacity: file ? 1 : 0.6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file ? file.name : "Ingen fil valgt"}</span>
+                {file && <span style={{ color: "var(--primary)", display: "flex", marginLeft: "auto" }}><CheckIcon size={18} /></span>}
+                <input type="file" accept="video/*,image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} style={{ display: "none" }} />
+              </label>
+            </>
           )}
-          <label style={{ ...field, display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <span style={{ padding: "6px 12px", borderRadius: 8, backgroundColor: "var(--border)", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>Velg fil</span>
-            <span style={{ fontSize: 14, opacity: file ? 1 : 0.6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file ? file.name : editing ? "Behold nåværende" : "Ingen fil valgt"}</span>
-            {file && <span style={{ color: "var(--primary)", display: "flex", marginLeft: "auto" }}><CheckIcon size={18} /></span>}
-            <input type="file" accept="video/*,image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} style={{ display: "none" }} />
-          </label>
 
           <span style={label}>Tekst</span>
           <textarea
