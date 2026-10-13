@@ -99,7 +99,7 @@ async function fetchProductsForStore(store: Store) {
         storeDomain: store.store_domain,
         shopifyProductId: String(p.id),
         createdAt: p.created_at,
-        styles: detectStyles([p.title, p.product_type, p.vendor, tags.join(" "), description].join(" ")),
+        styles: detectStyles([p.title, p.product_type, p.vendor, tags.join(" "), description].join(" "), `${p.title} ${p.product_type}`),
       };
     });
   } catch (err) {
@@ -116,7 +116,7 @@ const getAllProducts = unstable_cache(
     const results = await Promise.all(((stores || []) as Store[]).map(fetchProductsForStore));
     return results.flat();
   },
-  ["all-products-v3"],
+  ["all-products-v4"],
   { revalidate: CACHE_SECONDS, tags: ["products"] }
 );
 
