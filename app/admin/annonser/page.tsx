@@ -10,6 +10,9 @@ export default function MineAnnonserPage() {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [adverts, setAdverts] = useState<Advert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [savingCaption, setSavingCaption] = useState(false);
 
   useEffect(() => {
     fetchSession().then((s) => {
@@ -42,6 +45,23 @@ export default function MineAnnonserPage() {
       const data = await res.json().catch(() => ({}));
       alert(data.error || "Noe gikk galt, prøv igjen.");
     }
+  }
+
+  async function saveCaption(id: string) {
+    setSavingCaption(true);
+    const res = await fetch("/api/adverts/caption", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, caption: draft }),
+    });
+    setSavingCaption(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Noe gikk galt, prøv igjen.");
+      return;
+    }
+    setAdverts((prev) => prev.map((a) => (a.id === id ? { ...a, caption: draft.trim() } : a)));
+    setEditingId(null);
   }
 
   async function handleDelete(id: string) {
@@ -96,10 +116,47 @@ export default function MineAnnonserPage() {
                 )}
               </div>
               <div style={{ padding: 10 }}>
-                {a.caption && (
-                  <p style={{ fontSize: 12, opacity: 0.75, marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {a.caption}
-                  </p>
+                {editingId === a.id ? (
+                  <div style={{ marginBottom: 8 }}>
+                    <textarea
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      autoFocus
+                      rows={3}
+                      maxLength={500}
+                      style={{ width: "100%", boxSizing: "border-box", padding: 6, borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)", fontSize: 13, resize: "vertical" }}
+                    />
+                    <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                      <button
+                        onClick={() => saveCaption(a.id)}
+                        disabled={savingCaption}
+                        style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", backgroundColor: "var(--primary)", color: "white", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: savingCaption ? 0.6 : 1 }}
+                      >
+                        {savingCaption ? "Lagrer..." : "Lagre"}
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 12, cursor: "pointer" }}
+                      >
+                        Avbryt
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                    <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 12, opacity: a.caption ? 0.75 : 0.45, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {a.caption || "Ingen tekst"}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setEditingId(a.id);
+                        setDraft(a.caption || "");
+                      }}
+                      style={{ background: "none", border: "none", padding: 0, color: "var(--primary)", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
+                    >
+                      Rediger
+                    </button>
+                  </div>
                 )}
                 {a.product_url ? (
                   <select
