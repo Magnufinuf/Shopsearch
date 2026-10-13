@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ADVERT_CATEGORIES, Advert, advertCategory, storeUrl } from "@/lib/adverts";
+import { ADVERT_CATEGORIES, Advert, advertCategory, advertTargetUrl } from "@/lib/adverts";
 import { trackClick } from "@/lib/track";
 import { fetchUser, setSaved } from "@/lib/user-client";
 import ShareSheet from "../components/ShareSheet";
@@ -56,6 +56,7 @@ function AdvertSlide({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isVideo = advert.media_type === "video";
+  const isProduct = !!advert.product_url;
   const name = storeName(advert.store_domain);
   const category = ADVERT_CATEGORIES.find((c) => c.slug === advertCategory(advert));
 
@@ -88,31 +89,35 @@ function AdvertSlide({
       <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 120, background: "linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0))", pointerEvents: "none" }} />
       <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "45%", background: "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))", pointerEvents: "none" }} />
 
-      <div style={{ position: "absolute", left: 16, right: 80, bottom: 24, color: "white" }}>
+      <div style={{ position: "absolute", left: 16, right: 84, bottom: 28, color: "white" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
           <span style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, textTransform: "uppercase", border: "2px solid rgba(255,255,255,0.9)", flexShrink: 0 }}>
             {name.charAt(0)}
           </span>
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <p style={{ margin: 0, fontWeight: 700, fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</p>
             {category && <p style={{ margin: 0, fontSize: 12, opacity: 0.75 }}>{category.label}</p>}
           </div>
+          {/* Produktannonse: rett til produktet. Butikkannonse: til forsiden av butikken. */}
+          <a
+            href={advertTargetUrl(advert)}
+            onClick={() => trackClick(advert.store_domain, "annonse")}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, backgroundColor: "white", color: "#111", fontSize: 13, fontWeight: 700, flexShrink: 0 }}
+          >
+            {isProduct && <BagIcon size={16} strokeWidth={2.2} />}
+            {isProduct ? "Kjøp" : "Besøk"}
+          </a>
         </div>
+        {isProduct && advert.product_title && (
+          <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, opacity: 0.95, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{advert.product_title}</p>
+        )}
         {advert.caption && (
-          <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.4, opacity: 0.95, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.4, opacity: 0.95, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {advert.caption}
           </p>
         )}
-        <a
-          href={storeUrl(advert.store_domain)}
-          onClick={() => trackClick(advert.store_domain, "annonse")}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 20px", borderRadius: 12, backgroundColor: "white", color: "#111", fontSize: 14, fontWeight: 700 }}
-        >
-          <BagIcon size={18} strokeWidth={2.2} />
-          Kjøp nå
-        </a>
       </div>
 
       <div style={{ position: "absolute", right: 6, bottom: 32, display: "flex", flexDirection: "column", alignItems: "center", gap: 22 }}>

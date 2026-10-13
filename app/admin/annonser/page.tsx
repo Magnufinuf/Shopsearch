@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchSession } from "@/lib/session-client";
-import { ADVERT_CATEGORIES, Advert, advertCategory } from "@/lib/adverts";
+import { ADVERT_CATEGORIES, Advert, STORE_CATEGORY, advertCategory } from "@/lib/adverts";
 
 export default function MineAnnonserPage() {
   const [domain, setDomain] = useState("");
@@ -101,16 +101,20 @@ export default function MineAnnonserPage() {
                     {a.caption}
                   </p>
                 )}
-                <select
-                  value={advertCategory(a)}
-                  onChange={(e) => changeCategory(a.id, e.target.value)}
-                  aria-label="Kategori"
-                  style={{ width: "100%", padding: "6px 4px", marginBottom: 8, borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)", fontSize: 12 }}
-                >
-                  {ADVERT_CATEGORIES.map((c) => (
-                    <option key={c.slug} value={c.slug}>{c.label}</option>
-                  ))}
-                </select>
+                {a.product_url ? (
+                  <select
+                    value={advertCategory(a)}
+                    onChange={(e) => changeCategory(a.id, e.target.value)}
+                    aria-label="Kategori"
+                    style={{ width: "100%", padding: "6px 4px", marginBottom: 8, borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)", fontSize: 12 }}
+                  >
+                    {ADVERT_CATEGORIES.filter((c) => c.slug !== STORE_CATEGORY).map((c) => (
+                      <option key={c.slug} value={c.slug}>{c.label}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p style={{ fontSize: 12, opacity: 0.6, margin: "0 0 8px" }}>Hele butikken</p>
+                )}
                 <button
                   onClick={() => handleDelete(a.id)}
                   style={{ width: "100%", padding: "6px 0", borderRadius: 8, border: "1px solid #e05252", backgroundColor: "transparent", color: "#e05252", fontSize: 12, cursor: "pointer" }}
