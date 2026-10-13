@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { fetchSession } from "@/lib/session-client";
+import StatsPanel from "./StatsPanel";
 
 type Product = {
   id: string;
@@ -171,8 +172,10 @@ function AdminContent() {
         <StatCard label="Plan" value={isFree ? "Gratis" : subscribed ? "299 kr/mnd" : "4% provisjon"} />
       </div>
 
+      <StatsPanel productTitles={Object.fromEntries(products.map((p) => [p.shopifyProductId, p.title]))} />
+
       {/* To kolonner */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 20, alignItems: "start" }}>
         <Panel title="Dine produkter">
           {loading && <p style={{ opacity: 0.6 }}>Laster produkter...</p>}
           {!loading && message && <p style={{ opacity: 0.6 }}>{message}</p>}

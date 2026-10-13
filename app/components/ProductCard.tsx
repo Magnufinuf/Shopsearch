@@ -1,4 +1,7 @@
+"use client";
+
 import { CurrencyInfo, priceLabel } from "@/lib/currency";
+import { ClickSource, trackClick } from "@/lib/track";
 
 export type CardProduct = {
   id: string;
@@ -8,6 +11,8 @@ export type CardProduct = {
   vendor: string;
   image: string;
   url: string;
+  storeDomain?: string;
+  shopifyProductId?: string;
 };
 
 // Lenke til produktet hos butikken, merket så salget kan spores tilbake til Scavenger.
@@ -16,10 +21,22 @@ export function withTracking(url: string) {
   return `${url}${separator}ref=shopsearch&utm_source=shopsearch&utm_medium=referral`;
 }
 
-export default function ProductCard({ p, currencyInfo, width }: { p: CardProduct; currencyInfo: CurrencyInfo | null; width?: number }) {
+export default function ProductCard({
+  p,
+  currencyInfo,
+  width,
+  source = "sok",
+}: {
+  p: CardProduct;
+  currencyInfo: CurrencyInfo | null;
+  width?: number;
+  source?: ClickSource;
+}) {
   return (
     <a
       href={withTracking(p.url)}
+      // Teller besøket for butikkens statistikk (Administrasjon).
+      onClick={() => p.storeDomain && trackClick(p.storeDomain, source, p.shopifyProductId)}
       target="_blank"
       rel="noopener noreferrer"
       style={{

@@ -21,6 +21,8 @@ type Product = {
   sizes?: string[];
   styles?: string[];
   createdAt?: string;
+  storeDomain?: string;
+  shopifyProductId?: string;
 };
 
 // Horisontal rad med produkter (sveipes på mobil).
@@ -39,7 +41,7 @@ function ProductRow({ title, products, currencyInfo, onMore }: { title: string; 
       <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollSnapType: "x mandatory" }}>
         {products.map((p) => (
           <div key={p.id} style={{ scrollSnapAlign: "start", display: "flex" }}>
-            <ProductCard p={p} currencyInfo={currencyInfo} width={170} />
+            <ProductCard p={p} currencyInfo={currencyInfo} width={170} source="forside" />
           </div>
         ))}
       </div>
@@ -266,7 +268,7 @@ function FrontSections({ catalog, currencyInfo, onSearch }: { catalog: Product[]
         <h2 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 10px" }}>Utforsk alt</h2>
         <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
           {catalog.slice(0, 24).map((p) => (
-            <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} />
+            <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} source="forside" />
           ))}
         </div>
       </section>

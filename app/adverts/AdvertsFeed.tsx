@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Advert, storeUrl } from "@/lib/adverts";
+import { trackClick } from "@/lib/track";
 import { fetchUser, setSaved } from "@/lib/user-client";
 import ShareSheet from "../components/ShareSheet";
 import CommentsSheet from "../components/CommentsSheet";
@@ -79,7 +80,7 @@ function AdvertSlide({
         {advert.caption && (
           <p style={{ fontSize: 14, opacity: 0.9 }}>{advert.caption}</p>
         )}
-        <a href={storeUrl(advert.store_domain)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 10, padding: "8px 18px", borderRadius: 20, backgroundColor: "var(--primary)", color: "white", fontSize: 14, fontWeight: 600 }}>
+        <a href={storeUrl(advert.store_domain)} onClick={() => trackClick(advert.store_domain, "annonse")} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 10, padding: "8px 18px", borderRadius: 20, backgroundColor: "var(--primary)", color: "white", fontSize: 14, fontWeight: 600 }}>
           Kjøp
         </a>
       </div>
