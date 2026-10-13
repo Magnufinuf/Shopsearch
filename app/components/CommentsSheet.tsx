@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { fetchUser } from "@/lib/user-client";
+import { CloseIcon } from "./Icons";
 
 
 type Comment = { id: string; text: string; createdAt: string; username: string; canDelete: boolean };
@@ -147,8 +148,8 @@ export default function CommentsSheet({
           <h2 style={{ flex: 1, margin: 0, textAlign: "center", fontSize: 16, fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>
             {comments ? `${comments.length} kommentar${comments.length === 1 ? "" : "er"}` : "Kommentarer"}
           </h2>
-          <button onClick={onClose} aria-label="Lukk" style={{ width: 32, background: "none", border: "none", color: "var(--foreground)", fontSize: 26, lineHeight: 1, cursor: "pointer" }}>
-            ×
+          <button onClick={onClose} aria-label="Lukk" style={{ width: 32, background: "none", border: "none", color: "var(--foreground)", cursor: "pointer", display: "flex", justifyContent: "center", padding: 0 }}>
+            <CloseIcon size={22} strokeWidth={2.2} />
           </button>
         </div>
 

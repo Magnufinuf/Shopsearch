@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchSession } from "@/lib/session-client";
-
-type Advert = {
-  id: string;
-  store_domain: string;
-  media_url: string;
-  media_type: "video" | "image";
-  caption: string;
-  created_at: string;
-};
+import { ADVERT_CATEGORIES, Advert, advertCategory } from "@/lib/adverts";
 
 export default function MineAnnonserPage() {
   const [domain, setDomain] = useState("");
@@ -36,6 +28,21 @@ export default function MineAnnonserPage() {
         setLoading(false);
       });
   }, [domain]);
+
+  async function changeCategory(id: string, category: string) {
+    const before = adverts;
+    setAdverts((prev) => prev.map((a) => (a.id === id ? { ...a, category } : a)));
+    const res = await fetch("/api/adverts/category", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, category }),
+    });
+    if (!res.ok) {
+      setAdverts(before);
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Noe gikk galt, prøv igjen.");
+    }
+  }
 
   async function handleDelete(id: string) {
     const confirmed = confirm("Slette denne annonsen?");
@@ -94,6 +101,16 @@ export default function MineAnnonserPage() {
                     {a.caption}
                   </p>
                 )}
+                <select
+                  value={advertCategory(a)}
+                  onChange={(e) => changeCategory(a.id, e.target.value)}
+                  aria-label="Kategori"
+                  style={{ width: "100%", padding: "6px 4px", marginBottom: 8, borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)", fontSize: 12 }}
+                >
+                  {ADVERT_CATEGORIES.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.label}</option>
+                  ))}
+                </select>
                 <button
                   onClick={() => handleDelete(a.id)}
                   style={{ width: "100%", padding: "6px 0", borderRadius: 8, border: "1px solid #e05252", backgroundColor: "transparent", color: "#e05252", fontSize: 12, cursor: "pointer" }}

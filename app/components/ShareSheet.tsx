@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Advert, advertShareUrl } from "@/lib/adverts";
 import { fetchUser } from "@/lib/user-client";
+import { CheckIcon, CloseIcon, MailIcon, SearchIcon } from "./Icons";
 
 type Contact = { value: string; label: string };
 
@@ -25,7 +26,7 @@ function Person({ contact, selected, onClick }: { contact: Contact; selected: bo
         {contact.label[0]?.toUpperCase()}
         {selected && (
           <span style={{ position: "absolute", right: -2, bottom: -2, width: 22, height: 22, borderRadius: 999, backgroundColor: "var(--primary)", border: "2px solid var(--background)", fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            ✓
+            <CheckIcon size={13} strokeWidth={3} />
           </span>
         )}
       </span>
@@ -247,7 +248,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
                 onClick={() => (user?.loggedIn ? setSearchOpen(true) : window.location.assign(loginHref))}
                 style={{ background: "none", border: "none", color: "var(--foreground)", cursor: "pointer", padding: 4 }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                <SearchIcon size={22} strokeWidth={2.2} />
               </button>
               <h2 style={{ flex: 1, margin: 0, textAlign: "center", fontSize: 17, fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>Del på</h2>
             </>
@@ -256,15 +257,17 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
             type="button"
             aria-label="Lukk"
             onClick={() => (searchOpen ? (setSearchOpen(false), setQuery("")) : onClose())}
-            style={{ background: "none", border: "none", color: "var(--foreground)", fontSize: 26, lineHeight: 1, cursor: "pointer", padding: 4 }}
+            style={{ background: "none", border: "none", color: "var(--foreground)", cursor: "pointer", padding: 4, display: "flex" }}
           >
-            ×
+            <CloseIcon size={22} strokeWidth={2.2} />
           </button>
         </div>
 
         {/* Venner i Scavenger */}
         {status === "sent" ? (
-          <p style={{ textAlign: "center", fontSize: 17, fontWeight: 600, margin: "28px 0" }}>Sendt! ✉️</p>
+          <p style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 17, fontWeight: 600, margin: "28px 0" }}>
+            <MailIcon size={22} /> Sendt!
+          </p>
         ) : user === null ? (
           <div style={{ height: 96 }} />
         ) : !user.loggedIn ? (
@@ -276,7 +279,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
           <p style={{ textAlign: "center", fontSize: 14, opacity: 0.65, margin: "8px 0 18px" }}>
             {searchOpen && query.trim()
               ? "Fant ingen. Skriv brukernavnet eller e-posten deres."
-              : "Trykk på 🔍 for å finne venner med brukernavnet deres."}
+              : "Søk etter venner med brukernavnet deres."}
           </p>
         ) : (
           <div style={row}>
