@@ -57,7 +57,7 @@ export function countryFromLocale(locale: string | null | undefined): string | n
 
 export function formatPrice(amount: number, currency: string): string {
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount);
+    return new Intl.NumberFormat("nb-NO", { style: "currency", currency }).format(amount);
   } catch {
     return `${amount.toFixed(2)} ${currency}`;
   }

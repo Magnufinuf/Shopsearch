@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
 import { STYLES } from "@/lib/styles";
 import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
 import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
-import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
+import { CurrencyInfo, convertPrice, fetchCurrencyInfo } from "@/lib/currency";
+import ProductCard from "./components/ProductCard";
 
 type Product = {
   id: string;
@@ -19,11 +20,31 @@ type Product = {
   url: string;
   sizes?: string[];
   styles?: string[];
+  createdAt?: string;
 };
 
-function withTracking(url: string) {
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}ref=shopsearch&utm_source=shopsearch&utm_medium=referral`;
+// Horisontal rad med produkter (sveipes på mobil).
+function ProductRow({ title, products, currencyInfo, onMore }: { title: string; products: Product[]; currencyInfo: CurrencyInfo | null; onMore?: () => void }) {
+  if (products.length === 0) return null;
+  return (
+    <section style={{ width: "100%", textAlign: "left" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>{title}</h2>
+        {onMore && (
+          <button onClick={onMore} style={{ background: "none", border: "none", color: "var(--primary)", fontSize: 14, cursor: "pointer", padding: 0 }}>
+            Se alle →
+          </button>
+        )}
+      </div>
+      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollSnapType: "x mandatory" }}>
+        {products.map((p) => (
+          <div key={p.id} style={{ scrollSnapAlign: "start", display: "flex" }}>
+            <ProductCard p={p} currencyInfo={currencyInfo} width={170} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export default function Home() {
@@ -33,6 +54,26 @@ export default function Home() {
   const [searched, setSearched] = useState(false);
   const [currencyInfo, setCurrencyInfo] = useState<CurrencyInfo | null>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  // Alle produkter, hentet med en gang så forsiden kan vise «Nytt nå» osv. før man søker.
+  const [catalog, setCatalog] = useState<Product[] | null>(null);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then(async (data) => {
+        const all: Product[] = data.products || [];
+        setCurrencyInfo(await fetchCurrencyInfo(all.map((p) => p.currency)));
+        setCatalog(all);
+      })
+      .catch(() => setCatalog([]));
+  }, []);
+
+  function backToFront() {
+    setSearched(false);
+    setQuery("");
+    setResults([]);
+    setAiSummary(null);
+  }
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -49,12 +90,11 @@ export default function Home() {
     setLoading(true);
     setSearched(true);
     setAiSummary(null);
-    // Henter produkter og AI-tolkning samtidig.
-    const [data, ai]: [{ products?: Product[] }, AiFilters | null] = await Promise.all([
-      fetch("/api/products").then((res) => res.json()),
+    // Henter produkter (hvis ikke allerede hentet) og AI-tolkning samtidig.
+    const [all, ai]: [Product[], AiFilters | null] = await Promise.all([
+      catalog ?? fetch("/api/products").then((res) => res.json()).then((d) => (d.products || []) as Product[]),
       fetchAiFilters(query),
     ]);
-    const all: Product[] = data.products || [];
     const info = currencyInfo ?? (await fetchCurrencyInfo(all.map((p) => p.currency)));
     setCurrencyInfo(info);
 
@@ -179,24 +219,57 @@ export default function Home() {
           <p style={{ opacity: 0.6 }}>Fant ingen produkter.</p>
         )}
 
-        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
-          {results.map(function (p) {
-            const linkProps = {
-              href: withTracking(p.url),
-              target: "_blank",
-              rel: "noopener noreferrer",
-            };
-            const price = priceLabel(p.price, p.currency, currencyInfo);
-            return (
-              <a key={p.id} {...linkProps} className="flex flex-col items-center gap-2 rounded-lg border p-3 text-left" style={{ borderColor: "var(--border)" }}>
-                {p.image ? <img src={p.image} alt={p.title} className="h-32 w-full rounded object-cover" /> : null}
-                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{p.title}</p>
-                <p className="text-sm" style={{ opacity: 0.6 }}>{price}</p>
-              </a>
-            );
-          })}
-        </div>
+        {searched && !loading && (
+          <button onClick={backToFront} style={{ alignSelf: "flex-start", background: "none", border: "none", color: "var(--primary)", fontSize: 14, cursor: "pointer", padding: 0 }}>
+            ← Tilbake til forsiden
+          </button>
+        )}
+
+        {searched ? (
+          <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3" style={{ textAlign: "left" }}>
+            {results.map((p) => (
+              <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} />
+            ))}
+          </div>
+        ) : (
+          <FrontSections catalog={catalog} currencyInfo={currencyInfo} onSearch={searchStyle} />
+        )}
       </main>
+    </div>
+  );
+}
+
+// Forsiden før man har søkt: rader med produkter så det er noe å se på med en gang.
+function FrontSections({ catalog, currencyInfo, onSearch }: { catalog: Product[] | null; currencyInfo: CurrencyInfo | null; onSearch: (q: string) => void }) {
+  if (catalog === null) return <p style={{ opacity: 0.5 }}>Laster produkter...</p>;
+  if (catalog.length === 0) return null;
+
+  const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo);
+  const newest = [...catalog].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 12);
+  const cheap = catalog.filter((p) => priceOf(p) <= 500).slice(0, 12);
+  // Stiler med minst to produkter, de største først.
+  const styleRows = STYLES.map((s) => ({ style: s, products: catalog.filter((p) => (p.styles || []).includes(s.slug)) }))
+    .filter((r) => r.products.length >= 2)
+    .sort((a, b) => b.products.length - a.products.length)
+    .slice(0, 3);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 32, width: "100%", marginTop: 8 }}>
+      <ProductRow title="✨ Nytt nå" products={newest} currencyInfo={currencyInfo} />
+      {cheap.length >= 2 && cheap.length < catalog.length && (
+        <ProductRow title="💸 Under 500 kr" products={cheap} currencyInfo={currencyInfo} onMore={() => onSearch("under 500")} />
+      )}
+      {styleRows.map((r) => (
+        <ProductRow key={r.style.slug} title={r.style.label} products={r.products.slice(0, 12)} currencyInfo={currencyInfo} onMore={() => onSearch(r.style.label)} />
+      ))}
+      <section style={{ width: "100%", textAlign: "left" }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 10px" }}>Utforsk alt</h2>
+        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
+          {catalog.slice(0, 24).map((p) => (
+            <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
