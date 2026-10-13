@@ -21,7 +21,7 @@ Regler:
   Tom liste hvis søket bare er en stil, farge eller pris.
 - colors: farger på norsk og engelsk (f.eks. ["svart", "black"]).
 - category: én av ${CATEGORIES.map((c) => `"${c.slug}"`).join(", ")}, eller null.
-- styles: én eller flere av ${STYLES.map((s) => `"${s.slug}" (${s.label})`).join(", ")}. "Sossete"/"preppy" = "sos".
+- styles: én eller flere av ${STYLES.map((s) => `"${s.slug}" (${s.label})`).join(", ")}. "Sossete"/"preppy" = "soss".
 - minPrice/maxPrice: i norske kroner. "billig" uten tall = maxPrice 500. Ellers null.
 - sizes: f.eks. ["M"] eller ["43"]. Tom liste hvis ingen.
 - gender: "herre", "dame", "unisex" eller null.
