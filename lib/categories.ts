@@ -27,6 +27,15 @@ export const CATEGORIES: CategoryDef[] = [
   { slug: "underdeler", label: "Underdeler", keywords: ["bukse", "bukser", "shorts", "jogger", "joggebukse", "pants"] },
   { slug: "undertoy", label: "Undertøy", keywords: ["undertøy", "boxer", "truse", "bh", "underwear"] },
   { slug: "tilbehor", label: "Tilbehør", keywords: ["caps", "cap", "lue", "hansker", "veske", "bag", "belte", "smykke", "accessory"] },
+  {
+    slug: "interior",
+    label: "Hjem & interiør",
+    keywords: [
+      "poster", "plakat", "canvas", "wall art", "maleri", "bilderamme", "pute", "pillow", "teppe", "blanket", "pledd",
+      "kopp", "krus", "mug", "lampe", "lamp", "lys", "candle", "vase", "møbel", "stol", "chair", "bord", "table",
+      "hylle", "shelf", "speil", "mirror", "dekor", "decor", "interiør",
+    ],
+  },
 ];
 
 function containsWord(text: string, word: string): boolean {
@@ -37,6 +46,10 @@ function containsWord(text: string, word: string): boolean {
 
 export function categorizeProduct(p: Product): string {
   const text = `${p.title} ${p.category} ${p.tags.join(" ")}`.toLowerCase();
+  // Interiør først, så f.eks. en plakat med «t-shirt» i taggene ikke havner under Topper.
+  const interior = CATEGORIES.find((c) => c.slug === "interior");
+  const titleAndType = `${p.title} ${p.category}`.toLowerCase();
+  if (interior && interior.keywords.some((k) => containsWord(titleAndType, k))) return "interior";
   for (const cat of CATEGORIES) {
     if (cat.keywords.some((k) => text.includes(k.toLowerCase()))) {
       return cat.slug;
