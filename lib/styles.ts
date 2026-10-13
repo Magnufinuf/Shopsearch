@@ -23,11 +23,11 @@ export const STYLES: StyleDef[] = [
     ],
   },
   {
-    slug: "sos",
-    label: "Sos",
-    aliases: ["sos", "sossete", "sosse", "preppy"],
+    slug: "soss",
+    label: "Soss",
+    aliases: ["soss", "sos", "sossete", "sosse", "preppy"],
     keywords: [
-      "sos", "preppy", "polo", "oxford", "chinos", "halfzip", "half-zip", "half zip", "quarter zip",
+      "soss", "sos", "preppy", "polo", "oxford", "chinos", "halfzip", "half-zip", "half zip", "quarter zip",
       "cardigan", "loafers", "ralph lauren", "tommy hilfiger", "gant",
       "lacoste", "dale of norway", "holzweiler", "morris",
     ],
