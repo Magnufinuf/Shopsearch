@@ -18,8 +18,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
-  title: "Scavenger",
-  description: "Finn det du leter etter.",
+  title: "Scavenger – Don't search. Ask.",
+  description: "Finn klær, sko og interiør fra mange nettbutikker på ett sted. Bare skriv hva du leter etter.",
   // Standard forhåndsvisning når noen deler en lenke til Scavenger.
   openGraph: {
     siteName: "Scavenger",
