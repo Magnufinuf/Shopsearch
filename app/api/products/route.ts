@@ -18,6 +18,7 @@ type ShopifyProduct = {
   tags: string;
   handle: string;
   body_html: string | null;
+  created_at: string;
   images: { src: string }[];
   variants: ShopifyVariant[];
 };
@@ -68,7 +69,7 @@ async function fetchProductsForStore(store: Store) {
     // Bare aktive, publiserte produkter (ikke utkast eller arkiverte).
     let url: string | null =
       `https://${store.store_domain}/admin/api/${API}/products.json?limit=${PAGE_SIZE}&status=active&published_status=published` +
-      `&fields=id,title,product_type,vendor,tags,handle,body_html,images,variants`;
+      `&fields=id,title,product_type,vendor,tags,handle,body_html,images,variants,created_at`;
 
     for (let page = 0; url && page < MAX_PAGES; page++) {
       const res: Response = await fetch(url, { headers: { "X-Shopify-Access-Token": token }, cache: "no-store" });
@@ -97,6 +98,7 @@ async function fetchProductsForStore(store: Store) {
         url: `https://${store.store_domain}/products/${p.handle}`,
         storeDomain: store.store_domain,
         shopifyProductId: String(p.id),
+        createdAt: p.created_at,
         styles: detectStyles([p.title, p.product_type, p.vendor, tags.join(" "), description].join(" ")),
       };
     });
@@ -114,7 +116,7 @@ const getAllProducts = unstable_cache(
     const results = await Promise.all(((stores || []) as Store[]).map(fetchProductsForStore));
     return results.flat();
   },
-  ["all-products-v2"],
+  ["all-products-v3"],
   { revalidate: CACHE_SECONDS, tags: ["products"] }
 );
 
