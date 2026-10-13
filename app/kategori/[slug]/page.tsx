@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { CurrencyInfo, convertPrice, fetchCurrencyInfo, priceLabel } from "@/lib/currency";
+import { CurrencyInfo, convertPrice, fetchCurrencyInfo } from "@/lib/currency";
+import ProductCard from "../../components/ProductCard";
 import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
 import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
 import {
@@ -14,10 +15,6 @@ import {
   Gender,
 } from "@/lib/categories";
 
-function withTracking(url: string) {
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}ref=shopsearch&utm_source=shopsearch&utm_medium=referral`;
-}
 
 type PriceRangeDef = { key: string; label: string; min?: number; max?: number };
 
@@ -219,21 +216,9 @@ export default function KategoriPage() {
         )}
 
         <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
-          {results.map((p) => {
-            const linkProps = {
-              href: withTracking(p.url),
-              target: "_blank",
-              rel: "noopener noreferrer",
-            };
-            const price = priceLabel(p.price, p.currency, currencyInfo);
-            return (
-              <a key={p.id} {...linkProps} className="flex flex-col items-center gap-2 rounded-lg border p-3 text-left" style={{ borderColor: "var(--border)" }}>
-                {p.image ? <img src={p.image} alt={p.title} className="h-32 w-full rounded object-cover" /> : null}
-                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{p.title}</p>
-                <p className="text-sm" style={{ opacity: 0.6 }}>{price}</p>
-              </a>
-            );
-          })}
+          {results.map((p) => (
+            <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} source="kategori" />
+          ))}
         </div>
       </main>
     </div>

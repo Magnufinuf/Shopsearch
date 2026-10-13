@@ -10,6 +10,8 @@ export type Product = {
   url: string;
   sizes?: string[];
   styles?: string[];
+  storeDomain?: string;
+  shopifyProductId?: string;
 };
 
 export type CategoryDef = {
