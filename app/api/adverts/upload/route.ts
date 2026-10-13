@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getSessionShop, notLoggedIn } from "@/lib/session";
+import { isAdvertCategory } from "@/lib/adverts";
 
 export async function POST(request: Request) {
   const storeDomain = await getSessionShop();
@@ -9,6 +10,8 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
   const caption = formData.get("caption") as string | null;
+  const rawCategory = formData.get("category");
+  const category = isAdvertCategory(rawCategory) ? rawCategory : null;
 
   if (!file) {
     return NextResponse.json(
@@ -36,12 +39,17 @@ export async function POST(request: Request) {
     .from("adverts")
     .getPublicUrl(fileName);
 
-  const { error: insertError } = await supabase.from("adverts").insert({
+  const row = {
     store_domain: storeDomain,
     media_url: publicUrlData.publicUrl,
     media_type: mediaType,
     caption: caption || "",
-  });
+  };
+  let { error: insertError } = await supabase.from("adverts").insert({ ...row, category });
+  // Før kategori-kolonnen finnes (supabase/annonse-kategorier.sql): lagre uten kategori.
+  if (insertError && /category/i.test(insertError.message)) {
+    ({ error: insertError } = await supabase.from("adverts").insert(row));
+  }
 
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });

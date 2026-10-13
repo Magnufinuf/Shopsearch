@@ -119,3 +119,11 @@ h1, h2, h3 {
     background: rgba(0, 0, 0, 0.4);
   }
 }
+
+/* Rullbare rader uten synlig rullefelt (kategoriknapper, annonsefeed). */
+.sc-no-scrollbar {
+  scrollbar-width: none;
+}
+.sc-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
