@@ -28,6 +28,8 @@ const primaryButton: React.CSSProperties = {
   cursor: "pointer",
 };
 
+const EMAIL_KEY = "scavenger_last_email";
+
 // Bare interne stier, så lenken ikke kan sende folk til en annen nettside.
 function nextPath(): string {
   const next = new URLSearchParams(window.location.search).get("neste") || "/min-side";
@@ -46,6 +48,13 @@ export default function LoggInn() {
     fetchUser().then((u) => {
       if (u.loggedIn && u.username) window.location.assign(nextPath());
       else if (u.loggedIn) setStep("username");
+      else {
+        // Husk e-posten fra sist, så du slipper å skrive den igjen.
+        try {
+          const saved = localStorage.getItem(EMAIL_KEY);
+          if (saved) setEmail((current) => current || saved);
+        } catch {}
+      }
     });
   }, []);
 
@@ -65,18 +74,21 @@ export default function LoggInn() {
       setError(data.error || "Noe gikk galt, prøv igjen.");
       return;
     }
+    try {
+      localStorage.setItem(EMAIL_KEY, email.trim());
+    } catch {}
     setStep("code");
     setInfo(`Vi har sendt en kode til ${email.trim()}.`);
   }
 
-  async function verifyCode(e: React.FormEvent) {
-    e.preventDefault();
+  async function verifyCode(e?: React.FormEvent, codeValue = code) {
+    e?.preventDefault();
     setLoading(true);
     setError("");
     const res = await fetch("/api/user/verify-code", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code }),
+      body: JSON.stringify({ email, code: codeValue }),
     });
     const data = await res.json();
     if (res.ok && data.needsUsername) {
@@ -137,7 +149,12 @@ export default function LoggInn() {
               autoComplete="one-time-code"
               maxLength={6}
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setCode(value);
+                // Logg inn med en gang alle 6 tallene er skrevet inn.
+                if (value.length === 6 && !loading) verifyCode(undefined, value);
+              }}
               placeholder="123456"
               style={{ ...input, textAlign: "center", fontSize: 24, letterSpacing: 8 }}
             />

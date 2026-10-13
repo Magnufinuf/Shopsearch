@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export const SESSION_COOKIE = "scavenger_session";
-const SESSION_DAYS = 30;
+const SESSION_DAYS = 365;
 
 function sessionSecret(): string {
   const secret = process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD;
