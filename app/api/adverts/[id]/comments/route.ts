@@ -4,6 +4,7 @@ import { getSessionShop, getSessionUserId } from "@/lib/session";
 import { escapeHtml, sendEmail } from "@/lib/email";
 import { findMentions } from "@/lib/mentions";
 import { APP_URL } from "@/lib/app-url";
+import { wantsEmail } from "@/lib/notify-prefs";
 
 const MAX_LENGTH = 300;
 const MAX_PER_HOUR = 30;
@@ -17,9 +18,13 @@ async function notifyMentions(text: string, author: string, authorId: string, ad
   const { data: tagged } = await supabase.from("users").select("id, email, username").in("username", names);
   const link = `${APP_URL}/adverts?annonse=${advertId}&kommentarer=1`;
 
+  const recipients = [];
+  for (const u of tagged || []) {
+    if (u.id !== authorId && (await wantsEmail("notify_mentions", { id: u.id }))) recipients.push(u);
+  }
+
   await Promise.all(
-    (tagged || [])
-      .filter((u) => u.id !== authorId)
+    recipients
       .map((u) =>
         sendEmail(
           u.email,
