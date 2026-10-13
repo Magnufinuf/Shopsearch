@@ -79,8 +79,22 @@ function matchesWord(text: string, word: string): boolean {
   return new RegExp(`(^|[^a-zæøå0-9])${escaped}($|[^a-zæøå0-9])`, "i").test(text);
 }
 
+// Ting som ikke er klær (plakater, kopper, klistremerker …) skal ikke få klesstiler.
+const NOT_CLOTHING = [
+  "poster", "plakat", "canvas", "wall art", "framed print", "art print", "maleri", "bilde",
+  "mug", "kopp", "krus", "sticker", "klistremerke", "phone case", "mobildeksel", "iphone case",
+  "keychain", "nøkkelring", "puzzle", "puslespill", "pute", "pillow", "blanket", "teppe", "gift card", "gavekort",
+];
+
+export function isClothing(titleAndType: string): boolean {
+  const lower = titleAndType.toLowerCase();
+  return !NOT_CLOTHING.some((w) => matchesWord(lower, w));
+}
+
 // Hvilke stiler passer produktet? text = tittel + tagger + type + merke + beskrivelse.
-export function detectStyles(text: string): string[] {
+// titleAndType = bare tittel og produkttype, brukes til å se om det i det hele tatt er klær.
+export function detectStyles(text: string, titleAndType = text): string[] {
+  if (!isClothing(titleAndType)) return [];
   const lower = text.toLowerCase();
   return STYLES.filter((s) => s.keywords.some((k) => matchesWord(lower, k))).map((s) => s.slug);
 }
