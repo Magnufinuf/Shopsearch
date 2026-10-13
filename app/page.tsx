@@ -7,6 +7,7 @@ import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart
 import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo } from "@/lib/currency";
 import ProductCard from "./components/ProductCard";
+import InstallPrompt from "./components/InstallPrompt";
 
 type Product = {
   id: string;
@@ -237,6 +238,7 @@ export default function Home() {
           <FrontSections catalog={catalog} currencyInfo={currencyInfo} onSearch={searchStyle} />
         )}
       </main>
+      <InstallPrompt />
     </div>
   );
 }

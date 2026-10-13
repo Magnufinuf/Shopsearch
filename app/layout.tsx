@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "./components/Sidebar";
@@ -30,6 +30,15 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: { card: "summary" },
+  // iPhone: «Legg til på Hjem-skjerm» åpner Scavenger i fullskjerm som en app.
+  appleWebApp: { capable: true, title: "Scavenger", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FBF3EC" },
+    { media: "(prefers-color-scheme: dark)", color: "#201812" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
