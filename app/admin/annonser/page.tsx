@@ -3,16 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchSession } from "@/lib/session-client";
-import { ADVERT_CATEGORIES, Advert, STORE_CATEGORY, advertCategory } from "@/lib/adverts";
+import { ADVERT_CATEGORIES, Advert, advertCategory } from "@/lib/adverts";
 
 export default function MineAnnonserPage() {
   const [domain, setDomain] = useState("");
   const [sessionChecked, setSessionChecked] = useState(false);
   const [adverts, setAdverts] = useState<Advert[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
-  const [savingCaption, setSavingCaption] = useState(false);
 
   useEffect(() => {
     fetchSession().then((s) => {
@@ -31,38 +28,6 @@ export default function MineAnnonserPage() {
         setLoading(false);
       });
   }, [domain]);
-
-  async function changeCategory(id: string, category: string) {
-    const before = adverts;
-    setAdverts((prev) => prev.map((a) => (a.id === id ? { ...a, category } : a)));
-    const res = await fetch("/api/adverts/category", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, category }),
-    });
-    if (!res.ok) {
-      setAdverts(before);
-      const data = await res.json().catch(() => ({}));
-      alert(data.error || "Noe gikk galt, prøv igjen.");
-    }
-  }
-
-  async function saveCaption(id: string) {
-    setSavingCaption(true);
-    const res = await fetch("/api/adverts/caption", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, caption: draft }),
-    });
-    setSavingCaption(false);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data.error || "Noe gikk galt, prøv igjen.");
-      return;
-    }
-    setAdverts((prev) => prev.map((a) => (a.id === id ? { ...a, caption: draft.trim() } : a)));
-    setEditingId(null);
-  }
 
   async function handleDelete(id: string) {
     const confirmed = confirm("Slette denne annonsen?");
@@ -116,62 +81,18 @@ export default function MineAnnonserPage() {
                 )}
               </div>
               <div style={{ padding: 10 }}>
-                {editingId === a.id ? (
-                  <div style={{ marginBottom: 8 }}>
-                    <textarea
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      autoFocus
-                      rows={3}
-                      maxLength={500}
-                      style={{ width: "100%", boxSizing: "border-box", padding: 6, borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)", fontSize: 13, resize: "vertical" }}
-                    />
-                    <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                      <button
-                        onClick={() => saveCaption(a.id)}
-                        disabled={savingCaption}
-                        style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "none", backgroundColor: "var(--primary)", color: "white", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: savingCaption ? 0.6 : 1 }}
-                      >
-                        {savingCaption ? "Lagrer..." : "Lagre"}
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        style={{ flex: 1, padding: "6px 0", borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 12, cursor: "pointer" }}
-                      >
-                        Avbryt
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                    <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 12, opacity: a.caption ? 0.75 : 0.45, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {a.caption || "Ingen tekst"}
-                    </p>
-                    <button
-                      onClick={() => {
-                        setEditingId(a.id);
-                        setDraft(a.caption || "");
-                      }}
-                      style={{ background: "none", border: "none", padding: 0, color: "var(--primary)", fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
-                    >
-                      Rediger
-                    </button>
-                  </div>
-                )}
-                {a.product_url ? (
-                  <select
-                    value={advertCategory(a)}
-                    onChange={(e) => changeCategory(a.id, e.target.value)}
-                    aria-label="Kategori"
-                    style={{ width: "100%", padding: "6px 4px", marginBottom: 8, borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)", fontSize: 12 }}
-                  >
-                    {ADVERT_CATEGORIES.filter((c) => c.slug !== STORE_CATEGORY).map((c) => (
-                      <option key={c.slug} value={c.slug}>{c.label}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <p style={{ fontSize: 12, opacity: 0.6, margin: "0 0 8px" }}>Hele butikken</p>
-                )}
+                <p style={{ fontSize: 12, opacity: a.caption ? 0.75 : 0.45, margin: "0 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {a.caption || "Ingen tekst"}
+                </p>
+                <p style={{ fontSize: 11, opacity: 0.55, margin: "0 0 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {a.product_url ? `${a.product_title || "Produkt"} · ${ADVERT_CATEGORIES.find((c) => c.slug === advertCategory(a))?.label || ""}` : "Hele butikken"}
+                </p>
+                <Link
+                  href={`/admin/annonser/${a.id}`}
+                  style={{ display: "block", textAlign: "center", padding: "6px 0", marginBottom: 6, borderRadius: 8, backgroundColor: "var(--primary)", color: "white", fontSize: 12, fontWeight: 600 }}
+                >
+                  Rediger
+                </Link>
                 <button
                   onClick={() => handleDelete(a.id)}
                   style={{ width: "100%", padding: "6px 0", borderRadius: 8, border: "1px solid #e05252", backgroundColor: "transparent", color: "#e05252", fontSize: 12, cursor: "pointer" }}
