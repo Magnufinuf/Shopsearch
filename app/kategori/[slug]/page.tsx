@@ -84,17 +84,15 @@ export default function KategoriPage() {
 
     let hits = search(allProducts, true);
     if (hits.length === 0) hits = search(allProducts, false);
-    // ✨ = AI-en tolket søket, 🔎 = det gratis smarte søket.
-    const icon = ai ? "✨" : "🔎";
     const summary = ai ? ai.summary : smart.summary;
-    let message: string | null = query.trim() && hits.length > 0 && summary ? `${icon} ${summary}` : null;
+    let message: string | null = query.trim() && hits.length > 0 && summary ? summary : null;
 
     // Ingenting i denne kategorien? Søk i alle kategorier og si fra.
     if (hits.length === 0 && query.trim()) {
       hits = search(everyProduct, true);
       if (hits.length === 0) hits = search(everyProduct, false);
       if (hits.length > 0) {
-        message = `${icon} Ingen treff i ${categoryDef?.label ?? "denne kategorien"} – viser treff fra alle kategorier`;
+        message = `Ingen treff i ${categoryDef?.label ?? "denne kategorien"} – viser treff fra alle kategorier`;
       }
     }
 
@@ -215,7 +213,7 @@ export default function KategoriPage() {
           <p style={{ opacity: 0.6 }}>{query.trim() ? "Fant ingen produkter som passer søket." : "Fant ingen produkter i denne kategorien."}</p>
         )}
 
-        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="grid w-full grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3">
           {results.map((p) => (
             <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} source="kategori" />
           ))}

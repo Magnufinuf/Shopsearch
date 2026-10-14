@@ -127,3 +127,11 @@ h1, h2, h3 {
 .sc-no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Produktkort: bildet zoomer litt inn når man holder over. */
+.sc-product-img {
+  transition: transform 0.35s ease;
+}
+.sc-product-card:hover .sc-product-img {
+  transform: scale(1.04);
+}
