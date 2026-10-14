@@ -54,7 +54,12 @@ h1, h2, h3 {
 
 .sc-sidebar {
   width: 220px;
-  min-height: 100vh;
+  /* PC: menyen står stille mens siden rulles. */
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  overflow-y: auto;
   border-right: 1px solid var(--border);
   padding: 24px;
   display: flex;
@@ -95,7 +100,7 @@ h1, h2, h3 {
     z-index: 60;
     width: 270px;
     max-width: 85vw;
-    min-height: 0;
+    height: 100dvh;
     overflow-y: auto;
     background: var(--background);
     transform: translateX(-100%);
