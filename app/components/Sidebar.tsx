@@ -126,16 +126,28 @@ export default function Sidebar() {
               Logg ut
             </button>
           </div>
-        ) : userEmail ? (
-          <span style={{ fontSize: 12, opacity: 0.6, wordBreak: "break-all" }}>
-            Innlogget som: {userEmail}
-          </span>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <Link href="/logg-inn" onClick={close} style={{ fontSize: 14, color: "var(--primary)", fontWeight: 600 }}>
-              Logg inn
-            </Link>
-            <Link href="/logg-inn-bedrift" onClick={close} style={{ fontSize: 12, opacity: 0.6 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {userEmail ? (
+              <span style={{ fontSize: 12, opacity: 0.6, wordBreak: "break-all" }}>
+                Innlogget som: {userEmail}
+              </span>
+            ) : (
+              <Link href="/logg-inn" onClick={close} style={{ fontSize: 14, color: "var(--primary)", fontWeight: 600 }}>
+                Logg inn
+              </Link>
+            )}
+            {/* Synlig for butikkeiere, men roligere enn vanlig innlogging. */}
+            <Link
+              href="/logg-inn-bedrift"
+              onClick={close}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, border: "1px solid var(--border)", fontSize: 13, fontWeight: 500, color: "var(--foreground)" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ opacity: 0.7 }}>
+                <path d="M4 9.5 5.5 4h13L20 9.5" />
+                <path d="M4 9.5c0 1.4 1.1 2.5 2.7 2.5s2.6-1.1 2.6-2.5c0 1.4 1.1 2.5 2.7 2.5s2.7-1.1 2.7-2.5c0 1.4 1 2.5 2.6 2.5S20 10.9 20 9.5" />
+                <path d="M5.5 12v8h13v-8M10 20v-4.5h4V20" />
+              </svg>
               Logg inn som bedrift
             </Link>
           </div>
