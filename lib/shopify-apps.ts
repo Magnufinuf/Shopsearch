@@ -26,12 +26,14 @@ export function appByClientId(clientId: string | undefined | null): ShopifyApp |
   return allApps().find((a) => a.clientId === clientId) ?? null;
 }
 
-// Butikker som er koblet til med den gamle appen, logger inn med den. Alle andre bruker hovedappen.
+// Butikker som allerede er koblet til, men ikke med hovedappen, logger inn med den gamle appen.
+// Nye butikker bruker hovedappen.
 export async function appForShop(shop: string): Promise<ShopifyApp | null> {
+  const main = mainApp();
   const legacy = legacyApp();
   if (legacy) {
     const { data } = await supabase.from("stores").select("client_id").eq("store_domain", shop).maybeSingle();
-    if (data?.client_id === legacy.clientId) return legacy;
+    if (data && data.client_id !== main?.clientId) return legacy;
   }
-  return mainApp() ?? legacy;
+  return main ?? legacy;
 }
