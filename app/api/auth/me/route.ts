@@ -1,3 +1,4 @@
+import { allApps } from "@/lib/shopify-apps";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getSessionShop } from "@/lib/session";
@@ -7,7 +8,7 @@ import { getFreePeriod } from "@/lib/pricing";
 export async function GET() {
   const shop = await getSessionShop();
   const freePeriod = getFreePeriod();
-  const shopifyEnabled = !!(process.env.SHOPIFY_CLIENT_ID && process.env.SHOPIFY_CLIENT_SECRET);
+  const shopifyEnabled = allApps().length > 0;
 
   if (!shop) {
     return NextResponse.json({ loggedIn: false, shop: null, displayName: null, subscribed: false, shopifyEnabled, ...freePeriod });

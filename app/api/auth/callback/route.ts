@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { safeEqual, setSessionCookie } from "@/lib/session";
 import { APP_URL } from "@/lib/app-url";
 import { revalidateTag } from "next/cache";
+import { appByClientId, mainApp } from "@/lib/shopify-apps";
 
 // Sjekker at svaret faktisk kommer fra Shopify (hmac) og hører til innloggingen vi startet (state).
 function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean {
@@ -30,8 +31,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Mangler shop eller code" }, { status: 400 });
   }
 
-  const clientId = process.env.SHOPIFY_CLIENT_ID!;
-  const clientSecret = process.env.SHOPIFY_CLIENT_SECRET!;
+  const app = appByClientId(req.cookies.get("shopify_oauth_app")?.value) ?? mainApp();
+  if (!app) {
+    return NextResponse.json({ error: "Shopify er ikke satt opp." }, { status: 500 });
+  }
+  const { clientId, clientSecret } = app;
 
   if (!isValidShopifyCallback(req, clientSecret)) {
     return NextResponse.json({ error: "Ugyldig svar fra Shopify, prøv igjen." }, { status: 400 });
@@ -69,6 +73,7 @@ export async function GET(req: NextRequest) {
   const response = NextResponse.redirect(`${APP_URL}${isLogin ? "/admin" : "/registrer/suksess"}`);
   response.cookies.delete("shopify_oauth_state");
   response.cookies.delete("shopify_oauth_login");
+  response.cookies.delete("shopify_oauth_app");
   setSessionCookie(response, shop);
   return response;
 }
