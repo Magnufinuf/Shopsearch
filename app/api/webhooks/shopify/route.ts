@@ -3,6 +3,7 @@ import { createHmac } from "crypto";
 import { revalidateTag } from "next/cache";
 import { supabase } from "@/lib/supabase";
 import { safeEqual } from "@/lib/session";
+import { allApps } from "@/lib/shopify-apps";
 
 // Varsler fra Shopify: når en butikk avinstallerer appen, og personvern-varslene
 // som alle offentlige Shopify-apper må håndtere (customers/data_request,
@@ -10,11 +11,12 @@ import { safeEqual } from "@/lib/session";
 //
 // Adresse å legge inn hos Shopify: https://scavengers.shop/api/webhooks/shopify
 
+// Varselet er signert med hemmeligheten til appen det gjelder (ny eller gammel).
 function isFromShopify(rawBody: string, hmacHeader: string | null): boolean {
-  const secret = process.env.SHOPIFY_CLIENT_SECRET;
-  if (!secret || !hmacHeader) return false;
-  const expected = createHmac("sha256", secret).update(rawBody, "utf8").digest("base64");
-  return safeEqual(hmacHeader, expected);
+  if (!hmacHeader) return false;
+  return allApps().some((app) =>
+    safeEqual(hmacHeader, createHmac("sha256", app.clientSecret).update(rawBody, "utf8").digest("base64"))
+  );
 }
 
 async function forgetStoreConnection(shop: string) {
