@@ -26,6 +26,18 @@ type Product = {
   shopifyProductId?: string;
 };
 
+type SortKey = "relevans" | "pris-lav" | "pris-hoy" | "nyeste";
+
+function sortProducts(products: Product[], sort: SortKey, info: CurrencyInfo | null): Product[] {
+  if (sort === "relevans") return products;
+  const priceOf = (p: Product) => convertPrice(p.price, p.currency, info);
+  const sorted = [...products];
+  if (sort === "pris-lav") sorted.sort((a, b) => priceOf(a) - priceOf(b));
+  if (sort === "pris-hoy") sorted.sort((a, b) => priceOf(b) - priceOf(a));
+  if (sort === "nyeste") sorted.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+  return sorted;
+}
+
 // Horisontal rad med produkter (sveipes på mobil).
 function ProductRow({ title, products, currencyInfo, onMore }: { title: string; products: Product[]; currencyInfo: CurrencyInfo | null; onMore?: () => void }) {
   if (products.length === 0) return null;
@@ -42,7 +54,7 @@ function ProductRow({ title, products, currencyInfo, onMore }: { title: string; 
       <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollSnapType: "x mandatory" }}>
         {products.map((p) => (
           <div key={p.id} style={{ scrollSnapAlign: "start", display: "flex" }}>
-            <ProductCard p={p} currencyInfo={currencyInfo} width={170} source="forside" />
+            <ProductCard p={p} currencyInfo={currencyInfo} width={160} source="forside" />
           </div>
         ))}
       </div>
@@ -59,6 +71,7 @@ export default function Home() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   // Alle produkter, hentet med en gang så forsiden kan vise «Nytt nå» osv. før man søker.
   const [catalog, setCatalog] = useState<Product[] | null>(null);
+  const [sort, setSort] = useState<SortKey>("relevans");
 
   useEffect(() => {
     fetch("/api/products")
@@ -93,6 +106,7 @@ export default function Home() {
     setLoading(true);
     setSearched(true);
     setAiSummary(null);
+    setSort("relevans");
     // Henter produkter (hvis ikke allerede hentet) og AI-tolkning samtidig.
     const [all, ai]: [Product[], AiFilters | null] = await Promise.all([
       catalog ?? fetch("/api/products").then((res) => res.json()).then((d) => (d.products || []) as Product[]),
@@ -107,7 +121,7 @@ export default function Home() {
       let hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p)));
       if (hits.length === 0) hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p), false));
       if (hits.length > 0) {
-        setAiSummary(`✨ ${ai.summary}`);
+        setAiSummary(ai.summary);
         setResults(hits);
         setLoading(false);
         return;
@@ -125,7 +139,7 @@ export default function Home() {
       summary = "Ingen helt like treff – her er det nærmeste vi fant";
     }
 
-    setAiSummary(hits.length > 0 && summary ? `🔎 ${summary}` : null);
+    setAiSummary(hits.length > 0 && summary ? summary : null);
     setResults(hits);
     setLoading(false);
   }
@@ -214,9 +228,6 @@ export default function Home() {
 
         {loading && <p style={{ opacity: 0.6 }}>Søker...</p>}
 
-        {!loading && aiSummary && (
-          <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>{aiSummary}</p>
-        )}
 
         {!loading && searched && results.length === 0 && (
           <p style={{ opacity: 0.6 }}>Fant ingen produkter.</p>
@@ -229,11 +240,34 @@ export default function Home() {
         )}
 
         {searched ? (
-          <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3" style={{ textAlign: "left" }}>
-            {results.map((p) => (
-              <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} />
-            ))}
-          </div>
+          !loading && results.length > 0 && (
+            <div style={{ width: "100%", textAlign: "left" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
+                    {results.length} produkt{results.length === 1 ? "" : "er"}
+                  </p>
+                  {aiSummary && <p style={{ margin: "2px 0 0", fontSize: 13, opacity: 0.6 }}>{aiSummary}</p>}
+                </div>
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortKey)}
+                  aria-label="Sorter"
+                  style={{ flexShrink: 0, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)", fontSize: 13 }}
+                >
+                  <option value="relevans">Mest relevant</option>
+                  <option value="pris-lav">Pris: lav til høy</option>
+                  <option value="pris-hoy">Pris: høy til lav</option>
+                  <option value="nyeste">Nyeste</option>
+                </select>
+              </div>
+              <div className="grid w-full grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3">
+                {sortProducts(results, sort, currencyInfo).map((p) => (
+                  <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} />
+                ))}
+              </div>
+            </div>
+          )
         ) : (
           <FrontSections catalog={catalog} currencyInfo={currencyInfo} onSearch={searchStyle} />
         )}
@@ -259,16 +293,16 @@ function FrontSections({ catalog, currencyInfo, onSearch }: { catalog: Product[]
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 32, width: "100%", marginTop: 8 }}>
-      <ProductRow title="✨ Nytt nå" products={newest} currencyInfo={currencyInfo} />
+      <ProductRow title="Nytt nå" products={newest} currencyInfo={currencyInfo} />
       {cheap.length >= 2 && cheap.length < catalog.length && (
-        <ProductRow title="💸 Under 500 kr" products={cheap} currencyInfo={currencyInfo} onMore={() => onSearch("under 500")} />
+        <ProductRow title="Under 500 kr" products={cheap} currencyInfo={currencyInfo} onMore={() => onSearch("under 500")} />
       )}
       {styleRows.map((r) => (
         <ProductRow key={r.style.slug} title={r.style.label} products={r.products.slice(0, 12)} currencyInfo={currencyInfo} onMore={() => onSearch(r.style.label)} />
       ))}
       <section style={{ width: "100%", textAlign: "left" }}>
         <h2 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 10px" }}>Utforsk alt</h2>
-        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="grid w-full grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3">
           {catalog.slice(0, 24).map((p) => (
             <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} source="forside" />
           ))}
