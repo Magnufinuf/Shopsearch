@@ -59,9 +59,11 @@ function stripHtml(html: string | null): string {
   return (html || "").replace(/<[^>]*>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
 }
 
+// failed = true hvis Shopify ikke svarte ordentlig, så et tomt/halvt svar ikke mellomlagres.
 async function fetchProductsForStore(store: Store) {
   const token = store.client_secret;
-  if (!token) return [];
+  if (!token) return { products: [], failed: false };
+  let failed = false;
 
   try {
     const currency = await getShopCurrency(store.store_domain, token);
@@ -75,6 +77,9 @@ async function fetchProductsForStore(store: Store) {
       const res: Response = await fetch(url, { headers: { "X-Shopify-Access-Token": token }, cache: "no-store" });
       if (!res.ok) {
         console.error(`Shopify ${store.store_domain} svarte ${res.status}`);
+        // Midlertidige feil (for mange kall, Shopify nede) skal ikke mellomlagres.
+        // En butikk som har koblet fra appen (401/403) skal ikke stoppe mellomlagringen for alle.
+        failed = res.status === 429 || res.status >= 500;
         break;
       }
       const data = await res.json();
@@ -82,7 +87,7 @@ async function fetchProductsForStore(store: Store) {
       url = nextPageUrl(res.headers.get("link"));
     }
 
-    return products.map((p) => {
+    const mapped = products.map((p) => {
       const tags = p.tags ? p.tags.split(",").map((t) => t.trim()) : [];
       const description = stripHtml(p.body_html).slice(0, 500);
       return {
@@ -102,21 +107,37 @@ async function fetchProductsForStore(store: Store) {
         styles: detectStyles([p.title, p.product_type, p.vendor, tags.join(" "), description].join(" "), `${p.title} ${p.product_type}`),
       };
     });
+    return { products: mapped, failed };
   } catch (err) {
     console.error(`Kunne ikke hente produkter fra ${store.store_domain}:`, err);
-    return [];
+    return { products: [], failed: true };
   }
+}
+
+async function loadAllProducts() {
+  const { data: stores, error } = await supabase.from("stores").select("store_domain, client_id, client_secret, display_name");
+  const results = await Promise.all(((stores || []) as Store[]).map(fetchProductsForStore));
+  return { products: results.flatMap((r) => r.products), failed: !!error || results.some((r) => r.failed) };
 }
 
 // Alle produkter fra alle butikker, mellomlagret så søket går raskt.
 // Tømmes når en butikk kobles til eller fra (revalidateTag("products")).
-export const getAllProducts = unstable_cache(
+// Feiler en butikk, kastes en feil så resultatet ikke huskes i 10 minutter.
+const getCachedProducts = unstable_cache(
   async () => {
-    const { data: stores } = await supabase.from("stores").select("store_domain, client_id, client_secret, display_name");
-    const results = await Promise.all(((stores || []) as Store[]).map(fetchProductsForStore));
-    return results.flat();
+    const result = await loadAllProducts();
+    if (result.failed) throw new Error("Klarte ikke å hente alle produktene fra Shopify");
+    return result.products;
   },
   ["all-products-v4"],
   { revalidate: CACHE_SECONDS, tags: ["products"] }
 );
 
+export async function getAllProducts() {
+  try {
+    return await getCachedProducts();
+  } catch {
+    // Vis det vi får tak i nå, uten å mellomlagre det.
+    return (await loadAllProducts()).products;
+  }
+}
