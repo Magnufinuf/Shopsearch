@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Personvern – Scavenger" };
 
 export default function PersonvernPage() {
   return (
-    <LegalPage title="Personvernerklæring" updated="11. oktober 2026">
+    <LegalPage title="Personvernerklæring" updated="15. oktober 2026">
       <p>
         Scavenger er en søketjeneste som samler produkter fra flere nettbutikker på ett sted. Her forklarer vi hvilke
         opplysninger vi behandler, hvorfor, og hvilke rettigheter du har.
@@ -14,13 +14,15 @@ export default function PersonvernPage() {
 
       <H2>Når du søker</H2>
       <p>
-        Du trenger ikke konto for å søke. Vi lagrer ikke søkene dine. For å vise priser i din valuta bruker vi hvilket
+        Du trenger ikke konto for å søke. Vi lagrer ikke søkene dine. Søketeksten kan sendes til vår AI-leverandør
+        (Anthropic) for å forstå hva du leter etter. Den brukes bare til å svare på søket. For å vise priser i din valuta bruker vi hvilket
         land forespørselen kommer fra (gjettet ut fra IP-adressen av vår hostingleverandør). Landet brukes bare der og
         da og lagres ikke.
       </p>
       <p>
         Når du klikker på et produkt, sendes du til butikkens egen nettside. Lenken inneholder en merking som viser at
-        du kom fra Scavenger. Kjøpet skjer hos butikken, og deres personvernerklæring gjelder der.
+        du kom fra Scavenger. Vi teller klikket (hvilken butikk og hvilket produkt, og tidspunktet) så butikken kan se
+        statistikk, men vi lagrer ikke hvem som klikket. Kjøpet skjer hos butikken, og deres personvernerklæring gjelder der.
       </p>
 
       <H2>Når du lager en konto</H2>
@@ -40,9 +42,17 @@ export default function PersonvernPage() {
 
       <H2>Butikker som kobler seg til</H2>
       <p>
+        Scavenger-appen for Shopify ber bare om lesetilgang til butikkens produkter. Vi henter ikke kunder, ordrer eller
+        andre personopplysninger fra butikken.
+      </p>
+      <p>
         For butikker lagrer vi butikkdomene, tilgangsnøkkel til Shopify (for å hente produkter), visningsnavn,
-        kontakt-e-post, abonnementsstatus, produkter butikken har skjult og annonser butikken laster opp. Grunnlaget er
-        avtalen med butikken. Kobler butikken seg fra, slettes butikkens oppføring.
+        kontakt-e-post, abonnementsstatus, produkter butikken har skjult, annonser butikken laster opp og
+        klikkstatistikk. Grunnlaget er avtalen med butikken.
+      </p>
+      <p>
+        Avinstallerer butikken appen eller kobler seg fra, slutter vi å hente produktene med en gang. Senest 48 timer
+        etter avinstallering sletter vi alt vi har lagret om butikken, når Shopify ber oss om det.
       </p>
 
       <H2>Cookies og lagring i nettleseren</H2>
@@ -59,6 +69,7 @@ export default function PersonvernPage() {
         <li>Resend – sending av e-post</li>
         <li>Stripe – betaling av abonnement for butikker</li>
         <li>Shopify – henting av produkter fra butikkene</li>
+        <li>Anthropic – tolking av søketekst (AI-søk)</li>
       </ul>
       <p>
         Noen av disse kan behandle data utenfor EU/EØS. Det skjer i så fall med EUs standard personvernbestemmelser

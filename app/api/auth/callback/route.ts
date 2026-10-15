@@ -5,6 +5,7 @@ import { safeEqual, setSessionCookie } from "@/lib/session";
 import { APP_URL } from "@/lib/app-url";
 import { revalidateTag } from "next/cache";
 import { appByClientId, mainApp } from "@/lib/shopify-apps";
+import { shopifyGraphQL } from "@/lib/shopify";
 
 // Sjekker at svaret faktisk kommer fra Shopify (hmac) og hører til innloggingen vi startet (state).
 function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean {
@@ -22,6 +23,14 @@ function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean
   const expected = createHmac("sha256", clientSecret).update(message).digest("hex");
   return safeEqual(hmac, expected);
 }
+
+const UNINSTALL_WEBHOOK = `
+  mutation RegisterUninstall($uri: String!) {
+    webhookSubscriptionCreate(topic: APP_UNINSTALLED, webhookSubscription: { uri: $uri }) {
+      userErrors { message }
+    }
+  }
+`;
 
 export async function GET(req: NextRequest) {
   const shop = req.nextUrl.searchParams.get("shop");
@@ -68,6 +77,12 @@ export async function GET(req: NextRequest) {
     { onConflict: "store_domain" }
   );
   revalidateTag("products", { expire: 0 });
+
+  // Be Shopify si fra når butikken avinstallerer appen (håndteres i /api/webhooks/shopify).
+  // Finnes varselet allerede, svarer Shopify med en feilmelding som vi bare ignorerer.
+  await shopifyGraphQL(shop, accessToken, UNINSTALL_WEBHOOK, { uri: `${APP_URL}/api/webhooks/shopify` }).catch((err) =>
+    console.error(`Kunne ikke registrere app/uninstalled for ${shop}:`, err)
+  );
 
   const isLogin = req.cookies.get("shopify_oauth_login")?.value === "1";
   const response = NextResponse.redirect(`${APP_URL}${isLogin ? "/admin" : "/registrer/suksess"}`);
