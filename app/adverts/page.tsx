@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
+import { getStoreName } from "@/lib/store-names";
 import AdvertsFeed from "./AdvertsFeed";
 
 type Props = { searchParams: Promise<{ annonse?: string | string[] }> };
@@ -18,7 +19,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     .maybeSingle();
   if (!advert) return { title: "Annonser – Scavenger" };
 
-  const store = advert.store_domain.replace(".myshopify.com", "");
+  const store = await getStoreName(advert.store_domain);
   const title = advert.caption ? `${advert.caption} – ${store}` : `Se dette fra ${store}`;
   const description = "Funnet på Scavenger – trykk for å se annonsen.";
   const isVideo = advert.media_type === "video";

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getStoreName } from "@/lib/store-names";
 import { supabase } from "@/lib/supabase";
 import { getSessionUserId } from "@/lib/session";
 import { escapeHtml, sendEmail } from "@/lib/email";
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
   }
 
   const link = `${APP_URL}/adverts?annonse=${advert.id}`;
-  const store = advert.store_domain.replace(".myshopify.com", "");
+  const store = await getStoreName(advert.store_domain);
 
   // Mottakere med konto kan ha skrudd av e-post for tilsendte annonser (Innstillinger -> Varsler).
   if (await wantsEmail("notify_shares", { email })) await sendEmail(

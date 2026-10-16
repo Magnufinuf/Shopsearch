@@ -16,6 +16,7 @@ const navItems = [
 
 export default function Sidebar() {
   const [businessDomain, setBusinessDomain] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
   // Mobil: menyen er skjult bak ☰-knappen og glir inn fra venstre.
@@ -27,6 +28,7 @@ export default function Sidebar() {
     localStorage.removeItem("shopsearch_business_domain");
     fetchSession().then((s) => {
       setBusinessDomain(s.shop);
+      setBusinessName(s.displayName || s.shop?.replace(".myshopify.com", "") || null);
       if (s.shop) rememberAccount({ shop: s.shop, name: s.displayName || s.shop.replace(".myshopify.com", "") });
     });
     fetchUser().then((u) => {
@@ -117,7 +119,7 @@ export default function Sidebar() {
         {businessDomain ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: 12, opacity: 0.6 }}>
-              Innlogget som: {businessDomain}
+              Innlogget som: {businessName || businessDomain}
             </span>
             <button
               onClick={logout}
