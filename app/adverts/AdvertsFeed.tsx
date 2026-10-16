@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ADVERT_CATEGORIES, Advert, advertCategory, advertTargetUrl } from "@/lib/adverts";
+import { ADVERT_CATEGORIES, Advert, advertCategory, advertStoreName, advertTargetUrl } from "@/lib/adverts";
 import { trackClick } from "@/lib/track";
 import { fetchUser, setSaved } from "@/lib/user-client";
 import ShareSheet from "../components/ShareSheet";
@@ -35,10 +35,6 @@ function ActionButton({
   );
 }
 
-function storeName(domain: string): string {
-  return domain.replace(".myshopify.com", "");
-}
-
 function AdvertSlide({
   advert,
   currency,
@@ -61,7 +57,7 @@ function AdvertSlide({
   const videoRef = useRef<HTMLVideoElement>(null);
   const isVideo = advert.media_type === "video";
   const isProduct = !!advert.product_url;
-  const name = storeName(advert.store_domain);
+  const name = advertStoreName(advert);
   const category = ADVERT_CATEGORIES.find((c) => c.slug === advertCategory(advert));
 
   useEffect(() => {

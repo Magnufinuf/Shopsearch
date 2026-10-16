@@ -8,6 +8,8 @@ export type Advert = {
   caption: string;
   created_at: string;
   category?: string | null;
+  // Butikkens visningsnavn (fra /api/adverts), ellers myshopify-navnet.
+  store_name?: string;
   // Satt når annonsen gjelder ett produkt; ellers er det hele butikken.
   product_url?: string | null;
   product_title?: string | null;
@@ -46,6 +48,10 @@ export function advertCategory(advert: Advert): string {
     image: "",
     url: "",
   });
+}
+
+export function advertStoreName(advert: Advert): string {
+  return advert.store_name || advert.store_domain.replace(".myshopify.com", "");
 }
 
 // Lenke til butikken, merket så salget kan spores tilbake til Scavenger.

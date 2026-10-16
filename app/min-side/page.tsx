@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Advert, storeUrl } from "@/lib/adverts";
+import { Advert, advertStoreName, storeUrl } from "@/lib/adverts";
 import { trackClick } from "@/lib/track";
 import { fetchUser, logoutUser, setSaved, UserInfo } from "@/lib/user-client";
 import ShareSheet from "../components/ShareSheet";
@@ -51,7 +51,7 @@ function AdvertCard({
         )}
       </Link>
       <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{a.store_domain.replace(".myshopify.com", "")}</p>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{advertStoreName(a)}</p>
         {a.caption && <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>{a.caption}</p>}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: "auto" }}>
           <a href={storeUrl(a.store_domain)} onClick={() => trackClick(a.store_domain, "lagret")} target="_blank" rel="noopener noreferrer" style={{ ...smallButton, backgroundColor: "var(--primary)", color: "white", border: "none" }}>

@@ -67,12 +67,20 @@ export async function GET(req: NextRequest) {
   const tokenData = await tokenRes.json();
   const accessToken = tokenData.access_token;
 
+  // Navnet butikken har valgt beholdes. Nye butikker får navnet fra Shopify.
+  const { data: existing } = await supabase.from("stores").select("display_name").eq("store_domain", shop).maybeSingle();
+  let displayName = existing?.display_name?.trim() || "";
+  if (!displayName || displayName === shop.replace(".myshopify.com", "")) {
+    const info = await shopifyGraphQL<{ shop: { name: string } }>(shop, accessToken, "{ shop { name } }").catch(() => null);
+    displayName = info?.shop.name?.trim() || displayName || shop.replace(".myshopify.com", "");
+  }
+
   await supabase.from("stores").upsert(
     {
       store_domain: shop,
       client_id: clientId,
       client_secret: accessToken,
-      display_name: shop.replace(".myshopify.com", ""),
+      display_name: displayName,
     },
     { onConflict: "store_domain" }
   );
