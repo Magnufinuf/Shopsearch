@@ -28,7 +28,8 @@ export async function GET() {
   return NextResponse.json({
     loggedIn: true,
     shop,
-    displayName: data.display_name || null,
+    // Et navn som bare er myshopify-adressen regnes som ikke valgt.
+    displayName: data.display_name && data.display_name !== shop.replace(".myshopify.com", "") ? data.display_name : null,
     subscribed: !!data.subscribed,
     shopifyEnabled,
     ...freePeriod,

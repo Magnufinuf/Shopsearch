@@ -67,13 +67,10 @@ export async function GET(req: NextRequest) {
   const tokenData = await tokenRes.json();
   const accessToken = tokenData.access_token;
 
-  // Navnet butikken har valgt beholdes. Nye butikker får navnet fra Shopify.
+  // Navnet butikken har valgt beholdes. Mangler det, må butikken velge det før den går videre.
   const { data: existing } = await supabase.from("stores").select("display_name").eq("store_domain", shop).maybeSingle();
-  let displayName = existing?.display_name?.trim() || "";
-  if (!displayName || displayName === shop.replace(".myshopify.com", "")) {
-    const info = await shopifyGraphQL<{ shop: { name: string } }>(shop, accessToken, "{ shop { name } }").catch(() => null);
-    displayName = info?.shop.name?.trim() || displayName || shop.replace(".myshopify.com", "");
-  }
+  const savedName = existing?.display_name?.trim() || "";
+  const displayName = savedName && savedName !== shop.replace(".myshopify.com", "") ? savedName : null;
 
   await supabase.from("stores").upsert(
     {
@@ -93,7 +90,10 @@ export async function GET(req: NextRequest) {
   );
 
   const isLogin = req.cookies.get("shopify_oauth_login")?.value === "1";
-  const response = NextResponse.redirect(`${APP_URL}${isLogin ? "/admin" : "/registrer/suksess"}`);
+  const next = isLogin ? "/admin" : "/registrer/suksess";
+  const response = NextResponse.redirect(
+    displayName ? `${APP_URL}${next}` : `${APP_URL}/bedrift-navn?neste=${encodeURIComponent(next)}`
+  );
   response.cookies.delete("shopify_oauth_state");
   response.cookies.delete("shopify_oauth_login");
   response.cookies.delete("shopify_oauth_app");

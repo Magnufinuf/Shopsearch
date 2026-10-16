@@ -30,6 +30,10 @@ export default function Sidebar() {
       setBusinessDomain(s.shop);
       setBusinessName(s.displayName || s.shop?.replace(".myshopify.com", "") || null);
       if (s.shop) rememberAccount({ shop: s.shop, name: s.displayName || s.shop.replace(".myshopify.com", "") });
+      // Butikker må velge et navn før de bruker Scavenger.
+      if (s.shop && !s.displayName && pathname !== "/bedrift-navn") {
+        window.location.assign(`/bedrift-navn?neste=${encodeURIComponent(pathname)}`);
+      }
     });
     fetchUser().then((u) => {
       setUserEmail(u.username || u.email);
