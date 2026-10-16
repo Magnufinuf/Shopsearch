@@ -1,19 +1,31 @@
-// Visningsnavnet butikken har valgt (Innstillinger), i stedet for den tekniske myshopify-adressen (kun server).
+// Navnet og logoen butikken har valgt, i stedet for den tekniske myshopify-adressen (kun server).
 import { supabase } from "./supabase";
 
 export function fallbackStoreName(domain: string): string {
   return domain.replace(".myshopify.com", "");
 }
 
-export async function getStoreNames(domains: string[]): Promise<Map<string, string>> {
+export type StoreProfile = { name: string; logo: string | null };
+
+// select("*") så det virker også før logo-kolonnen finnes (supabase/butikk-logo.sql).
+export async function getStoreProfiles(domains: string[]): Promise<Map<string, StoreProfile>> {
   const unique = Array.from(new Set(domains.filter(Boolean)));
-  const names = new Map<string, string>();
-  if (unique.length === 0) return names;
-  const { data } = await supabase.from("stores").select("store_domain, display_name").in("store_domain", unique);
+  const profiles = new Map<string, StoreProfile>();
+  if (unique.length === 0) return profiles;
+  const { data } = await supabase.from("stores").select("*").in("store_domain", unique);
   for (const row of data || []) {
-    if (row.display_name?.trim()) names.set(row.store_domain, row.display_name.trim());
+    const name = row.display_name?.trim();
+    profiles.set(row.store_domain, {
+      name: name && name !== fallbackStoreName(row.store_domain) ? name : fallbackStoreName(row.store_domain),
+      logo: row.logo_url || null,
+    });
   }
-  return names;
+  return profiles;
+}
+
+export async function getStoreNames(domains: string[]): Promise<Map<string, string>> {
+  const profiles = await getStoreProfiles(domains);
+  return new Map(Array.from(profiles, ([domain, p]) => [domain, p.name]));
 }
 
 export async function getStoreName(domain: string): Promise<string> {

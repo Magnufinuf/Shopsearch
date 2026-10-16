@@ -51,7 +51,10 @@ function AdvertCard({
         )}
       </Link>
       <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>{advertStoreName(a)}</p>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+          {a.store_logo && <img src={a.store_logo} alt="" style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />}
+          {advertStoreName(a)}
+        </p>
         {a.caption && <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>{a.caption}</p>}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: "auto" }}>
           <a href={storeUrl(a.store_domain)} onClick={() => trackClick(a.store_domain, "lagret")} target="_blank" rel="noopener noreferrer" style={{ ...smallButton, backgroundColor: "var(--primary)", color: "white", border: "none" }}>

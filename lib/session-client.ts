@@ -3,6 +3,8 @@ export type SessionInfo = {
   loggedIn: boolean;
   shop: string | null;
   displayName: string | null;
+  logoUrl?: string | null;
+  logoSupported?: boolean;
   shopifyEnabled: boolean;
   subscribed: boolean;
   free: boolean;

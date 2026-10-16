@@ -16,7 +16,7 @@ export async function GET() {
 
   const { data } = await supabase
     .from("stores")
-    .select("store_domain, subscribed, display_name")
+    .select("*")
     .eq("store_domain", shop)
     .maybeSingle();
 
@@ -31,6 +31,9 @@ export async function GET() {
     // Et navn som bare er myshopify-adressen regnes som ikke valgt.
     displayName: data.display_name && data.display_name !== shop.replace(".myshopify.com", "") ? data.display_name : null,
     subscribed: !!data.subscribed,
+    logoUrl: data.logo_url || null,
+    // false før logo-kolonnen finnes; da kreves ikke logo.
+    logoSupported: "logo_url" in data,
     shopifyEnabled,
     ...freePeriod,
   });

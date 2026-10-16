@@ -10,6 +10,7 @@ export type Advert = {
   category?: string | null;
   // Butikkens visningsnavn (fra /api/adverts), ellers myshopify-navnet.
   store_name?: string;
+  store_logo?: string | null;
   // Satt når annonsen gjelder ett produkt; ellers er det hele butikken.
   product_url?: string | null;
   product_title?: string | null;

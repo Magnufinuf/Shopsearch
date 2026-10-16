@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getSessionUserId } from "@/lib/session";
-import { fallbackStoreName, getStoreNames } from "@/lib/store-names";
+import { fallbackStoreName, getStoreProfiles } from "@/lib/store-names";
 
 const notLoggedIn = () => NextResponse.json({ error: "Logg inn for å lagre annonser." }, { status: 401 });
 
@@ -19,9 +19,13 @@ export async function GET() {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const adverts = (data || []).map((row) => row.adverts as unknown as { store_domain: string } | null).filter((a) => !!a) as { store_domain: string }[];
-  const names = await getStoreNames(adverts.map((a) => a.store_domain));
+  const profiles = await getStoreProfiles(adverts.map((a) => a.store_domain));
   return NextResponse.json({
-    adverts: adverts.map((a) => ({ ...a, store_name: names.get(a.store_domain) || fallbackStoreName(a.store_domain) })),
+    adverts: adverts.map((a) => ({
+      ...a,
+      store_name: profiles.get(a.store_domain)?.name || fallbackStoreName(a.store_domain),
+      store_logo: profiles.get(a.store_domain)?.logo || null,
+    })),
   });
 }
 
