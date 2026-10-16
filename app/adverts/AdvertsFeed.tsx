@@ -91,9 +91,13 @@ function AdvertSlide({
 
       <div style={{ position: "absolute", left: 16, right: 84, bottom: 28, color: "white" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <span style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, textTransform: "uppercase", border: "2px solid rgba(255,255,255,0.9)", flexShrink: 0 }}>
-            {name.charAt(0)}
-          </span>
+          {advert.store_logo ? (
+            <img src={advert.store_logo} alt="" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", backgroundColor: "white", border: "2px solid rgba(255,255,255,0.9)", flexShrink: 0 }} />
+          ) : (
+            <span style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, textTransform: "uppercase", border: "2px solid rgba(255,255,255,0.9)", flexShrink: 0 }}>
+              {name.charAt(0)}
+            </span>
+          )}
           <div style={{ minWidth: 0, flex: 1 }}>
             <p style={{ margin: 0, fontWeight: 700, fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</p>
             {category && <p style={{ margin: 0, fontSize: 12, opacity: 0.75 }}>{category.label}</p>}

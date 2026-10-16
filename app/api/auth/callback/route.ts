@@ -68,7 +68,9 @@ export async function GET(req: NextRequest) {
   const accessToken = tokenData.access_token;
 
   // Navnet butikken har valgt beholdes. Mangler det, må butikken velge det før den går videre.
-  const { data: existing } = await supabase.from("stores").select("display_name").eq("store_domain", shop).maybeSingle();
+  const { data: existing } = await supabase.from("stores").select("*").eq("store_domain", shop).maybeSingle();
+  // Logo kreves bare når logo-kolonnen finnes (supabase/butikk-logo.sql).
+  const missingLogo = !!existing && "logo_url" in existing && !existing.logo_url;
   const savedName = existing?.display_name?.trim() || "";
   const displayName = savedName && savedName !== shop.replace(".myshopify.com", "") ? savedName : null;
 
@@ -92,7 +94,7 @@ export async function GET(req: NextRequest) {
   const isLogin = req.cookies.get("shopify_oauth_login")?.value === "1";
   const next = isLogin ? "/admin" : "/registrer/suksess";
   const response = NextResponse.redirect(
-    displayName ? `${APP_URL}${next}` : `${APP_URL}/bedrift-navn?neste=${encodeURIComponent(next)}`
+    displayName && !missingLogo ? `${APP_URL}${next}` : `${APP_URL}/bedrift-navn?neste=${encodeURIComponent(next)}`
   );
   response.cookies.delete("shopify_oauth_state");
   response.cookies.delete("shopify_oauth_login");

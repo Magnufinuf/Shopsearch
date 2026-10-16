@@ -101,6 +101,9 @@ export default function InnstillingerPage() {
   const [notifyMessage, setNotifyMessage] = useState("");
 
   const [domain, setDomain] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoSupported, setLogoSupported] = useState(false);
+  const [logoMessage, setLogoMessage] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [saving, setSaving] = useState(false);
@@ -127,6 +130,8 @@ export default function InnstillingerPage() {
     fetchSession().then((s) => {
       if (!s.shop) return;
       setDomain(s.shop);
+      setLogoUrl(s.logoUrl || null);
+      setLogoSupported(!!s.logoSupported);
       fetch("/api/store-info", { method: "POST" })
         .then((res) => res.json())
         .then((data) => {
@@ -173,6 +178,21 @@ export default function InnstillingerPage() {
     const res = await fetch("/api/user/delete", { method: "POST" });
     if (res.ok) window.location.assign("/");
     else alert("Noe gikk galt, prøv igjen.");
+  }
+
+  async function uploadLogo(file: File | undefined) {
+    if (!file) return;
+    setLogoMessage("Laster opp...");
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch("/api/store-logo", { method: "POST", body: form });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setLogoUrl(data.logoUrl);
+      setLogoMessage("Logoen er oppdatert!");
+    } else {
+      setLogoMessage(data.error || "Noe gikk galt, prøv igjen.");
+    }
   }
 
   async function saveStore() {
@@ -285,6 +305,20 @@ export default function InnstillingerPage() {
       {domain && (
         <Panel title="Bedrift">
           <p style={{ fontSize: 13, opacity: 0.6, marginTop: 0 }}>{domain}</p>
+          {logoSupported && (
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)", backgroundColor: "white" }} />
+              ) : (
+                <span style={{ width: 56, height: 56, borderRadius: "50%", border: "2px dashed var(--border)" }} />
+              )}
+              <label style={{ ...linkButton, cursor: "pointer" }}>
+                {logoUrl ? "Bytt logo" : "Last opp logo"}
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => uploadLogo(e.target.files?.[0])} style={{ display: "none" }} />
+              </label>
+              {logoMessage && <span style={{ fontSize: 13, opacity: 0.7 }}>{logoMessage}</span>}
+            </div>
+          )}
           <label style={{ display: "block", fontSize: 13, opacity: 0.7, marginBottom: 6 }}>Visningsnavn</label>
           <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="F.eks. Auto Collections" style={{ ...inputStyle, marginBottom: 16 }} />
           <label style={{ display: "block", fontSize: 13, opacity: 0.7, marginBottom: 6 }}>Kontakt-e-post</label>

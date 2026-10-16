@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getAllProducts } from "@/lib/products";
 import { detectGender } from "@/lib/categories";
-import { fallbackStoreName, getStoreNames } from "@/lib/store-names";
+import { fallbackStoreName, getStoreProfiles } from "@/lib/store-names";
 
 export async function GET() {
   const { data, error } = await supabase
@@ -26,7 +26,7 @@ export async function GET() {
   const hasProducts = (data || []).some((a) => a.product_url);
   const products = hasProducts ? await getAllProducts().catch(() => []) : [];
   const byUrl = new Map(products.map((p) => [p.url, p]));
-  const names = await getStoreNames((data || []).map((a) => a.store_domain));
+  const profiles = await getStoreProfiles((data || []).map((a) => a.store_domain));
 
   return NextResponse.json({
     adverts: (data || []).map((a) => {
@@ -34,7 +34,8 @@ export async function GET() {
       return {
         ...a,
         comment_count: counts.get(String(a.id)) || 0,
-        store_name: names.get(a.store_domain) || fallbackStoreName(a.store_domain),
+        store_name: profiles.get(a.store_domain)?.name || fallbackStoreName(a.store_domain),
+        store_logo: profiles.get(a.store_domain)?.logo || null,
         ...(product
           ? {
               product_price: product.price,
