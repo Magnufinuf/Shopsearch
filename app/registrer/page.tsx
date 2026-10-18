@@ -1,5 +1,6 @@
 "use client";
 
+import WooConnectForm from "../components/WooConnectForm";
 import { useState } from "react";
 
 export default function Registrer() {
@@ -112,6 +113,16 @@ export default function Registrer() {
             <a href="/personvern" className="underline">personvernerklæringen</a>.
           </p>
         </form>
+
+        {/* WooCommerce */}
+        <div className="mt-8">
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, opacity: 0.5, fontSize: 13 }}>
+            <span style={{ flex: 1, height: 1, backgroundColor: "var(--border)" }} />
+            Bruker du WooCommerce?
+            <span style={{ flex: 1, height: 1, backgroundColor: "var(--border)" }} />
+          </div>
+          <WooConnectForm />
+        </div>
 
         <div className="mt-8 text-center">
           <button

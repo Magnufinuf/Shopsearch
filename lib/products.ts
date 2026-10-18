@@ -1,8 +1,9 @@
-// Henter produktene fra alle tilkoblede Shopify-butikker (kun server).
+// Henter produktene fra alle tilkoblede butikker, Shopify og WooCommerce (kun server).
 import { unstable_cache } from "next/cache";
 import { supabase } from "@/lib/supabase";
 import { detectStyles } from "@/lib/styles";
 import { ShopifyError, shopifyGraphQL } from "@/lib/shopify";
+import { fetchWooProducts, isShopifyDomain } from "@/lib/woocommerce";
 
 type Store = {
   store_domain: string;
@@ -108,6 +109,7 @@ async function fetchViaRest(store: Store): Promise<{ nodes: ProductNode[]; curre
 
 // failed = true hvis Shopify ikke svarte ordentlig, så et tomt/halvt svar ikke mellomlagres.
 async function fetchProductsForStore(store: Store) {
+  if (!isShopifyDomain(store.store_domain)) return fetchWooProducts(store);
   const token = store.client_secret;
   if (!token) return { products: [], failed: false };
 
