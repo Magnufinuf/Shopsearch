@@ -63,14 +63,24 @@ export function storeUrl(storeDomain: string): string {
 // En produktlenke må høre til butikken som legger ut annonsen.
 export function isOwnProductUrl(url: unknown, storeDomain: string): url is string {
   if (typeof url !== "string") return false;
-  const prefix = `https://${storeDomain}/products/`;
-  return url.startsWith(prefix) && /^[a-z0-9][a-z0-9-]*$/i.test(url.slice(prefix.length));
+  if (storeDomain.endsWith(".myshopify.com")) {
+    const prefix = `https://${storeDomain}/products/`;
+    return url.startsWith(prefix) && /^[a-z0-9][a-z0-9-]*$/i.test(url.slice(prefix.length));
+  }
+  // WooCommerce: produktlenken må ligge på butikkens egen nettside.
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" && u.hostname === storeDomain;
+  } catch {
+    return false;
+  }
 }
 
 // Hvor «Kjøp»/«Besøk butikken» sender deg, merket så salget kan spores.
 export function advertTargetUrl(advert: Advert): string {
   if (!advert.product_url) return storeUrl(advert.store_domain);
-  return `${advert.product_url}?ref=shopsearch&utm_source=shopsearch&utm_medium=referral`;
+  const separator = advert.product_url.includes("?") ? "&" : "?";
+  return `${advert.product_url}${separator}ref=shopsearch&utm_source=shopsearch&utm_medium=referral`;
 }
 
 export function advertShareUrl(id: string): string {

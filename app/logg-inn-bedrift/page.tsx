@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { fetchSession } from "@/lib/session-client";
 import { RememberedAccount, forgetAccount, getRememberedAccounts } from "@/lib/remembered-accounts";
+import WooConnectForm from "../components/WooConnectForm";
 
 const SHOPIFY_GREEN = "#5E8E3E";
 
@@ -71,6 +72,8 @@ export default function LoggInnBedrift() {
   const [shopifyEnabled, setShopifyEnabled] = useState(true);
   const [showShopifyForm, setShowShopifyForm] = useState(false);
   const [showSecretForm, setShowSecretForm] = useState(false);
+  const [showWooForm, setShowWooForm] = useState(false);
+  const [wooUrl, setWooUrl] = useState("");
   const [shopInput, setShopInput] = useState("");
   const [domain, setDomain] = useState("");
   const [secret, setSecret] = useState("");
@@ -92,6 +95,16 @@ export default function LoggInnBedrift() {
       if (!s.shopifyEnabled) setShowSecretForm(true);
     });
   }, []);
+
+  function continueWithAccount(shop: string) {
+    // WooCommerce-butikker logger inn med nøkkelen sin.
+    if (!shop.endsWith(".myshopify.com")) {
+      setWooUrl(shop);
+      setShowWooForm(true);
+      return;
+    }
+    continueWithShopify(shop);
+  }
 
   function continueWithShopify(shop: string) {
     if (!shopifyEnabled) {
@@ -137,7 +150,7 @@ export default function LoggInnBedrift() {
             {accounts.map((a) => (
               <div key={a.shop} style={{ ...card, padding: 0 }}>
                 <button
-                  onClick={() => continueWithShopify(a.shop)}
+                  onClick={() => continueWithAccount(a.shop)}
                   style={{ ...card, border: "none", flex: 1, cursor: "pointer" }}
                 >
                   <span style={{ width: 44, height: 44, borderRadius: 999, backgroundColor: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, flexShrink: 0 }}>
@@ -201,15 +214,25 @@ export default function LoggInnBedrift() {
           </form>
         )}
 
-        {/* Andre plattformer – kommer senere */}
+        {/* WooCommerce og Wix */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
-          {["WooCommerce", "Wix"].map((name) => (
-            <div key={name} style={{ ...card, justifyContent: "center", flexDirection: "column", gap: 2, padding: "12px 8px", opacity: 0.5, cursor: "not-allowed" }} title="Kommer snart">
-              <span style={{ fontWeight: 600, fontSize: 14 }}>{name}</span>
-              <span style={{ fontSize: 11 }}>Kommer snart</span>
-            </div>
-          ))}
+          <button
+            onClick={() => setShowWooForm((v) => !v)}
+            style={{ ...card, justifyContent: "center", flexDirection: "column", gap: 2, padding: "12px 8px", cursor: "pointer", borderColor: showWooForm ? "#7F54B3" : "var(--border)" }}
+          >
+            <span style={{ fontWeight: 600, fontSize: 14 }}>WooCommerce</span>
+            <span style={{ fontSize: 11, opacity: 0.6 }}>Koble til med nøkkel</span>
+          </button>
+          <div style={{ ...card, justifyContent: "center", flexDirection: "column", gap: 2, padding: "12px 8px", opacity: 0.5, cursor: "not-allowed" }} title="Kommer snart">
+            <span style={{ fontWeight: 600, fontSize: 14 }}>Wix</span>
+            <span style={{ fontSize: 11 }}>Kommer snart</span>
+          </div>
         </div>
+        {showWooForm && (
+          <div style={{ marginTop: 14 }}>
+            <WooConnectForm key={wooUrl} initialUrl={wooUrl} />
+          </div>
+        )}
 
         {/* Reserve: hemmelighet */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0 16px", opacity: 0.5, fontSize: 13 }}>

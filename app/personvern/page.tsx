@@ -42,11 +42,12 @@ export default function PersonvernPage() {
 
       <H2>Butikker som kobler seg til</H2>
       <p>
-        Scavenger-appen for Shopify ber bare om lesetilgang til butikkens produkter. Vi henter ikke kunder, ordrer eller
-        andre personopplysninger fra butikken.
+        Scavenger-appen for Shopify ber bare om lesetilgang til butikkens produkter. WooCommerce-butikker kobler til med en
+        lesenøkkel de lager selv, og vi bruker den bare til å hente produkter. Vi henter ikke kunder, ordrer eller andre
+        personopplysninger fra butikken.
       </p>
       <p>
-        For butikker lagrer vi butikkdomene, tilgangsnøkkel til Shopify (for å hente produkter), visningsnavn,
+        For butikker lagrer vi butikkdomene, tilgangsnøkkel til Shopify eller WooCommerce (for å hente produkter), visningsnavn,
         kontakt-e-post, abonnementsstatus, produkter butikken har skjult, annonser butikken laster opp og
         klikkstatistikk. Grunnlaget er avtalen med butikken.
       </p>
@@ -68,7 +69,7 @@ export default function PersonvernPage() {
         <li>Supabase – database og lagring av annonser</li>
         <li>Resend – sending av e-post</li>
         <li>Stripe – betaling av abonnement for butikker</li>
-        <li>Shopify – henting av produkter fra butikkene</li>
+        <li>Shopify og WooCommerce – henting av produkter fra butikkene</li>
         <li>Anthropic – tolking av søketekst (AI-søk)</li>
       </ul>
       <p>
