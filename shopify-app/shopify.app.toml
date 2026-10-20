@@ -1,0 +1,22 @@
+# Oppsett for Scavenger-appen i Shopify. Last opp med: npx @shopify/cli@latest app deploy
+client_id = "cd1d45ee5e689ed3fd1d78d4057b1bfc"
+name = "Scavenger"
+application_url = "https://scavengers.shop/api/auth/start"
+embedded = false
+
+[access_scopes]
+scopes = "read_products"
+
+[auth]
+redirect_urls = ["https://scavengers.shop/api/auth/callback"]
+
+[webhooks]
+api_version = "2026-10"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "https://scavengers.shop/api/webhooks/shopify"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "https://scavengers.shop/api/webhooks/shopify"

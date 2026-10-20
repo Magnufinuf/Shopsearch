@@ -1,0 +1,7 @@
+{
+  "name": "scavenger-shopify-app",
+  "private": true,
+  "scripts": {
+    "deploy": "shopify app deploy"
+  }
+}
