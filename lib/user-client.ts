@@ -4,6 +4,7 @@ export type UserInfo = {
   email: string | null;
   username?: string | null;
   savedIds: string[];
+  savedProductIds?: string[];
   unread: number;
 };
 

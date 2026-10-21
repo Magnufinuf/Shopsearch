@@ -6,9 +6,11 @@ export async function GET() {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ loggedIn: false, email: null, savedIds: [], unread: 0 });
 
-  const [{ data: user }, { data: saved }] = await Promise.all([
+  const [{ data: user }, { data: saved }, { data: savedProducts }] = await Promise.all([
     supabase.from("users").select("email, username").eq("id", userId).maybeSingle(),
     supabase.from("saved_adverts").select("advert_id").eq("user_id", userId),
+    // Feiler stille før tabellen finnes (supabase/lagrede-produkter.sql).
+    supabase.from("saved_products").select("product_key").eq("user_id", userId),
   ]);
 
   if (!user) return NextResponse.json({ loggedIn: false, email: null, savedIds: [], unread: 0 });
@@ -26,5 +28,6 @@ export async function GET() {
     email: user.email,
     username: user.username ?? null,
     savedIds: (saved || []).map((s) => String(s.advert_id)),
+    savedProductIds: (savedProducts || []).map((s) => s.product_key as string),
   });
 }
