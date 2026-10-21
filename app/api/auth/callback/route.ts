@@ -24,13 +24,16 @@ function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean
   return safeEqual(hmac, expected);
 }
 
-const UNINSTALL_WEBHOOK = `
-  mutation RegisterUninstall($uri: String!) {
-    webhookSubscriptionCreate(topic: APP_UNINSTALLED, webhookSubscription: { uri: $uri }) {
+const REGISTER_WEBHOOK = `
+  mutation RegisterWebhook($topic: WebhookSubscriptionTopic!, $uri: String!) {
+    webhookSubscriptionCreate(topic: $topic, webhookSubscription: { uri: $uri }) {
       userErrors { message }
     }
   }
 `;
+
+// Avinstallering, og endringer i produktene så søket oppdateres med en gang.
+const WEBHOOK_TOPICS = ["APP_UNINSTALLED", "PRODUCTS_CREATE", "PRODUCTS_UPDATE", "PRODUCTS_DELETE"];
 
 export async function GET(req: NextRequest) {
   const shop = req.nextUrl.searchParams.get("shop");
@@ -85,10 +88,14 @@ export async function GET(req: NextRequest) {
   );
   revalidateTag("products", { expire: 0 });
 
-  // Be Shopify si fra når butikken avinstallerer appen (håndteres i /api/webhooks/shopify).
+  // Be Shopify si fra når appen avinstalleres eller produktene endres (håndteres i /api/webhooks/shopify).
   // Finnes varselet allerede, svarer Shopify med en feilmelding som vi bare ignorerer.
-  await shopifyGraphQL(shop, accessToken, UNINSTALL_WEBHOOK, { uri: `${APP_URL}/api/webhooks/shopify` }).catch((err) =>
-    console.error(`Kunne ikke registrere app/uninstalled for ${shop}:`, err)
+  await Promise.all(
+    WEBHOOK_TOPICS.map((topic) =>
+      shopifyGraphQL(shop, accessToken, REGISTER_WEBHOOK, { topic, uri: `${APP_URL}/api/webhooks/shopify` }).catch((err) =>
+        console.error(`Kunne ikke registrere ${topic} for ${shop}:`, err)
+      )
+    )
   );
 
   const isLogin = req.cookies.get("shopify_oauth_login")?.value === "1";

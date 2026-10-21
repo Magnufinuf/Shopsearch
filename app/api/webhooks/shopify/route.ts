@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { safeEqual } from "@/lib/session";
 import { allApps } from "@/lib/shopify-apps";
 
-// Varsler fra Shopify: når en butikk avinstallerer appen, og personvern-varslene
+// Varsler fra Shopify: når en butikk avinstallerer appen eller endrer produktene, og personvern-varslene
 // som alle offentlige Shopify-apper må håndtere (customers/data_request,
 // customers/redact, shop/redact).
 //
@@ -52,6 +52,12 @@ export async function POST(request: Request) {
     case "app/uninstalled":
       // Tilgangen er borte: slutt å hente produkter fra butikken.
       await forgetStoreConnection(shop);
+      break;
+    case "products/create":
+    case "products/update":
+    case "products/delete":
+      // Produktene er endret: hent dem på nytt neste gang noen søker (de gamle vises imens).
+      revalidateTag("products", "max");
       break;
     case "shop/redact":
       // Sendes 48 timer etter avinstallering: slett alt om butikken.
