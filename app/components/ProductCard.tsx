@@ -2,6 +2,8 @@
 
 import { CurrencyInfo, priceLabel } from "@/lib/currency";
 import { ClickSource, trackClick } from "@/lib/track";
+import { useSavedProducts } from "@/lib/saved-products";
+import { HeartIcon } from "./Icons";
 
 export type CardProduct = {
   id: string;
@@ -41,7 +43,11 @@ export default function ProductCard({
   width?: number;
   source?: ClickSource;
 }) {
+  const { isSaved, toggle } = useSavedProducts();
+  const saved = isSaved(p.id);
   return (
+    // Hjertet ligger ved siden av lenken (ikke inni), så et trykk på det ikke åpner butikken.
+    <div style={{ position: "relative", width, flexShrink: 0 }}>
     <a
       href={withTracking(p.url)}
       // Teller besøket for butikkens statistikk (Administrasjon).
@@ -53,8 +59,7 @@ export default function ProductCard({
         display: "flex",
         flexDirection: "column",
         gap: 4,
-        width,
-        flexShrink: 0,
+        width: "100%",
         textAlign: "left",
         color: "var(--foreground)",
         boxSizing: "border-box",
@@ -74,5 +79,42 @@ export default function ProductCard({
       </p>
       <p style={{ margin: "2px 0 0", fontSize: 15, fontWeight: 700 }}>{priceLabel(p.price, p.currency, currencyInfo)}</p>
     </a>
+    <button
+      type="button"
+      onClick={() =>
+        toggle({
+          id: p.id,
+          title: p.title,
+          price: p.price,
+          currency: p.currency,
+          vendor: p.vendor,
+          image: p.image,
+          url: p.url,
+          storeDomain: p.storeDomain,
+          shopifyProductId: p.shopifyProductId,
+        })
+      }
+      aria-label={saved ? "Fjern fra lagrede" : "Lagre produktet"}
+      aria-pressed={saved}
+      style={{
+        position: "absolute",
+        top: 8,
+        right: 8,
+        width: 34,
+        height: 34,
+        borderRadius: "50%",
+        border: "none",
+        backgroundColor: "rgba(255,255,255,0.92)",
+        color: saved ? "#ff3b5c" : "#222",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+      }}
+    >
+      <HeartIcon size={18} filled={saved} strokeWidth={2} />
+    </button>
+    </div>
   );
 }

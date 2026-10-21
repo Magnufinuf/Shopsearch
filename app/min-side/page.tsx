@@ -7,6 +7,8 @@ import { trackClick } from "@/lib/track";
 import { fetchUser, logoutUser, setSaved, UserInfo } from "@/lib/user-client";
 import ShareSheet from "../components/ShareSheet";
 import UsernameForm from "../components/UsernameForm";
+import ProductCard, { CardProduct } from "../components/ProductCard";
+import { CurrencyInfo, fetchCurrencyInfo } from "@/lib/currency";
 
 type InboxItem = {
   id: string;
@@ -73,7 +75,9 @@ export default function MinSide() {
   const [adverts, setAdverts] = useState<Advert[]>([]);
   const [loading, setLoading] = useState(true);
   const [inbox, setInbox] = useState<InboxItem[]>([]);
-  const [tab, setTab] = useState<"mottatt" | "lagret">("lagret");
+  const [tab, setTab] = useState<"mottatt" | "lagret" | "produkter">("produkter");
+  const [products, setProducts] = useState<CardProduct[]>([]);
+  const [currencyInfo, setCurrencyInfo] = useState<CurrencyInfo | null>(null);
   const [sharing, setSharing] = useState<Advert | null>(null);
   const [editingUsername, setEditingUsername] = useState(false);
 
@@ -88,9 +92,14 @@ export default function MinSide() {
       Promise.all([
         fetch("/api/user/saved").then((res) => res.json()),
         fetch("/api/user/inbox").then((res) => (res.ok ? res.json() : { items: [] })),
-      ]).then(([saved, received]) => {
+        fetch("/api/user/saved-products").then((res) => (res.ok ? res.json() : { products: [] })),
+      ]).then(([saved, received, savedProducts]) => {
+        const list: CardProduct[] = savedProducts.products || [];
         setAdverts(saved.adverts || []);
         setInbox(received.items || []);
+        setProducts(list);
+        if (list.length === 0 && (saved.adverts || []).length > 0) setTab((t) => (t === "produkter" ? "lagret" : t));
+        fetchCurrencyInfo(list.map((p) => p.currency)).then(setCurrencyInfo);
         setLoading(false);
       });
     });
@@ -128,7 +137,7 @@ export default function MinSide() {
         <div style={{ maxWidth: 360 }}>
           <p style={{ fontSize: 40, margin: "0 0 8px" }}>♡</p>
           <h1 style={{ fontSize: 26, fontWeight: 600, margin: "0 0 8px" }}>Lagre det du liker</h1>
-          <p style={{ opacity: 0.7, marginBottom: 20 }}>Logg inn for å lagre annonser og finne dem igjen senere.</p>
+          <p style={{ opacity: 0.7, marginBottom: 20 }}>Logg inn for å lagre produkter og annonser og finne dem igjen senere.</p>
           <Link href="/logg-inn" style={{ display: "inline-block", padding: "12px 28px", borderRadius: 12, backgroundColor: "var(--primary)", color: "white", fontWeight: 600 }}>
             Logg inn
           </Link>
@@ -167,10 +176,11 @@ export default function MinSide() {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {(
           [
-            ["lagret", `Lagret (${adverts.length})`, 0],
+            ["produkter", `Produkter (${products.length})`, 0],
+            ["lagret", `Annonser (${adverts.length})`, 0],
             ["mottatt", `Mottatt (${inbox.length})`, inbox.filter((i) => !i.seen).length],
           ] as const
         ).map(([key, label, badge]) => (
@@ -198,6 +208,20 @@ export default function MinSide() {
           </button>
         ))}
       </div>
+
+      {tab === "produkter" &&
+        (products.length === 0 ? (
+          <p style={{ opacity: 0.7 }}>
+            Du har ikke lagret noen produkter ennå. Trykk på hjertet på et produkt i{" "}
+            <Link href="/" style={{ color: "var(--primary)" }}>søket</Link> for å lagre det her.
+          </p>
+        ) : (
+          <div className="grid w-full grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:grid-cols-4">
+            {products.map((p) => (
+              <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} source="lagret" />
+            ))}
+          </div>
+        ))}
 
       {tab === "lagret" &&
         (adverts.length === 0 ? (
