@@ -5,7 +5,7 @@ import { safeEqual, setSessionCookie } from "@/lib/session";
 import { APP_URL } from "@/lib/app-url";
 import { revalidateTag } from "next/cache";
 import { appByClientId, mainApp } from "@/lib/shopify-apps";
-import { shopifyGraphQL } from "@/lib/shopify";
+import { registerWebhooks } from "@/lib/shopify-webhooks";
 
 // Sjekker at svaret faktisk kommer fra Shopify (hmac) og hører til innloggingen vi startet (state).
 function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean {
@@ -23,17 +23,6 @@ function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean
   const expected = createHmac("sha256", clientSecret).update(message).digest("hex");
   return safeEqual(hmac, expected);
 }
-
-const REGISTER_WEBHOOK = `
-  mutation RegisterWebhook($topic: WebhookSubscriptionTopic!, $uri: String!) {
-    webhookSubscriptionCreate(topic: $topic, webhookSubscription: { uri: $uri }) {
-      userErrors { message }
-    }
-  }
-`;
-
-// Avinstallering, og endringer i produktene så søket oppdateres med en gang.
-const WEBHOOK_TOPICS = ["APP_UNINSTALLED", "PRODUCTS_CREATE", "PRODUCTS_UPDATE", "PRODUCTS_DELETE"];
 
 export async function GET(req: NextRequest) {
   const shop = req.nextUrl.searchParams.get("shop");
@@ -89,14 +78,7 @@ export async function GET(req: NextRequest) {
   revalidateTag("products", { expire: 0 });
 
   // Be Shopify si fra når appen avinstalleres eller produktene endres (håndteres i /api/webhooks/shopify).
-  // Finnes varselet allerede, svarer Shopify med en feilmelding som vi bare ignorerer.
-  await Promise.all(
-    WEBHOOK_TOPICS.map((topic) =>
-      shopifyGraphQL(shop, accessToken, REGISTER_WEBHOOK, { topic, uri: `${APP_URL}/api/webhooks/shopify` }).catch((err) =>
-        console.error(`Kunne ikke registrere ${topic} for ${shop}:`, err)
-      )
-    )
-  );
+  await registerWebhooks(shop, accessToken);
 
   const isLogin = req.cookies.get("shopify_oauth_login")?.value === "1";
   const next = isLogin ? "/admin" : "/registrer/suksess";
