@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { detectStyles } from "@/lib/styles";
 import { ShopifyError, shopifyGraphQL } from "@/lib/shopify";
 import { fetchWooProducts, isShopifyDomain } from "@/lib/woocommerce";
+import { ensureWebhooks } from "@/lib/shopify-webhooks";
 
 type Store = {
   store_domain: string;
@@ -112,6 +113,7 @@ async function fetchProductsForStore(store: Store) {
   if (!isShopifyDomain(store.store_domain)) return fetchWooProducts(store);
   const token = store.client_secret;
   if (!token) return { products: [], failed: false };
+  await ensureWebhooks(store.store_domain, token);
 
   const nodes: ProductNode[] = [];
   let currency = "USD";
