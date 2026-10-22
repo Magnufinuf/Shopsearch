@@ -10,9 +10,10 @@ export async function GET() {
   if (!shop) return notLoggedIn();
 
   const since30 = new Date(Date.now() - 30 * 86400_000).toISOString();
-  const [{ data, error }, { count: total }] = await Promise.all([
+  const [{ data, error }, { count: total }, saved] = await Promise.all([
     supabase.from("product_clicks").select("product_id, created_at").eq("store_domain", shop).gte("created_at", since30).limit(20000),
     supabase.from("product_clicks").select("id", { count: "exact", head: true }).eq("store_domain", shop),
+    supabase.from("saved_products").select("product_key, product->>title").eq("product->>storeDomain", shop).limit(20000),
   ]);
   // Tabellen finnes ikke ennå (SQL ikke kjørt): vis tomt, ikke feil.
   if (error) return NextResponse.json({ ready: false, last7: 0, last30: 0, total: 0, daily: [], topProducts: [] });
@@ -39,5 +40,17 @@ export async function GET() {
     .sort((a, b) => b.clicks - a.clicks)
     .slice(0, 5);
 
-  return NextResponse.json({ ready: true, last7, last30: rows.length, total: total ?? rows.length, daily, topProducts });
+  // Produkter kundene har lagret med hjertet (tomt hvis tabellen ikke finnes).
+  const savedRows = (saved.data || []) as { product_key: string; title: string | null }[];
+  const perSaved = new Map<string, { title: string; saves: number }>();
+  for (const r of savedRows) {
+    const entry = perSaved.get(r.product_key) || { title: r.title || "Produkt", saves: 0 };
+    entry.saves++;
+    perSaved.set(r.product_key, entry);
+  }
+  const topSaved = Array.from(perSaved.values())
+    .sort((a, b) => b.saves - a.saves)
+    .slice(0, 5);
+
+  return NextResponse.json({ ready: true, last7, last30: rows.length, total: total ?? rows.length, daily, topProducts, savedTotal: savedRows.length, topSaved });
 }
