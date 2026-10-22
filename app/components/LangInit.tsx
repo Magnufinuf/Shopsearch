@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { useLang } from "@/lib/i18n";
+import { applyLang, loadDict, useLang } from "@/lib/i18n";
 
-// Setter <html lang> til språket brukeren har valgt (for skjermlesere og oversettelse i nettleseren).
+// Setter <html lang/dir> til språket brukeren har valgt, og henter oversettelsene.
 export default function LangInit() {
   const lang = useLang();
   useEffect(() => {
-    document.documentElement.lang = lang;
+    applyLang(lang);
+    loadDict(lang);
   }, [lang]);
   return null;
 }

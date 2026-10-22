@@ -15,7 +15,7 @@ export type AiFilters = {
 
 
 // Spør AI-søket. null = ikke tilgjengelig (ingen nøkkel, feil o.l.) – bruk vanlig søk da.
-export async function fetchAiFilters(query: string, lang: "no" | "en" = "no"): Promise<AiFilters | null> {
+export async function fetchAiFilters(query: string, lang = "no"): Promise<AiFilters | null> {
   try {
     const res = await fetch("/api/ai-search", {
       method: "POST",

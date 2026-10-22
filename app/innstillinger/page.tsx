@@ -6,7 +6,7 @@ import { fetchSession, logout } from "@/lib/session-client";
 import { fetchUser, logoutUser, UserInfo } from "@/lib/user-client";
 import { CURRENCY_KEY, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { THEME_KEY, ThemeChoice, applyTheme, readTheme } from "@/lib/theme";
-import { LANGUAGES, Lang, setLang, useLang, useT } from "@/lib/i18n";
+import { languageName, useLang, useT } from "@/lib/i18n";
 import UsernameForm from "../components/UsernameForm";
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -280,7 +280,11 @@ export default function InnstillingerPage() {
 
       {/* Språk */}
       <Panel title={t("Språk")}>
-        <Segmented<Lang> value={lang} onChange={setLang} options={LANGUAGES} />
+        <Row label={languageName(lang, lang)} hint={lang === "no" || lang === "en" ? undefined : t("Oversatt automatisk")}>
+          <Link href="/innstillinger/sprak" style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid var(--border)", color: "var(--foreground)", fontWeight: 600, fontSize: 14, textDecoration: "none" }}>
+            {t("Bytt språk")}
+          </Link>
+        </Row>
       </Panel>
 
       {/* Utseende */}
