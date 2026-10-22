@@ -1,0 +1,128 @@
+// Engelske tekster for kontosidene (innstillinger, min side, logg inn, innboks, kontakt).
+export const EN_ACCOUNT: Record<string, string> = {
+  // Felles
+  "Laster...": "Loading...",
+  "Sender...": "Sending...",
+  "Sjekker...": "Checking...",
+  "Lagre": "Save",
+  "Lagrer...": "Saving...",
+  "Lagret!": "Saved!",
+  "Avbryt": "Cancel",
+  "Endre": "Change",
+  "Ferdig": "Done",
+  "Logg inn": "Log in",
+  "Logg ut": "Log out",
+  "E-post": "Email",
+  "Personvern": "Privacy",
+  "Vilkår": "Terms",
+  "Kontakt oss": "Contact us",
+  "Min side": "My page",
+  "Noe gikk galt, prøv igjen.": "Something went wrong, please try again.",
+  "Noe gikk galt. Prøv igjen.": "Something went wrong. Please try again.",
+  "Slett kontoen min": "Delete my account",
+  "Slette kontoen din? Alle lagrede annonser forsvinner. Dette kan ikke angres.":
+    "Delete your account? All saved ads will be removed. This cannot be undone.",
+
+  // Brukernavn
+  "brukernavn": "username",
+  "3–20 tegn: bokstaver a–z, tall, punktum og understrek.": "3–20 characters: letters a–z, numbers, periods and underscores.",
+
+  // Innstillinger
+  "Innstillinger": "Settings",
+  "Konto": "Account",
+  "Du er ikke logget inn": "You're not logged in",
+  "Logg inn for å lagre, dele og kommentere annonser.": "Log in to save, share and comment on ads.",
+  "Brukernavn": "Username",
+  "Ikke valgt": "Not set",
+  "Lagrede og mottatte annonser": "Saved and received ads",
+  "Varsler på e-post": "Email notifications",
+  "Når noen sender meg en annonse": "When someone sends me an ad",
+  "Når noen tagger meg i en kommentar": "When someone tags me in a comment",
+  "Kommer snart.": "Coming soon.",
+  "Kunne ikke lagre. Prøv igjen senere.": "Couldn't save. Please try again later.",
+  "Utseende": "Appearance",
+  "Lys": "Light",
+  "Mørk": "Dark",
+  "Automatisk": "Automatic",
+  "Automatisk følger innstillingen på telefonen eller PC-en.": "Automatic follows the setting on your phone or computer.",
+  "Valuta": "Currency",
+  "Vis priser i": "Show prices in",
+  "Automatisk velger valuta ut fra landet du er i.": "Automatic picks the currency based on the country you're in.",
+  "Bedrift": "Business",
+  "Logo": "Logo",
+  "Bytt logo": "Change logo",
+  "Last opp logo": "Upload logo",
+  "Laster opp...": "Uploading...",
+  "Logoen er oppdatert!": "Logo updated!",
+  "Visningsnavn": "Display name",
+  "F.eks. Auto Collections": "E.g. Auto Collections",
+  "Kontakt-e-post": "Contact email",
+  "post@butikken.no": "hello@yourstore.com",
+  "Administrasjon": "Admin",
+  "Logg ut som bedrift": "Log out as business",
+  "Om Scavenger": "About Scavenger",
+  "Har du en butikk? Koble den til": "Have a store? Connect it",
+
+  // Min side
+  "Kjøp": "Buy",
+  "Del": "Share",
+  "Fjern": "Remove",
+  "Lagre det du liker": "Save what you like",
+  "Logg inn for å lagre produkter og annonser og finne dem igjen senere.":
+    "Log in to save products and ads and find them again later.",
+  "Ingen brukernavn ennå": "No username yet",
+  "Velg brukernavn": "Choose username",
+  "Produkter ({antall})": "Products ({antall})",
+  "Annonser ({antall})": "Ads ({antall})",
+  "Mottatt ({antall})": "Received ({antall})",
+  "Du har ikke lagret noen produkter ennå. Trykk på hjertet på et produkt i":
+    "You haven't saved any products yet. Tap the heart on a product in",
+  "søket": "search",
+  "for å lagre det her.": "to save it here.",
+  "Du har ikke lagret noe ennå. Trykk ♡ på en annonse under": "You haven't saved anything yet. Tap ♡ on an ad under",
+  "Annonser": "Ads",
+  "for å lagre den her.": "to save it here.",
+  "Ingen har sendt deg noe ennå. Når noen sender deg en annonse, dukker den opp her.":
+    "Nobody has sent you anything yet. When someone sends you an ad, it will show up here.",
+  "Fra": "From",
+  "en venn": "a friend",
+  "Ny": "New",
+
+  // Logg inn
+  "Nesten ferdig!": "Almost done!",
+  "Lagre annonser og finn dem igjen senere": "Save ads and find them again later",
+  "Velg et brukernavn": "Choose a username",
+  "Det vises på kommentarene dine, og venner kan sende deg annonser med det.":
+    "It's shown on your comments, and friends can use it to send you ads.",
+  "din@epost.no": "you@email.com",
+  "Send meg en kode": "Send me a code",
+  "Ingen passord. Du får en kode på e-post. Er du ny, lages kontoen automatisk.":
+    "No password. You'll get a code by email. If you're new, your account is created automatically.",
+  "Vi har sendt en kode til {epost}.": "We've sent a code to {epost}.",
+  "Annen e-post": "Different email",
+  "Send ny kode": "Send new code",
+  "Har du en butikk?": "Have a store?",
+  "Logg inn som bedrift": "Log in as a business",
+
+  // Innboks
+  "Innboks": "Inbox",
+  "Passord": "Password",
+  "Feil passord": "Wrong password",
+  "Ingen meldinger ennå.": "No messages yet.",
+  "Anonym": "Anonymous",
+  "Svar": "Reply",
+  "Skriv svaret ditt her...": "Write your reply here...",
+  "Send svar": "Send reply",
+  "Svar sendt!": "Reply sent!",
+
+  // Kontakt
+  "Har du et spørsmål, et samarbeidsforslag, eller noe annet? Send oss en melding.":
+    "Have a question, a partnership idea, or something else? Send us a message.",
+  "Takk! Meldingen din er sendt.": "Thanks! Your message has been sent.",
+  "Navn (valgfritt)": "Name (optional)",
+  "Melding": "Message",
+  "Send melding": "Send message",
+  "Vi lagrer navn, e-post og meldingen din for å kunne svare. Les mer i":
+    "We store your name, email and message so we can reply. Read more in our",
+  "personvernerklæringen": "privacy policy",
+};

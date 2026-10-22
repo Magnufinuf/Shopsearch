@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { locale, useLang, useT } from "@/lib/i18n";
 
 type Message = {
   id: string;
@@ -11,6 +12,7 @@ type Message = {
 };
 
 function ReplyBox({ message, password }: { message: Message; password: string }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
@@ -32,11 +34,11 @@ function ReplyBox({ message, password }: { message: Message; password: string })
     });
     setSending(false);
     if (res.ok) {
-      setStatus("Svar sendt!");
+      setStatus(t("Svar sendt!"));
       setReply("");
       setTimeout(() => setOpen(false), 1200);
     } else {
-      setStatus("Noe gikk galt, prøv igjen.");
+      setStatus(t("Noe gikk galt, prøv igjen."));
     }
   }
 
@@ -55,7 +57,7 @@ function ReplyBox({ message, password }: { message: Message; password: string })
           cursor: "pointer",
         }}
       >
-        Svar
+        {t("Svar")}
       </button>
     );
   }
@@ -65,7 +67,7 @@ function ReplyBox({ message, password }: { message: Message; password: string })
       <textarea
         value={reply}
         onChange={(e) => setReply(e.target.value)}
-        placeholder="Skriv svaret ditt her..."
+        placeholder={t("Skriv svaret ditt her...")}
         rows={4}
         style={{
           width: "100%",
@@ -95,7 +97,7 @@ function ReplyBox({ message, password }: { message: Message; password: string })
             cursor: "pointer",
           }}
         >
-          {sending ? "Sender..." : "Send svar"}
+          {sending ? t("Sender...") : t("Send svar")}
         </button>
         <button
           onClick={() => setOpen(false)}
@@ -109,7 +111,7 @@ function ReplyBox({ message, password }: { message: Message; password: string })
             cursor: "pointer",
           }}
         >
-          Avbryt
+          {t("Avbryt")}
         </button>
         {status && <span style={{ fontSize: 13, opacity: 0.75 }}>{status}</span>}
       </div>
@@ -118,6 +120,8 @@ function ReplyBox({ message, password }: { message: Message; password: string })
 }
 
 export default function InnboksPage() {
+  const t = useT();
+  const lang = useLang();
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -136,7 +140,7 @@ export default function InnboksPage() {
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
-      setError("Feil passord");
+      setError(t("Feil passord"));
       return;
     }
     setMessages(data.messages || []);
@@ -147,14 +151,14 @@ export default function InnboksPage() {
     return (
       <main style={{ padding: "48px 24px", maxWidth: 420, margin: "0 auto" }}>
         <h1 style={{ fontFamily: "var(--font-heading), Georgia, serif", fontSize: 26, fontWeight: 600, marginBottom: 20 }}>
-          Innboks
+          {t("Innboks")}
         </h1>
         <form onSubmit={handleLogin}>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Passord"
+            placeholder={t("Passord")}
             style={{
               width: "100%",
               padding: "10px 14px",
@@ -182,7 +186,7 @@ export default function InnboksPage() {
               cursor: "pointer",
             }}
           >
-            {loading ? "Sjekker..." : "Logg inn"}
+            {loading ? t("Sjekker...") : t("Logg inn")}
           </button>
           {error && <p style={{ color: "#e05252", fontSize: 13, marginTop: 10 }}>{error}</p>}
         </form>
@@ -193,10 +197,10 @@ export default function InnboksPage() {
   return (
     <main style={{ padding: "48px 24px", maxWidth: 720, margin: "0 auto" }}>
       <h1 style={{ fontFamily: "var(--font-heading), Georgia, serif", fontSize: 26, fontWeight: 600, marginBottom: 24 }}>
-        Innboks
+        {t("Innboks")}
       </h1>
 
-      {messages.length === 0 && <p style={{ opacity: 0.6 }}>Ingen meldinger ennå.</p>}
+      {messages.length === 0 && <p style={{ opacity: 0.6 }}>{t("Ingen meldinger ennå.")}</p>}
 
       {messages.map((m) => (
         <div
@@ -209,9 +213,9 @@ export default function InnboksPage() {
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
-            <span style={{ fontWeight: 600 }}>{m.name || "Anonym"}</span>
+            <span style={{ fontWeight: 600 }}>{m.name || t("Anonym")}</span>
             <span style={{ fontSize: 12, opacity: 0.5 }}>
-              {new Date(m.created_at).toLocaleString("nb-NO")}
+              {new Date(m.created_at).toLocaleString(locale(lang))}
             </span>
           </div>
           <p style={{ fontSize: 13, opacity: 0.6, marginBottom: 10 }}>{m.email}</p>

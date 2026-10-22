@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchUser } from "@/lib/user-client";
+import { useT } from "@/lib/i18n";
 import UsernameForm from "../components/UsernameForm";
 
 const input: React.CSSProperties = {
@@ -37,6 +38,7 @@ function nextPath(): string {
 }
 
 export default function LoggInn() {
+  const t = useT();
   const [step, setStep] = useState<"email" | "code" | "username">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -71,14 +73,14 @@ export default function LoggInn() {
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
-      setError(data.error || "Noe gikk galt, prøv igjen.");
+      setError(data.error || t("Noe gikk galt, prøv igjen."));
       return;
     }
     try {
       localStorage.setItem(EMAIL_KEY, email.trim());
     } catch {}
     setStep("code");
-    setInfo(`Vi har sendt en kode til ${email.trim()}.`);
+    setInfo(t("Vi har sendt en kode til {epost}.", { epost: email.trim() }));
   }
 
   async function verifyCode(e?: React.FormEvent, codeValue = code) {
@@ -101,7 +103,7 @@ export default function LoggInn() {
       return;
     }
     setLoading(false);
-    setError(data.error || "Noe gikk galt, prøv igjen.");
+    setError(data.error || t("Noe gikk galt, prøv igjen."));
   }
 
   return (
@@ -109,18 +111,18 @@ export default function LoggInn() {
       <div style={{ width: "100%", maxWidth: 380 }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <img src="/logo.png" alt="" style={{ width: 48, height: 48, objectFit: "contain", margin: "0 auto 12px", display: "block" }} />
-          <h1 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px" }}>{step === "username" ? "Nesten ferdig!" : "Logg inn"}</h1>
-          {step !== "username" && <p style={{ margin: 0, opacity: 0.65, fontSize: 15 }}>Lagre annonser og finn dem igjen senere</p>}
+          <h1 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px" }}>{step === "username" ? t("Nesten ferdig!") : t("Logg inn")}</h1>
+          {step !== "username" && <p style={{ margin: 0, opacity: 0.65, fontSize: 15 }}>{t("Lagre annonser og finn dem igjen senere")}</p>}
         </div>
 
         {step === "username" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <p style={{ margin: 0, fontSize: 15, textAlign: "center" }}>
-              <strong>Velg et brukernavn</strong>
+              <strong>{t("Velg et brukernavn")}</strong>
               <br />
-              <span style={{ opacity: 0.7, fontSize: 14 }}>Det vises på kommentarene dine, og venner kan sende deg annonser med det.</span>
+              <span style={{ opacity: 0.7, fontSize: 14 }}>{t("Det vises på kommentarene dine, og venner kan sende deg annonser med det.")}</span>
             </p>
-            <UsernameForm buttonLabel="Ferdig" onSaved={() => window.location.assign(nextPath())} />
+            <UsernameForm buttonLabel={t("Ferdig")} onSaved={() => window.location.assign(nextPath())} />
           </div>
         ) : step === "email" ? (
           <form onSubmit={sendCode} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -130,14 +132,14 @@ export default function LoggInn() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="din@epost.no"
+              placeholder={t("din@epost.no")}
               style={input}
             />
             <button type="submit" disabled={!email || loading} style={{ ...primaryButton, opacity: !email || loading ? 0.6 : 1 }}>
-              {loading ? "Sender..." : "Send meg en kode"}
+              {loading ? t("Sender...") : t("Send meg en kode")}
             </button>
             <p style={{ margin: 0, fontSize: 12, opacity: 0.6, textAlign: "center" }}>
-              Ingen passord. Du får en kode på e-post. Er du ny, lages kontoen automatisk.
+              {t("Ingen passord. Du får en kode på e-post. Er du ny, lages kontoen automatisk.")}
             </p>
           </form>
         ) : (
@@ -159,14 +161,14 @@ export default function LoggInn() {
               style={{ ...input, textAlign: "center", fontSize: 24, letterSpacing: 8 }}
             />
             <button type="submit" disabled={code.length !== 6 || loading} style={{ ...primaryButton, opacity: code.length !== 6 || loading ? 0.6 : 1 }}>
-              {loading ? "Sjekker..." : "Logg inn"}
+              {loading ? t("Sjekker...") : t("Logg inn")}
             </button>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
               <button type="button" onClick={() => { setStep("email"); setCode(""); setError(""); }} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", padding: 0 }}>
-                ← Annen e-post
+                ← {t("Annen e-post")}
               </button>
               <button type="button" onClick={() => sendCode()} disabled={loading} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", padding: 0 }}>
-                Send ny kode
+                {t("Send ny kode")}
               </button>
             </div>
           </form>
@@ -175,10 +177,10 @@ export default function LoggInn() {
         {error && <p style={{ color: "#e05252", fontSize: 14, marginTop: 14, textAlign: "center" }}>{error}</p>}
 
         <p style={{ textAlign: "center", fontSize: 13, marginTop: 32, opacity: 0.7 }}>
-          Har du en butikk? <Link href="/logg-inn-bedrift" style={{ color: "var(--primary)" }}>Logg inn som bedrift</Link>
+          {t("Har du en butikk?")} <Link href="/logg-inn-bedrift" style={{ color: "var(--primary)" }}>{t("Logg inn som bedrift")}</Link>
         </p>
         <p style={{ textAlign: "center", fontSize: 12, opacity: 0.5, marginTop: 8 }}>
-          <Link href="/vilkar">Vilkår</Link> · <Link href="/personvern">Personvern</Link>
+          <Link href="/vilkar">{t("Vilkår")}</Link> · <Link href="/personvern">{t("Personvern")}</Link>
         </p>
       </div>
     </main>

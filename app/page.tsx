@@ -6,7 +6,7 @@ import { STYLES } from "@/lib/styles";
 import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
 import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo } from "@/lib/currency";
-import { useT } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
 import ProductCard from "./components/ProductCard";
 import InstallPrompt from "./components/InstallPrompt";
 
@@ -65,6 +65,7 @@ function ProductRow({ title, products, currencyInfo, onMore }: { title: string; 
 }
 
 export default function Home() {
+  const lang = useLang();
   const t = useT();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
@@ -113,7 +114,7 @@ export default function Home() {
     // Henter produkter (hvis ikke allerede hentet) og AI-tolkning samtidig.
     const [all, ai]: [Product[], AiFilters | null] = await Promise.all([
       catalog ?? fetch("/api/products").then((res) => res.json()).then((d) => (d.products || []) as Product[]),
-      fetchAiFilters(query),
+      fetchAiFilters(query, lang),
     ]);
     const info = currencyInfo ?? (await fetchCurrencyInfo(all.map((p) => p.currency)));
     setCurrencyInfo(info);
@@ -136,7 +137,8 @@ export default function Home() {
     const smart = parseSmartQuery(query, buildVocabulary(all));
     const priceOf = (p: Product) => convertPrice(p.price, p.currency, info);
     let hits = all.filter((p) => matchesSmartQuery(p, smart, priceOf(p)));
-    let summary = smart.summary;
+    // Forklaringen fra det vanlige søket finnes bare på norsk.
+    let summary = lang === "no" ? smart.summary : "";
     if (hits.length === 0) {
       hits = all.filter((p) => matchesSmartQuery(p, smart, priceOf(p), false));
       summary = t("Ingen helt like treff – her er det nærmeste vi fant");

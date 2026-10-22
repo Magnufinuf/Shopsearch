@@ -9,6 +9,7 @@ import ShareSheet from "../components/ShareSheet";
 import UsernameForm from "../components/UsernameForm";
 import ProductCard, { CardProduct } from "../components/ProductCard";
 import { CurrencyInfo, fetchCurrencyInfo } from "@/lib/currency";
+import { useT } from "@/lib/i18n";
 
 type InboxItem = {
   id: string;
@@ -42,6 +43,7 @@ function AdvertCard({
   onShare: () => void;
   children?: React.ReactNode;
 }) {
+  const t = useT();
   return (
     <div style={{ border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column" }}>
       {header && <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)" }}>{header}</div>}
@@ -60,9 +62,9 @@ function AdvertCard({
         {a.caption && <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>{a.caption}</p>}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: "auto" }}>
           <a href={storeUrl(a.store_domain)} onClick={() => trackClick(a.store_domain, "lagret")} target="_blank" rel="noopener noreferrer" style={{ ...smallButton, backgroundColor: "var(--primary)", color: "white", border: "none" }}>
-            Kjøp
+            {t("Kjøp")}
           </a>
-          <button onClick={onShare} style={smallButton}>Del</button>
+          <button onClick={onShare} style={smallButton}>{t("Del")}</button>
           {children}
         </div>
       </div>
@@ -71,6 +73,7 @@ function AdvertCard({
 }
 
 export default function MinSide() {
+  const t = useT();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [adverts, setAdverts] = useState<Advert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +112,7 @@ export default function MinSide() {
     setAdverts((prev) => prev.filter((a) => a.id !== advert.id));
     if (!(await setSaved(String(advert.id), false))) {
       setAdverts((prev) => [advert, ...prev]);
-      alert("Noe gikk galt, prøv igjen.");
+      alert(t("Noe gikk galt, prøv igjen."));
     }
   }
 
@@ -121,14 +124,14 @@ export default function MinSide() {
   }, [tab, inbox]);
 
   async function deleteAccount() {
-    if (!confirm("Slette kontoen din? Alle lagrede annonser forsvinner. Dette kan ikke angres.")) return;
+    if (!confirm(t("Slette kontoen din? Alle lagrede annonser forsvinner. Dette kan ikke angres."))) return;
     const res = await fetch("/api/user/delete", { method: "POST" });
     if (res.ok) window.location.assign("/");
-    else alert("Noe gikk galt, prøv igjen.");
+    else alert(t("Noe gikk galt, prøv igjen."));
   }
 
   if (!user || (user.loggedIn && loading)) {
-    return <p style={{ padding: 24, opacity: 0.6 }}>Laster...</p>;
+    return <p style={{ padding: 24, opacity: 0.6 }}>{t("Laster...")}</p>;
   }
 
   if (!user.loggedIn) {
@@ -136,10 +139,10 @@ export default function MinSide() {
       <main style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
         <div style={{ maxWidth: 360 }}>
           <p style={{ fontSize: 40, margin: "0 0 8px" }}>♡</p>
-          <h1 style={{ fontSize: 26, fontWeight: 600, margin: "0 0 8px" }}>Lagre det du liker</h1>
-          <p style={{ opacity: 0.7, marginBottom: 20 }}>Logg inn for å lagre produkter og annonser og finne dem igjen senere.</p>
+          <h1 style={{ fontSize: 26, fontWeight: 600, margin: "0 0 8px" }}>{t("Lagre det du liker")}</h1>
+          <p style={{ opacity: 0.7, marginBottom: 20 }}>{t("Logg inn for å lagre produkter og annonser og finne dem igjen senere.")}</p>
           <Link href="/logg-inn" style={{ display: "inline-block", padding: "12px 28px", borderRadius: 12, backgroundColor: "var(--primary)", color: "white", fontWeight: 600 }}>
-            Logg inn
+            {t("Logg inn")}
           </Link>
         </div>
       </main>
@@ -150,18 +153,18 @@ export default function MinSide() {
     <main style={{ padding: "48px 24px", maxWidth: 960, margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 4px" }}>Min side</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 4px" }}>{t("Min side")}</h1>
           <p style={{ margin: 0, fontSize: 14 }}>
-            {user.username ? <strong>{user.username}</strong> : <span style={{ opacity: 0.6 }}>Ingen brukernavn ennå</span>}
+            {user.username ? <strong>{user.username}</strong> : <span style={{ opacity: 0.6 }}>{t("Ingen brukernavn ennå")}</span>}
             {!editingUsername && (
               <button onClick={() => setEditingUsername(true)} style={{ marginLeft: 8, background: "none", border: "none", color: "var(--primary)", fontSize: 13, cursor: "pointer", padding: 0 }}>
-                {user.username ? "Endre" : "Velg brukernavn"}
+                {user.username ? t("Endre") : t("Velg brukernavn")}
               </button>
             )}
           </p>
           <p style={{ margin: "2px 0 0", fontSize: 13, opacity: 0.6 }}>{user.email}</p>
         </div>
-        <button onClick={logoutUser} style={smallButton}>Logg ut</button>
+        <button onClick={logoutUser} style={smallButton}>{t("Logg ut")}</button>
       </div>
 
       {editingUsername && (
@@ -179,9 +182,9 @@ export default function MinSide() {
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {(
           [
-            ["produkter", `Produkter (${products.length})`, 0],
-            ["lagret", `Annonser (${adverts.length})`, 0],
-            ["mottatt", `Mottatt (${inbox.length})`, inbox.filter((i) => !i.seen).length],
+            ["produkter", t("Produkter ({antall})", { antall: products.length }), 0],
+            ["lagret", t("Annonser ({antall})", { antall: adverts.length }), 0],
+            ["mottatt", t("Mottatt ({antall})", { antall: inbox.length }), inbox.filter((i) => !i.seen).length],
           ] as const
         ).map(([key, label, badge]) => (
           <button
@@ -212,8 +215,8 @@ export default function MinSide() {
       {tab === "produkter" &&
         (products.length === 0 ? (
           <p style={{ opacity: 0.7 }}>
-            Du har ikke lagret noen produkter ennå. Trykk på hjertet på et produkt i{" "}
-            <Link href="/" style={{ color: "var(--primary)" }}>søket</Link> for å lagre det her.
+            {t("Du har ikke lagret noen produkter ennå. Trykk på hjertet på et produkt i")}{" "}
+            <Link href="/" style={{ color: "var(--primary)" }}>{t("søket")}</Link> {t("for å lagre det her.")}
           </p>
         ) : (
           <div className="grid w-full grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:grid-cols-4">
@@ -226,14 +229,14 @@ export default function MinSide() {
       {tab === "lagret" &&
         (adverts.length === 0 ? (
           <p style={{ opacity: 0.7 }}>
-            Du har ikke lagret noe ennå. Trykk ♡ på en annonse under{" "}
-            <Link href="/adverts" style={{ color: "var(--primary)" }}>Annonser</Link> for å lagre den her.
+            {t("Du har ikke lagret noe ennå. Trykk ♡ på en annonse under")}{" "}
+            <Link href="/adverts" style={{ color: "var(--primary)" }}>{t("Annonser")}</Link> {t("for å lagre den her.")}
           </p>
         ) : (
           <div style={grid}>
             {adverts.map((a) => (
               <AdvertCard key={a.id} advert={a} onShare={() => setSharing(a)}>
-                <button onClick={() => remove(a)} style={smallButton}>Fjern</button>
+                <button onClick={() => remove(a)} style={smallButton}>{t("Fjern")}</button>
               </AdvertCard>
             ))}
           </div>
@@ -242,7 +245,7 @@ export default function MinSide() {
       {tab === "mottatt" &&
         (inbox.length === 0 ? (
           <p style={{ opacity: 0.7 }}>
-            Ingen har sendt deg noe ennå. Når noen sender deg en annonse, dukker den opp her.
+            {t("Ingen har sendt deg noe ennå. Når noen sender deg en annonse, dukker den opp her.")}
           </p>
         ) : (
           <div style={grid}>
@@ -253,9 +256,9 @@ export default function MinSide() {
                 onShare={() => setSharing(item.advert)}
                 header={
                   <div style={{ fontSize: 12 }}>
-                    <span style={{ opacity: 0.6 }}>Fra </span>
-                    <strong style={{ wordBreak: "break-all" }}>{item.from || "en venn"}</strong>
-                    {!item.seen && <span style={{ marginLeft: 6, color: "#e05252", fontWeight: 600 }}>Ny</span>}
+                    <span style={{ opacity: 0.6 }}>{t("Fra")} </span>
+                    <strong style={{ wordBreak: "break-all" }}>{item.from || t("en venn")}</strong>
+                    {!item.seen && <span style={{ marginLeft: 6, color: "#e05252", fontWeight: 600 }}>{t("Ny")}</span>}
                     {item.message && <p style={{ margin: "6px 0 0", fontStyle: "italic", opacity: 0.85 }}>«{item.message}»</p>}
                   </div>
                 }
@@ -268,7 +271,7 @@ export default function MinSide() {
 
       <div style={{ marginTop: 56, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
         <button onClick={deleteAccount} style={{ ...smallButton, color: "#e05252", borderColor: "#e05252" }}>
-          Slett kontoen min
+          {t("Slett kontoen min")}
         </button>
       </div>
     </main>

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useT } from "@/lib/i18n";
 
 export default function KontaktPage() {
+  const t = useT();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [messages, setMessages] = useState("");
@@ -30,7 +32,7 @@ export default function KontaktPage() {
       setEmail("");
       setMessages("");
     } else {
-      setError("Noe gikk galt. Prøv igjen.");
+      setError(t("Noe gikk galt. Prøv igjen."));
     }
   }
 
@@ -49,33 +51,33 @@ export default function KontaktPage() {
   return (
     <main style={{ padding: "48px 24px", maxWidth: 520, margin: "0 auto" }}>
       <h1 style={{ fontFamily: "var(--font-heading), Georgia, serif", fontSize: 28, fontWeight: 600, marginBottom: 8 }}>
-        Kontakt oss
+        {t("Kontakt oss")}
       </h1>
       <p style={{ opacity: 0.7, fontSize: 14, marginBottom: 24 }}>
-        Har du et spørsmål, et samarbeidsforslag, eller noe annet? Send oss en melding.
+        {t("Har du et spørsmål, et samarbeidsforslag, eller noe annet? Send oss en melding.")}
       </p>
 
       {sent ? (
-        <p style={{ opacity: 0.85 }}>Takk! Meldingen din er sendt.</p>
+        <p style={{ opacity: 0.85 }}>{t("Takk! Meldingen din er sendt.")}</p>
       ) : (
         <form onSubmit={handleSubmit}>
           <input
             type="text"
-            placeholder="Navn (valgfritt)"
+            placeholder={t("Navn (valgfritt)")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             style={inputStyle}
           />
           <input
             type="email"
-            placeholder="E-post"
+            placeholder={t("E-post")}
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             style={inputStyle}
           />
           <textarea
-            placeholder="Melding"
+            placeholder={t("Melding")}
             required
             rows={5}
             value={messages}
@@ -88,11 +90,11 @@ export default function KontaktPage() {
             disabled={sending}
             style={{ padding: "10px 24px", borderRadius: 10, backgroundColor: "var(--primary)", color: "white", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
           >
-            {sending ? "Sender..." : "Send melding"}
+            {sending ? t("Sender...") : t("Send melding")}
           </button>
           <p style={{ fontSize: 12, opacity: 0.6, marginTop: 12 }}>
-            Vi lagrer navn, e-post og meldingen din for å kunne svare. Les mer i{" "}
-            <Link href="/personvern" style={{ color: "var(--primary)" }}>personvernerklæringen</Link>.
+            {t("Vi lagrer navn, e-post og meldingen din for å kunne svare. Les mer i")}{" "}
+            <Link href="/personvern" style={{ color: "var(--primary)" }}>{t("personvernerklæringen")}</Link>.
           </p>
         </form>
       )}
