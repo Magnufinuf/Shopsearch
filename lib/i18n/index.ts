@@ -39,7 +39,8 @@ export function setLang(lang: Lang) {
 // Oversettelser som er hentet (fra minnet, nettleseren eller serveren).
 const dicts: Record<string, Record<string, string>> = { en: EN };
 const loading = new Set<string>();
-const dictKey = (lang: Lang) => `scavenger_dict_${lang}_${TRANSLATION_VERSION}`;
+const DICT_REVISION = 2; // økes når oversettelsene lages på nytt (samme tekst, bedre oversettelse)
+const dictKey = (lang: Lang) => `scavenger_dict_${lang}_${TRANSLATION_VERSION}_${DICT_REVISION}`;
 
 function cachedDict(lang: Lang): Record<string, string> | undefined {
   if (dicts[lang]) return dicts[lang];
@@ -53,7 +54,7 @@ function cachedDict(lang: Lang): Record<string, string> | undefined {
 export function loadDict(lang: Lang) {
   if (lang === "no" || cachedDict(lang) || loading.has(lang)) return;
   loading.add(lang);
-  fetch(`/api/translations?lang=${encodeURIComponent(lang)}&v=${TRANSLATION_VERSION}`)
+  fetch(`/api/translations?lang=${encodeURIComponent(lang)}&v=${TRANSLATION_VERSION}-${DICT_REVISION}`)
     .then((res) => (res.ok ? res.json() : null))
     .then((data) => {
       if (!data?.translations) return;

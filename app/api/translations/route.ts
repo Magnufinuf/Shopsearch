@@ -34,6 +34,7 @@ async function translateChunk(client: Anthropic, language: string, texts: string
     system: `You translate the user interface of Scavenger, a shopping search engine for clothes and accessories from many online stores.
 Translate each English text to ${language}. Keep it short and natural, like a modern shopping app.
 Keep placeholders in curly braces (like {antall}) exactly as they are. Keep "Scavenger" untranslated.
+Localize example values too, like example email addresses (hello@yourstore.com) and example searches, so they look natural in ${language}.
 Return the translations in the same order, one per input text.`,
     messages: [{ role: "user", content: JSON.stringify(texts) }],
   });
@@ -63,7 +64,7 @@ async function translateAll(lang: string): Promise<Record<string, string>> {
   return dict;
 }
 
-const translateCached = unstable_cache(translateAll, ["translations", TRANSLATION_VERSION, MODEL], { revalidate: 30 * 86400 });
+const translateCached = unstable_cache(translateAll, ["translations-v2", TRANSLATION_VERSION, MODEL], { revalidate: 30 * 86400 });
 
 export async function GET(request: NextRequest) {
   const lang = request.nextUrl.searchParams.get("lang");
