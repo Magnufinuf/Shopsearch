@@ -21,7 +21,11 @@ export default function VelgSprak() {
 
   const languages = useMemo(() => {
     const collator = new Intl.Collator(locale(lang));
-    return LANGUAGE_CODES.map((code) => ({ code, name: languageName(code, lang), native: languageName(code, code) })).sort((a, b) =>
+    return LANGUAGE_CODES.map((code) => {
+      const native = languageName(code, code);
+      // Kjenner ikke nettleseren navnet på språket selv, gir den det engelske navnet: vis det ikke to ganger.
+      return { code, name: languageName(code, lang), native: code !== "en" && native === languageName(code, "en") ? "" : native };
+    }).sort((a, b) =>
       collator.compare(a.name, b.name)
     );
   }, [lang]);
@@ -103,7 +107,7 @@ export default function VelgSprak() {
                 >
                   <span style={{ minWidth: 0 }}>
                     <span style={{ display: "block", fontSize: 15, fontWeight: active ? 700 : 500 }}>{l.name}</span>
-                    {l.native !== l.name && <span style={{ display: "block", fontSize: 13, opacity: 0.6 }}>{l.native}</span>}
+                    {l.native && l.native !== l.name && <span style={{ display: "block", fontSize: 13, opacity: 0.6 }}>{l.native}</span>}
                   </span>
                   {active && <span style={{ color: "var(--primary)", fontWeight: 700 }}>✓</span>}
                 </button>
