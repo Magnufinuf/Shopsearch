@@ -9,7 +9,23 @@ type Stats = {
   total: number;
   daily: { date: string; clicks: number }[];
   topProducts: { productId: string; clicks: number }[];
+  savedTotal?: number;
+  topSaved?: { title: string; saves: number }[];
 };
+
+function TopList({ title, rows }: { title: string; rows: { key: string; label: string; value: number }[] }) {
+  return (
+    <div style={{ marginTop: 20 }}>
+      <p style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 600 }}>{title}</p>
+      {rows.map((r) => (
+        <div key={r.key} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "6px 0", borderTop: "1px solid var(--border)", fontSize: 14 }}>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</span>
+          <strong style={{ flexShrink: 0 }}>{r.value}</strong>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // "2026-10-13" -> "13. okt"
 function shortDate(iso: string) {
@@ -116,20 +132,23 @@ export default function StatsPanel({ productTitles }: { productTitles: Record<st
             <Tile label="Siste 7 dager" value={stats.last7} />
             <Tile label="Siste 30 dager" value={stats.last30} />
             <Tile label="Totalt" value={stats.total} />
+            <Tile label="Lagringer" value={stats.savedTotal ?? 0} />
           </div>
 
           <DailyBars daily={stats.daily} />
 
           {stats.topProducts.length > 0 && (
-            <div style={{ marginTop: 20 }}>
-              <p style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 600 }}>Mest besøkte produkter (30 dager)</p>
-              {stats.topProducts.map((t) => (
-                <div key={t.productId} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "6px 0", borderTop: "1px solid var(--border)", fontSize: 14 }}>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{productTitles[t.productId] ?? "Produkt"}</span>
-                  <strong style={{ flexShrink: 0 }}>{t.clicks}</strong>
-                </div>
-              ))}
-            </div>
+            <TopList
+              title="Mest besøkte produkter (30 dager)"
+              rows={stats.topProducts.map((t) => ({ key: t.productId, label: productTitles[t.productId] ?? "Produkt", value: t.clicks }))}
+            />
+          )}
+
+          {!!stats.topSaved?.length && (
+            <TopList
+              title="Mest lagrede produkter"
+              rows={stats.topSaved.map((t, i) => ({ key: `${i}-${t.title}`, label: t.title, value: t.saves }))}
+            />
           )}
 
           {stats.total === 0 && (
