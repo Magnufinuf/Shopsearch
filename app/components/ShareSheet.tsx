@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Advert, advertShareUrl } from "@/lib/adverts";
 import { fetchUser } from "@/lib/user-client";
+import { useT } from "@/lib/i18n";
 import { CheckIcon, CloseIcon, MailIcon, SearchIcon } from "./Icons";
 
 type Contact = { value: string; label: string };
@@ -110,6 +111,7 @@ const row: React.CSSProperties = { display: "flex", gap: 12, overflowX: "auto", 
 
 // «Del på»-vindu: send til venner i Scavenger øverst, del til andre apper under.
 export default function ShareSheet({ advert, onClose }: { advert: Advert; onClose: () => void }) {
+  const t = useT();
   const [user, setUser] = useState<{ loggedIn: boolean; username: string | null } | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -122,7 +124,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
   const [notice, setNotice] = useState("");
 
   const url = advertShareUrl(advert.id);
-  const text = advert.caption ? `${advert.caption} – se den på Scavenger` : "Se denne på Scavenger";
+  const text = advert.caption ? t("{tekst} – se den på Scavenger", { tekst: advert.caption }) : t("Se denne på Scavenger");
 
   useEffect(() => {
     fetchUser().then((u) => {
@@ -172,7 +174,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
       if (!res.ok) {
         const data = await res.json();
         setStatus("idle");
-        setError(`${contact.label}: ${data.error || "Noe gikk galt."}`);
+        setError(`${contact.label}: ${data.error || t("Noe gikk galt.")}`);
         return;
       }
     }
@@ -194,7 +196,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
       await navigator.clipboard.writeText(url);
       return true;
     } catch {
-      prompt("Kopier lenken:", url);
+      prompt(t("Kopier lenken:"), url);
       return false;
     }
   }
@@ -209,7 +211,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
       navigator.share({ title: text, url }).catch(() => {});
       return;
     }
-    if (await copyLink()) flash(`Lenken er kopiert – lim den inn i ${appName}`);
+    if (await copyLink()) flash(t("Lenken er kopiert – lim den inn i {app}", { app: appName }));
     openApp(fallbackUrl);
   }
 
@@ -225,7 +227,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
       <div
         onClick={(ev) => ev.stopPropagation()}
         role="dialog"
-        aria-label="Del på"
+        aria-label={t("Del på")}
         style={{ width: "100%", maxWidth: 520, backgroundColor: "var(--background)", color: "var(--foreground)", borderRadius: "20px 20px 0 0", padding: "16px 16px max(16px, env(safe-area-inset-bottom))", boxSizing: "border-box" }}
       >
         {/* Topp: søk – tittel – lukk */}
@@ -235,7 +237,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
               autoFocus
               value={query}
               onChange={(ev) => setQuery(ev.target.value)}
-              placeholder="Søk etter brukernavn eller skriv e-post"
+              placeholder={t("Søk etter brukernavn eller skriv e-post")}
               autoCapitalize="none"
               autoCorrect="off"
               style={{ flex: 1, minWidth: 0, padding: "10px 14px", borderRadius: 999, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 16 }}
@@ -244,18 +246,18 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
             <>
               <button
                 type="button"
-                aria-label="Søk"
+                aria-label={t("Søk")}
                 onClick={() => (user?.loggedIn ? setSearchOpen(true) : window.location.assign(loginHref))}
                 style={{ background: "none", border: "none", color: "var(--foreground)", cursor: "pointer", padding: 4 }}
               >
                 <SearchIcon size={22} strokeWidth={2.2} />
               </button>
-              <h2 style={{ flex: 1, margin: 0, textAlign: "center", fontSize: 17, fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>Del på</h2>
+              <h2 style={{ flex: 1, margin: 0, textAlign: "center", fontSize: 17, fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>{t("Del på")}</h2>
             </>
           )}
           <button
             type="button"
-            aria-label="Lukk"
+            aria-label={t("Lukk")}
             onClick={() => (searchOpen ? (setSearchOpen(false), setQuery("")) : onClose())}
             style={{ background: "none", border: "none", color: "var(--foreground)", cursor: "pointer", padding: 4, display: "flex" }}
           >
@@ -266,20 +268,20 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
         {/* Venner i Scavenger */}
         {status === "sent" ? (
           <p style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 17, fontWeight: 600, margin: "28px 0" }}>
-            <MailIcon size={22} /> Sendt!
+            <MailIcon size={22} /> {t("Sendt!")}
           </p>
         ) : user === null ? (
           <div style={{ height: 96 }} />
         ) : !user.loggedIn ? (
           <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-            <a href={loginHref} style={{ color: "var(--primary)", fontWeight: 600 }}>Logg inn</a>
-            <span style={{ opacity: 0.7 }}> for å sende til venner i Scavenger</span>
+            <a href={loginHref} style={{ color: "var(--primary)", fontWeight: 600 }}>{t("Logg inn")}</a>
+            <span style={{ opacity: 0.7 }}> {t("for å sende til venner i Scavenger")}</span>
           </div>
         ) : people.length === 0 ? (
           <p style={{ textAlign: "center", fontSize: 14, opacity: 0.65, margin: "8px 0 18px" }}>
             {searchOpen && query.trim()
-              ? "Fant ingen. Skriv brukernavnet eller e-posten deres."
-              : "Søk etter venner med brukernavnet deres."}
+              ? t("Fant ingen. Skriv brukernavnet eller e-posten deres.")
+              : t("Søk etter venner med brukernavnet deres.")}
           </p>
         ) : (
           <div style={row}>
@@ -295,7 +297,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
             <input
               value={message}
               onChange={(ev) => setMessage(ev.target.value)}
-              placeholder="Skriv en hilsen..."
+              placeholder={t("Skriv en hilsen...")}
               maxLength={300}
               style={{ flex: 1, minWidth: 0, padding: "11px 14px", borderRadius: 12, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 16 }}
             />
@@ -305,7 +307,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
               disabled={status === "sending"}
               style={{ flexShrink: 0, padding: "0 18px", borderRadius: 12, backgroundColor: "var(--primary)", color: "white", border: "none", fontWeight: 600, fontSize: 15, cursor: "pointer", opacity: status === "sending" ? 0.6 : 1 }}
             >
-              {status === "sending" ? "..." : selected.length > 1 ? `Send (${selected.length})` : "Send"}
+              {status === "sending" ? "..." : selected.length > 1 ? t("Send ({antall})", { antall: selected.length }) : t("Send")}
             </button>
           </div>
         )}
@@ -332,7 +334,7 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
             onClick={() => shareViaApp("Instagram", "https://www.instagram.com/direct/inbox/")}
           />
           <AppButton
-            label="Meldinger"
+            label={t("Meldinger")}
             color="#34C759"
             icon={ICONS.messages}
             onClick={() => window.location.assign(`sms:?&body=${e(`${text} ${url}`)}`)}
@@ -352,19 +354,19 @@ export default function ShareSheet({ advert, onClose }: { advert: Advert; onClos
             label="ChatGPT"
             color="#10A37F"
             icon={ICONS.chatgpt}
-            onClick={() => openApp(`https://chatgpt.com/?q=${e(`Hva synes du om dette produktet? ${url}`)}`)}
+            onClick={() => openApp(`https://chatgpt.com/?q=${e(t("Hva synes du om dette produktet? {url}", { url }))}`)}
           />
           <AppButton label="Facebook" color="#1877F2" icon={ICONS.facebook} onClick={() => openApp(`https://www.facebook.com/sharer/sharer.php?u=${e(url)}`)} />
           <AppButton
-            label="Kopier"
+            label={t("Kopier")}
             color="#3478F6"
             icon={ICONS.copy}
             onClick={async () => {
-              if (await copyLink()) flash("Lenken er kopiert!");
+              if (await copyLink()) flash(t("Lenken er kopiert!"));
             }}
           />
           {canNativeShare && (
-            <AppButton label="Mer" color="#636366" icon={ICONS.more} onClick={() => navigator.share({ title: text, url }).catch(() => {})} />
+            <AppButton label={t("Mer")} color="#636366" icon={ICONS.more} onClick={() => navigator.share({ title: text, url }).catch(() => {})} />
           )}
         </div>
       </div>

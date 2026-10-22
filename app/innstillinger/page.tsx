@@ -6,6 +6,7 @@ import { fetchSession, logout } from "@/lib/session-client";
 import { fetchUser, logoutUser, UserInfo } from "@/lib/user-client";
 import { CURRENCY_KEY, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { THEME_KEY, ThemeChoice, applyTheme, readTheme } from "@/lib/theme";
+import { LANGUAGES, Lang, setLang, useLang, useT } from "@/lib/i18n";
 import UsernameForm from "../components/UsernameForm";
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -94,6 +95,8 @@ const linkButton: React.CSSProperties = {
 
 export default function InnstillingerPage() {
   const [theme, setTheme] = useState<ThemeChoice>("light");
+  const lang = useLang();
+  const t = useT();
   const [currency, setCurrency] = useState("auto");
   const [user, setUser] = useState<UserInfo | null>(null);
   const [editingUsername, setEditingUsername] = useState(false);
@@ -169,29 +172,29 @@ export default function InnstillingerPage() {
     });
     if (!res.ok) {
       setNotify(previous);
-      setNotifyMessage("Kunne ikke lagre. Prøv igjen senere.");
+      setNotifyMessage(t("Kunne ikke lagre. Prøv igjen senere."));
     }
   }
 
   async function deleteAccount() {
-    if (!confirm("Slette kontoen din? Alle lagrede annonser forsvinner. Dette kan ikke angres.")) return;
+    if (!confirm(t("Slette kontoen din? Alle lagrede annonser forsvinner. Dette kan ikke angres."))) return;
     const res = await fetch("/api/user/delete", { method: "POST" });
     if (res.ok) window.location.assign("/");
-    else alert("Noe gikk galt, prøv igjen.");
+    else alert(t("Noe gikk galt, prøv igjen."));
   }
 
   async function uploadLogo(file: File | undefined) {
     if (!file) return;
-    setLogoMessage("Laster opp...");
+    setLogoMessage(t("Laster opp..."));
     const form = new FormData();
     form.append("file", file);
     const res = await fetch("/api/store-logo", { method: "POST", body: form });
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       setLogoUrl(data.logoUrl);
-      setLogoMessage("Logoen er oppdatert!");
+      setLogoMessage(t("Logoen er oppdatert!"));
     } else {
-      setLogoMessage(data.error || "Noe gikk galt, prøv igjen.");
+      setLogoMessage(data.error || t("Noe gikk galt, prøv igjen."));
     }
   }
 
@@ -204,30 +207,30 @@ export default function InnstillingerPage() {
       body: JSON.stringify({ displayName, contactEmail }),
     });
     setSaving(false);
-    setMessage(res.ok ? "Lagret!" : "Noe gikk galt, prøv igjen.");
+    setMessage(res.ok ? t("Lagret!") : t("Noe gikk galt, prøv igjen."));
   }
 
   return (
     <main style={{ padding: "48px 24px", maxWidth: 640, margin: "0 auto" }}>
       <h1 style={{ fontFamily: "var(--font-heading), Georgia, serif", fontSize: 28, fontWeight: 600, marginBottom: 24 }}>
-        Innstillinger
+        {t("Innstillinger")}
       </h1>
 
       {/* Konto */}
-      <Panel title="Konto">
+      <Panel title={t("Konto")}>
         {user === null ? (
-          <p style={{ opacity: 0.6, margin: 0 }}>Laster...</p>
+          <p style={{ opacity: 0.6, margin: 0 }}>{t("Laster...")}</p>
         ) : !user.loggedIn ? (
-          <Row label="Du er ikke logget inn" hint="Logg inn for å lagre, dele og kommentere annonser.">
+          <Row label={t("Du er ikke logget inn")} hint={t("Logg inn for å lagre, dele og kommentere annonser.")}>
             <Link href="/logg-inn?neste=/innstillinger" style={{ padding: "8px 16px", borderRadius: 10, backgroundColor: "var(--primary)", color: "white", fontWeight: 600, fontSize: 14 }}>
-              Logg inn
+              {t("Logg inn")}
             </Link>
           </Row>
         ) : (
           <>
-            <Row label="Brukernavn" hint={user.username ?? "Ikke valgt"}>
+            <Row label={t("Brukernavn")} hint={user.username ?? t("Ikke valgt")}>
               <button onClick={() => setEditingUsername((v) => !v)} style={linkButton}>
-                {editingUsername ? "Avbryt" : "Endre"}
+                {editingUsername ? t("Avbryt") : t("Endre")}
               </button>
             </Row>
             {editingUsername && (
@@ -241,15 +244,15 @@ export default function InnstillingerPage() {
                 />
               </div>
             )}
-            <Row label="E-post" hint={user.email ?? ""}>
+            <Row label={t("E-post")} hint={user.email ?? ""}>
               <span />
             </Row>
-            <Row label="Lagrede og mottatte annonser">
-              <Link href="/min-side" style={{ ...linkButton, textDecoration: "none" }}>Min side →</Link>
+            <Row label={t("Lagrede og mottatte annonser")}>
+              <Link href="/min-side" style={{ ...linkButton, textDecoration: "none" }}>{t("Min side")} →</Link>
             </Row>
             <div style={{ display: "flex", gap: 20, paddingTop: 10, borderTop: "1px solid var(--border)", marginTop: 6 }}>
-              <button onClick={logoutUser} style={linkButton}>Logg ut</button>
-              <button onClick={deleteAccount} style={{ ...linkButton, color: "#e05252" }}>Slett kontoen min</button>
+              <button onClick={logoutUser} style={linkButton}>{t("Logg ut")}</button>
+              <button onClick={deleteAccount} style={{ ...linkButton, color: "#e05252" }}>{t("Slett kontoen min")}</button>
             </div>
           </>
         )}
@@ -257,43 +260,48 @@ export default function InnstillingerPage() {
 
       {/* Varsler */}
       {user?.loggedIn && (
-        <Panel title="Varsler på e-post">
+        <Panel title={t("Varsler på e-post")}>
           {notify === null ? (
-            <p style={{ opacity: 0.6, margin: 0 }}>Laster...</p>
+            <p style={{ opacity: 0.6, margin: 0 }}>{t("Laster...")}</p>
           ) : (
             <>
-              <Row label="Når noen sender meg en annonse">
+              <Row label={t("Når noen sender meg en annonse")}>
                 <Toggle on={notify.notifyShares} disabled={!notify.ready} onChange={(on) => saveNotify({ notifyShares: on })} />
               </Row>
-              <Row label="Når noen tagger meg i en kommentar">
+              <Row label={t("Når noen tagger meg i en kommentar")}>
                 <Toggle on={notify.notifyMentions} disabled={!notify.ready} onChange={(on) => saveNotify({ notifyMentions: on })} />
               </Row>
-              {!notify.ready && <p style={{ fontSize: 12, opacity: 0.6, margin: "6px 0 0" }}>Kommer snart.</p>}
+              {!notify.ready && <p style={{ fontSize: 12, opacity: 0.6, margin: "6px 0 0" }}>{t("Kommer snart.")}</p>}
               {notifyMessage && <p style={{ fontSize: 13, color: "#e05252", margin: "6px 0 0" }}>{notifyMessage}</p>}
             </>
           )}
         </Panel>
       )}
 
+      {/* Språk */}
+      <Panel title={t("Språk")}>
+        <Segmented<Lang> value={lang} onChange={setLang} options={LANGUAGES} />
+      </Panel>
+
       {/* Utseende */}
-      <Panel title="Utseende">
+      <Panel title={t("Utseende")}>
         <Segmented<ThemeChoice>
           value={theme}
           onChange={chooseTheme}
           options={[
-            { value: "light", label: "☀️ Lys" },
-            { value: "dark", label: "🌙 Mørk" },
-            { value: "system", label: "⚙️ Automatisk" },
+            { value: "light", label: "☀️ " + t("Lys") },
+            { value: "dark", label: "🌙 " + t("Mørk") },
+            { value: "system", label: "⚙️ " + t("Automatisk") },
           ]}
         />
-        <p style={{ fontSize: 12, opacity: 0.6, margin: "10px 0 0" }}>Automatisk følger innstillingen på telefonen eller PC-en.</p>
+        <p style={{ fontSize: 12, opacity: 0.6, margin: "10px 0 0" }}>{t("Automatisk følger innstillingen på telefonen eller PC-en.")}</p>
       </Panel>
 
       {/* Valuta */}
-      <Panel title="Valuta">
-        <Row label="Vis priser i" hint="Automatisk velger valuta ut fra landet du er i.">
+      <Panel title={t("Valuta")}>
+        <Row label={t("Vis priser i")} hint={t("Automatisk velger valuta ut fra landet du er i.")}>
           <select value={currency} onChange={(e) => chooseCurrency(e.target.value)} style={{ ...inputStyle, width: "auto", paddingRight: 32 }}>
-            <option value="auto">Automatisk</option>
+            <option value="auto">{t("Automatisk")}</option>
             {SUPPORTED_CURRENCIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -303,44 +311,44 @@ export default function InnstillingerPage() {
 
       {/* Bedrift */}
       {domain && (
-        <Panel title="Bedrift">
+        <Panel title={t("Bedrift")}>
           <p style={{ fontSize: 13, opacity: 0.6, marginTop: 0 }}>{domain}</p>
           {logoSupported && (
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
               {logoUrl ? (
-                <img src={logoUrl} alt="Logo" style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)", backgroundColor: "white" }} />
+                <img src={logoUrl} alt={t("Logo")} style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)", backgroundColor: "white" }} />
               ) : (
                 <span style={{ width: 56, height: 56, borderRadius: "50%", border: "2px dashed var(--border)" }} />
               )}
               <label style={{ ...linkButton, cursor: "pointer" }}>
-                {logoUrl ? "Bytt logo" : "Last opp logo"}
+                {logoUrl ? t("Bytt logo") : t("Last opp logo")}
                 <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => uploadLogo(e.target.files?.[0])} style={{ display: "none" }} />
               </label>
               {logoMessage && <span style={{ fontSize: 13, opacity: 0.7 }}>{logoMessage}</span>}
             </div>
           )}
-          <label style={{ display: "block", fontSize: 13, opacity: 0.7, marginBottom: 6 }}>Visningsnavn</label>
-          <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="F.eks. Auto Collections" style={{ ...inputStyle, marginBottom: 16 }} />
-          <label style={{ display: "block", fontSize: 13, opacity: 0.7, marginBottom: 6 }}>Kontakt-e-post</label>
-          <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="post@butikken.no" style={{ ...inputStyle, marginBottom: 16 }} />
+          <label style={{ display: "block", fontSize: 13, opacity: 0.7, marginBottom: 6 }}>{t("Visningsnavn")}</label>
+          <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder={t("F.eks. Auto Collections")} style={{ ...inputStyle, marginBottom: 16 }} />
+          <label style={{ display: "block", fontSize: 13, opacity: 0.7, marginBottom: 6 }}>{t("Kontakt-e-post")}</label>
+          <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder={t("post@butikken.no")} style={{ ...inputStyle, marginBottom: 16 }} />
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <button onClick={saveStore} disabled={saving} style={{ padding: "10px 20px", borderRadius: 10, backgroundColor: "var(--primary)", color: "white", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
-              {saving ? "Lagrer..." : "Lagre"}
+              {saving ? t("Lagrer...") : t("Lagre")}
             </button>
-            <Link href="/admin" style={{ ...linkButton, textDecoration: "none" }}>Administrasjon →</Link>
-            <button onClick={logout} style={linkButton}>Logg ut som bedrift</button>
+            <Link href="/admin" style={{ ...linkButton, textDecoration: "none" }}>{t("Administrasjon")} →</Link>
+            <button onClick={logout} style={linkButton}>{t("Logg ut som bedrift")}</button>
           </div>
           {message && <p style={{ marginTop: 10, fontSize: 13, opacity: 0.75 }}>{message}</p>}
         </Panel>
       )}
 
       {/* Om */}
-      <Panel title="Om Scavenger">
+      <Panel title={t("Om Scavenger")}>
         <div style={{ display: "flex", gap: 20, flexWrap: "wrap", fontSize: 14 }}>
-          <Link href="/kontakt" style={{ color: "var(--primary)" }}>Kontakt oss</Link>
-          <Link href="/personvern" style={{ color: "var(--primary)" }}>Personvern</Link>
-          <Link href="/vilkar" style={{ color: "var(--primary)" }}>Vilkår</Link>
-          {!domain && <Link href="/registrer" style={{ color: "var(--primary)" }}>Har du en butikk? Koble den til</Link>}
+          <Link href="/kontakt" style={{ color: "var(--primary)" }}>{t("Kontakt oss")}</Link>
+          <Link href="/personvern" style={{ color: "var(--primary)" }}>{t("Personvern")}</Link>
+          <Link href="/vilkar" style={{ color: "var(--primary)" }}>{t("Vilkår")}</Link>
+          {!domain && <Link href="/registrer" style={{ color: "var(--primary)" }}>{t("Har du en butikk? Koble den til")}</Link>}
         </div>
       </Panel>
     </main>

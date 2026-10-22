@@ -10,17 +10,17 @@ export type AiFilters = {
   maxPrice: number | null;
   sizes: string[];
   gender: "herre" | "dame" | "unisex" | null;
-  summary: string; // kort forklaring på norsk, vises over resultatene
+  summary: string; // kort forklaring på språket brukeren har valgt, vises over resultatene
 };
 
 
 // Spør AI-søket. null = ikke tilgjengelig (ingen nøkkel, feil o.l.) – bruk vanlig søk da.
-export async function fetchAiFilters(query: string): Promise<AiFilters | null> {
+export async function fetchAiFilters(query: string, lang: "no" | "en" = "no"): Promise<AiFilters | null> {
   try {
     const res = await fetch("/api/ai-search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, lang }),
       // Søket skal aldri henge på AI-en: etter 4 sekunder brukes vanlig søk.
       signal: AbortSignal.timeout(4000),
     });

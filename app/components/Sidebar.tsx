@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { fetchSession, logout } from "@/lib/session-client";
 import { rememberAccount } from "@/lib/remembered-accounts";
 import { fetchUser } from "@/lib/user-client";
+import { useT } from "@/lib/i18n";
 
 const navItems = [
   { href: "/", label: "Søk" },
@@ -15,6 +16,7 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  const t = useT();
   const [businessDomain, setBusinessDomain] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export default function Sidebar() {
       {logo}
       <button
         onClick={() => setOpen(true)}
-        aria-label="Åpne meny"
+        aria-label={t("Åpne meny")}
         style={{ position: "relative", background: "none", border: "none", color: "var(--foreground)", padding: 8, cursor: "pointer" }}
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
@@ -82,7 +84,7 @@ export default function Sidebar() {
     <nav className={`sc-sidebar${open ? " open" : ""}`}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         {logo}
-        <button className="sc-close" onClick={close} aria-label="Lukk meny" style={{ background: "none", border: "none", color: "var(--foreground)", fontSize: 26, lineHeight: 1, cursor: "pointer", padding: 4 }}>
+        <button className="sc-close" onClick={close} aria-label={t("Lukk meny")} style={{ background: "none", border: "none", color: "var(--foreground)", fontSize: 26, lineHeight: 1, cursor: "pointer", padding: 4 }}>
           ×
         </button>
       </div>
@@ -105,7 +107,7 @@ export default function Sidebar() {
               transition: "background-color 0.15s ease",
             }}
           >
-            {item.label}
+            {t(item.label)}
             {item.href === "/min-side" && unread > 0 && (
               <span style={{ marginLeft: 8, backgroundColor: "#e05252", color: "white", borderRadius: 999, fontSize: 11, padding: "1px 7px", fontWeight: 600 }}>
                 {unread}
@@ -117,30 +119,30 @@ export default function Sidebar() {
 
       <div style={{ marginTop: "auto", paddingTop: 24 }}>
         <div style={{ display: "flex", gap: 12, fontSize: 12, opacity: 0.55, marginBottom: 12 }}>
-          <Link href="/personvern" onClick={close}>Personvern</Link>
-          <Link href="/vilkar" onClick={close}>Vilkår</Link>
+          <Link href="/personvern" onClick={close}>{t("Personvern")}</Link>
+          <Link href="/vilkar" onClick={close}>{t("Vilkår")}</Link>
         </div>
         {businessDomain ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ fontSize: 12, opacity: 0.6 }}>
-              Innlogget som: {businessName || businessDomain}
+              {t("Innlogget som: {navn}", { navn: businessName || businessDomain })}
             </span>
             <button
               onClick={logout}
               style={{ alignSelf: "flex-start", padding: 0, border: "none", background: "none", color: "var(--primary)", fontSize: 13, cursor: "pointer" }}
             >
-              Logg ut
+              {t("Logg ut")}
             </button>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {userEmail ? (
               <span style={{ fontSize: 12, opacity: 0.6, wordBreak: "break-all" }}>
-                Innlogget som: {userEmail}
+                {t("Innlogget som: {navn}", { navn: userEmail })}
               </span>
             ) : (
               <Link href="/logg-inn" onClick={close} style={{ fontSize: 14, color: "var(--primary)", fontWeight: 600 }}>
-                Logg inn
+                {t("Logg inn")}
               </Link>
             )}
             {/* Synlig for butikkeiere, men roligere enn vanlig innlogging. */}
@@ -154,7 +156,7 @@ export default function Sidebar() {
                 <path d="M4 9.5c0 1.4 1.1 2.5 2.7 2.5s2.6-1.1 2.6-2.5c0 1.4 1.1 2.5 2.7 2.5s2.7-1.1 2.7-2.5c0 1.4 1 2.5 2.6 2.5S20 10.9 20 9.5" />
                 <path d="M5.5 12v8h13v-8M10 20v-4.5h4V20" />
               </svg>
-              Logg inn som bedrift
+              {t("Logg inn som bedrift")}
             </Link>
           </div>
         )}

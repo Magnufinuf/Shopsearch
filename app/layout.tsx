@@ -3,6 +3,7 @@ import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "./components/Sidebar";
 import ThemeInit from "./components/ThemeInit";
+import LangInit from "./components/LangInit";
 import { APP_URL } from "@/lib/app-url";
 
 const fraunces = Fraunces({
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="no" className={`h-full antialiased ${fraunces.variable} ${inter.variable}`}>
       <body className="min-h-full flex">
         <ThemeInit />
+        <LangInit />
         <Sidebar />
         <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
       </body>

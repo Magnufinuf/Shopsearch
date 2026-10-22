@@ -25,7 +25,8 @@ Regler:
 - minPrice/maxPrice: i norske kroner. "billig" uten tall = maxPrice 500. Ellers null.
 - sizes: f.eks. ["M"] eller ["43"]. Tom liste hvis ingen.
 - gender: "herre", "dame", "unisex" eller null.
-- summary: én kort setning på norsk som forklarer hva du ser etter, f.eks. "Varme gensere og jakker under 1000 kr".`;
+- summary: én kort setning som forklarer hva du ser etter, f.eks. "Varme gensere og jakker under 1000 kr".
+  Skriv den på språket som står i <summary_language>.`;
 
 const SCHEMA = {
   type: "object",
@@ -44,7 +45,7 @@ const SCHEMA = {
   additionalProperties: false,
 };
 
-async function interpret(query: string): Promise<AiFilters | null> {
+async function interpret(query: string, lang: "no" | "en"): Promise<AiFilters | null> {
   // Lages her (ikke øverst i fila), så bygget ikke feiler når nøkkelen mangler.
   const client = new Anthropic();
   const response = await client.beta.messages.create({
@@ -56,7 +57,7 @@ async function interpret(query: string): Promise<AiFilters | null> {
     // Finnes ikke for Haiku – der faller vi bare tilbake til det vanlige søket.
     ...(MODEL.includes("haiku") ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }),
     system: SYSTEM,
-    messages: [{ role: "user", content: query }],
+    messages: [{ role: "user", content: `<summary_language>${lang === "en" ? "English" : "norsk"}</summary_language>\n${query}` }],
   });
 
   if (response.stop_reason === "refusal") return null;
@@ -66,7 +67,7 @@ async function interpret(query: string): Promise<AiFilters | null> {
 }
 
 // Samme søk gir samme svar, så vi lagrer tolkningen i et døgn (sparer tid og penger).
-const interpretCached = unstable_cache(interpret, ["ai-search-v1", MODEL], { revalidate: 86400 });
+const interpretCached = unstable_cache(interpret, ["ai-search-v2", MODEL], { revalidate: 86400 });
 
 // Enkel sperre mot misbruk: maks 20 AI-søk i minuttet per IP (per server-instans).
 const recent = new Map<string, number[]>();
@@ -84,7 +85,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "AI-søk er ikke satt opp." }, { status: 503 });
   }
 
-  const { query: raw } = await request.json();
+  const { query: raw, lang: rawLang } = await request.json();
+  const lang = rawLang === "en" ? "en" : "no";
   const query = String(raw || "").trim().toLowerCase().slice(0, MAX_QUERY);
   if (!query) return NextResponse.json({ error: "Tomt søk." }, { status: 400 });
 
@@ -92,7 +94,7 @@ export async function POST(request: NextRequest) {
   if (rateLimited(ip)) return NextResponse.json({ error: "For mange søk, vent litt." }, { status: 429 });
 
   try {
-    const filters = await interpretCached(query);
+    const filters = await interpretCached(query, lang);
     if (!filters) return NextResponse.json({ error: "Kunne ikke tolke søket." }, { status: 502 });
     return NextResponse.json({ filters });
   } catch (error) {
