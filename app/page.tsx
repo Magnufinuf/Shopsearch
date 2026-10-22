@@ -6,6 +6,7 @@ import { STYLES } from "@/lib/styles";
 import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
 import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo } from "@/lib/currency";
+import { useT } from "@/lib/i18n";
 import ProductCard from "./components/ProductCard";
 import InstallPrompt from "./components/InstallPrompt";
 
@@ -40,6 +41,7 @@ function sortProducts(products: Product[], sort: SortKey, info: CurrencyInfo | n
 
 // Horisontal rad med produkter (sveipes på mobil).
 function ProductRow({ title, products, currencyInfo, onMore }: { title: string; products: Product[]; currencyInfo: CurrencyInfo | null; onMore?: () => void }) {
+  const t = useT();
   if (products.length === 0) return null;
   return (
     <section style={{ width: "100%", textAlign: "left" }}>
@@ -47,7 +49,7 @@ function ProductRow({ title, products, currencyInfo, onMore }: { title: string; 
         <h2 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>{title}</h2>
         {onMore && (
           <button onClick={onMore} style={{ background: "none", border: "none", color: "var(--primary)", fontSize: 14, cursor: "pointer", padding: 0 }}>
-            Se alle →
+            {t("Se alle →")}
           </button>
         )}
       </div>
@@ -63,6 +65,7 @@ function ProductRow({ title, products, currencyInfo, onMore }: { title: string; 
 }
 
 export default function Home() {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -136,7 +139,7 @@ export default function Home() {
     let summary = smart.summary;
     if (hits.length === 0) {
       hits = all.filter((p) => matchesSmartQuery(p, smart, priceOf(p), false));
-      summary = "Ingen helt like treff – her er det nærmeste vi fant";
+      summary = t("Ingen helt like treff – her er det nærmeste vi fant");
     }
 
     setAiSummary(hits.length > 0 && summary ? summary : null);
@@ -159,14 +162,14 @@ export default function Home() {
           Don&apos;t search. Ask.
         </h1>
         <p className="max-w-md text-lg" style={{ color: "var(--foreground)", opacity: 0.7 }}>
-          Fortell oss hva du leter etter, så finner vi de beste alternativene.
+          {t("Fortell oss hva du leter etter, så finner vi de beste alternativene.")}
         </p>
         <form onSubmit={handleSearch} className="flex w-full max-w-lg gap-2">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="F.eks. noe varmt til vinteren under 1000 kr"
+            placeholder={t("F.eks. noe varmt til vinteren under 1000 kr")}
             className="flex-1 rounded-full border px-5 py-3 text-base outline-none"
             style={{
               borderColor: "var(--border)",
@@ -179,7 +182,7 @@ export default function Home() {
             className="rounded-full px-6 py-3 font-medium text-white transition-colors"
             style={{ backgroundColor: "var(--primary)" }}
           >
-            Søk
+            {t("Søk")}
           </button>
         </form>
 
@@ -197,13 +200,13 @@ export default function Home() {
                 color: "var(--foreground)",
               }}
             >
-              {c.label}
+              {t(c.label)}
             </Link>
           ))}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: -16 }}>
-          <span style={{ fontSize: 12, opacity: 0.55, textTransform: "uppercase", letterSpacing: 1 }}>Stiler</span>
+          <span style={{ fontSize: 12, opacity: 0.55, textTransform: "uppercase", letterSpacing: 1 }}>{t("Stiler")}</span>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
             {STYLES.map((s) => (
               <button
@@ -220,22 +223,22 @@ export default function Home() {
                   cursor: "pointer",
                 }}
               >
-                {s.label}
+                {t(s.label)}
               </button>
             ))}
           </div>
         </div>
 
-        {loading && <p style={{ opacity: 0.6 }}>Søker...</p>}
+        {loading && <p style={{ opacity: 0.6 }}>{t("Søker...")}</p>}
 
 
         {!loading && searched && results.length === 0 && (
-          <p style={{ opacity: 0.6 }}>Fant ingen produkter.</p>
+          <p style={{ opacity: 0.6 }}>{t("Fant ingen produkter.")}</p>
         )}
 
         {searched && !loading && (
           <button onClick={backToFront} style={{ alignSelf: "flex-start", background: "none", border: "none", color: "var(--primary)", fontSize: 14, cursor: "pointer", padding: 0 }}>
-            ← Tilbake til forsiden
+            {t("← Tilbake til forsiden")}
           </button>
         )}
 
@@ -245,20 +248,20 @@ export default function Home() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
-                    {results.length} produkt{results.length === 1 ? "" : "er"}
+                    {results.length === 1 ? t("{n} produkt", { n: results.length }) : t("{n} produkter", { n: results.length })}
                   </p>
                   {aiSummary && <p style={{ margin: "2px 0 0", fontSize: 13, opacity: 0.6 }}>{aiSummary}</p>}
                 </div>
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
-                  aria-label="Sorter"
+                  aria-label={t("Sorter")}
                   style={{ flexShrink: 0, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--border)", backgroundColor: "var(--background)", color: "var(--foreground)", fontSize: 13 }}
                 >
-                  <option value="relevans">Mest relevant</option>
-                  <option value="pris-lav">Pris: lav til høy</option>
-                  <option value="pris-hoy">Pris: høy til lav</option>
-                  <option value="nyeste">Nyeste</option>
+                  <option value="relevans">{t("Mest relevant")}</option>
+                  <option value="pris-lav">{t("Pris: lav til høy")}</option>
+                  <option value="pris-hoy">{t("Pris: høy til lav")}</option>
+                  <option value="nyeste">{t("Nyeste")}</option>
                 </select>
               </div>
               <div className="grid w-full grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3">
@@ -279,7 +282,8 @@ export default function Home() {
 
 // Forsiden før man har søkt: rader med produkter så det er noe å se på med en gang.
 function FrontSections({ catalog, currencyInfo, onSearch }: { catalog: Product[] | null; currencyInfo: CurrencyInfo | null; onSearch: (q: string) => void }) {
-  if (catalog === null) return <p style={{ opacity: 0.5 }}>Laster produkter...</p>;
+  const t = useT();
+  if (catalog === null) return <p style={{ opacity: 0.5 }}>{t("Laster produkter...")}</p>;
   if (catalog.length === 0) return null;
 
   const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo);
@@ -293,15 +297,15 @@ function FrontSections({ catalog, currencyInfo, onSearch }: { catalog: Product[]
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 32, width: "100%", marginTop: 8 }}>
-      <ProductRow title="Nytt nå" products={newest} currencyInfo={currencyInfo} />
+      <ProductRow title={t("Nytt nå")} products={newest} currencyInfo={currencyInfo} />
       {cheap.length >= 2 && cheap.length < catalog.length && (
-        <ProductRow title="Under 500 kr" products={cheap} currencyInfo={currencyInfo} onMore={() => onSearch("under 500")} />
+        <ProductRow title={t("Under 500 kr")} products={cheap} currencyInfo={currencyInfo} onMore={() => onSearch("under 500")} />
       )}
       {styleRows.map((r) => (
-        <ProductRow key={r.style.slug} title={r.style.label} products={r.products.slice(0, 12)} currencyInfo={currencyInfo} onMore={() => onSearch(r.style.label)} />
+        <ProductRow key={r.style.slug} title={t(r.style.label)} products={r.products.slice(0, 12)} currencyInfo={currencyInfo} onMore={() => onSearch(r.style.label)} />
       ))}
       <section style={{ width: "100%", textAlign: "left" }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 10px" }}>Utforsk alt</h2>
+        <h2 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 10px" }}>{t("Utforsk alt")}</h2>
         <div className="grid w-full grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3">
           {catalog.slice(0, 24).map((p) => (
             <ProductCard key={p.id} p={p} currencyInfo={currencyInfo} source="forside" />

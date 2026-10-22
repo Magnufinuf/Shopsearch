@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo } from "@/lib/currency";
+import { useT } from "@/lib/i18n";
 import ProductCard from "../../components/ProductCard";
 import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
 import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
@@ -26,7 +27,10 @@ const PRICE_RANGES: PriceRangeDef[] = [
   { key: "over2000", label: "Over 2000 kr", min: 2000 },
 ];
 
+const GENDER_LABELS: Record<Gender | "alle", string> = { alle: "Alle", herre: "Herre", dame: "Dame", unisex: "Unisex" };
+
 export default function KategoriPage() {
+  const t = useT();
   const params = useParams();
   const slug = String(params.slug);
   const categoryDef = getCategoryBySlug(slug);
@@ -92,7 +96,9 @@ export default function KategoriPage() {
       hits = search(everyProduct, true);
       if (hits.length === 0) hits = search(everyProduct, false);
       if (hits.length > 0) {
-        message = `Ingen treff i ${categoryDef?.label ?? "denne kategorien"} – viser treff fra alle kategorier`;
+        message = categoryDef
+          ? t("Ingen treff i {kategori} – viser treff fra alle kategorier", { kategori: t(categoryDef.label) })
+          : t("Ingen treff i denne kategorien – viser treff fra alle kategorier");
       }
     }
 
@@ -112,11 +118,11 @@ export default function KategoriPage() {
     >
       <main className="flex w-full max-w-2xl flex-col items-center gap-6 text-center">
         <Link href="/" style={{ fontSize: 13, opacity: 0.6, alignSelf: "flex-start" }}>
-          ← Tilbake til søk
+          {t("← Tilbake til søk")}
         </Link>
 
         <h1 className="text-3xl font-semibold tracking-tight">
-          {categoryDef ? categoryDef.label : "Kategori"}
+          {categoryDef ? t(categoryDef.label) : t("Kategori")}
         </h1>
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
@@ -134,7 +140,7 @@ export default function KategoriPage() {
                 backgroundColor: c.slug === slug ? "var(--primary)" : "transparent",
               }}
             >
-              {c.label}
+              {t(c.label)}
             </Link>
           ))}
         </div>
@@ -154,7 +160,7 @@ export default function KategoriPage() {
                 backgroundColor: gender === g ? "var(--primary)" : "transparent",
               }}
             >
-              {g === "alle" ? "Alle" : g.charAt(0).toUpperCase() + g.slice(1)}
+              {t(GENDER_LABELS[g])}
             </button>
           ))}
         </div>
@@ -174,7 +180,7 @@ export default function KategoriPage() {
                 backgroundColor: priceRange === r.key ? "var(--primary)" : "transparent",
               }}
             >
-              {r.label}
+              {t(r.label)}
             </button>
           ))}
         </div>
@@ -190,7 +196,7 @@ export default function KategoriPage() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="F.eks. str. M under 1000 kr"
+            placeholder={t("F.eks. str. M under 1000 kr")}
             className="flex-1 rounded-full border px-5 py-3 text-base outline-none"
             style={{
               borderColor: "var(--border)",
@@ -203,14 +209,14 @@ export default function KategoriPage() {
             className="rounded-full px-6 py-3 font-medium text-white transition-colors"
             style={{ backgroundColor: "var(--primary)" }}
           >
-            Søk
+            {t("Søk")}
           </button>
         </form>
 
-        {loading && <p style={{ opacity: 0.6 }}>Laster produkter...</p>}
+        {loading && <p style={{ opacity: 0.6 }}>{t("Laster produkter...")}</p>}
         {!loading && notice && <p style={{ fontSize: 14, opacity: 0.75, margin: 0 }}>{notice}</p>}
         {!loading && results.length === 0 && (
-          <p style={{ opacity: 0.6 }}>{query.trim() ? "Fant ingen produkter som passer søket." : "Fant ingen produkter i denne kategorien."}</p>
+          <p style={{ opacity: 0.6 }}>{query.trim() ? t("Fant ingen produkter som passer søket.") : t("Fant ingen produkter i denne kategorien.")}</p>
         )}
 
         <div className="grid w-full grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3">

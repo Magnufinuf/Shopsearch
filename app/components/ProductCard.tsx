@@ -4,6 +4,7 @@ import { CurrencyInfo, priceLabel } from "@/lib/currency";
 import { ClickSource, trackClick } from "@/lib/track";
 import { useSavedProducts } from "@/lib/saved-products";
 import { HeartIcon } from "./Icons";
+import { useT } from "@/lib/i18n";
 
 export type CardProduct = {
   id: string;
@@ -43,6 +44,7 @@ export default function ProductCard({
   width?: number;
   source?: ClickSource;
 }) {
+  const t = useT();
   const { isSaved, toggle } = useSavedProducts();
   const saved = isSaved(p.id);
   return (
@@ -69,7 +71,7 @@ export default function ProductCard({
         {p.image && <img className="sc-product-img" src={p.image} alt={p.title} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
         {isNew(p.createdAt) && (
           <span style={{ position: "absolute", top: 8, left: 8, padding: "3px 8px", borderRadius: 999, backgroundColor: "var(--background)", color: "var(--foreground)", fontSize: 11, fontWeight: 700, letterSpacing: 0.3 }}>
-            NY
+            {t("NY")}
           </span>
         )}
       </div>
@@ -94,7 +96,7 @@ export default function ProductCard({
           shopifyProductId: p.shopifyProductId,
         })
       }
-      aria-label={saved ? "Fjern fra lagrede" : "Lagre produktet"}
+      aria-label={saved ? t("Fjern fra lagrede") : t("Lagre produktet")}
       aria-pressed={saved}
       style={{
         position: "absolute",
