@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { CATEGORIES } from "@/lib/categories";
 import { STYLES } from "@/lib/styles";
 import type { AiFilters } from "@/lib/ai-search";
+import { isSupportedLang, languageName } from "@/lib/i18n/languages";
 
 // AI-søk: Claude gjør om det folk skriver («noe varmt til vinteren under 1000») til filtre.
 // Selve søket i produktene skjer som før, i nettleseren.
@@ -45,7 +46,7 @@ const SCHEMA = {
   additionalProperties: false,
 };
 
-async function interpret(query: string, lang: "no" | "en"): Promise<AiFilters | null> {
+async function interpret(query: string, lang: string): Promise<AiFilters | null> {
   // Lages her (ikke øverst i fila), så bygget ikke feiler når nøkkelen mangler.
   const client = new Anthropic();
   const response = await client.beta.messages.create({
@@ -57,7 +58,7 @@ async function interpret(query: string, lang: "no" | "en"): Promise<AiFilters | 
     // Finnes ikke for Haiku – der faller vi bare tilbake til det vanlige søket.
     ...(MODEL.includes("haiku") ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }),
     system: SYSTEM,
-    messages: [{ role: "user", content: `<summary_language>${lang === "en" ? "English" : "norsk"}</summary_language>\n${query}` }],
+    messages: [{ role: "user", content: `<summary_language>${lang === "no" ? "norsk" : languageName(lang, "en")}</summary_language>\n${query}` }],
   });
 
   if (response.stop_reason === "refusal") return null;
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { query: raw, lang: rawLang } = await request.json();
-  const lang = rawLang === "en" ? "en" : "no";
+  const lang = isSupportedLang(rawLang) ? rawLang : "no";
   const query = String(raw || "").trim().toLowerCase().slice(0, MAX_QUERY);
   if (!query) return NextResponse.json({ error: "Tomt søk." }, { status: 400 });
 
