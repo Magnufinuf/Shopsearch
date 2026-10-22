@@ -4,6 +4,9 @@ import { Advert } from "@/lib/adverts";
 import { CurrencyInfo, convertPrice, formatPrice } from "@/lib/currency";
 import { STYLES } from "@/lib/styles";
 import { CloseIcon } from "../components/Icons";
+import { useT } from "@/lib/i18n";
+
+type Translate = (text: string, vars?: Record<string, string | number>) => string;
 
 export type Filters = {
   price: string | null;
@@ -25,11 +28,11 @@ function whole(amount: number, currency: string): string {
   return formatPrice(amount, currency).replace(/[,.]00(?=\D*$)/, "");
 }
 
-export function priceBucketLabel(id: string, currency: string): string {
+export function priceBucketLabel(id: string, currency: string, t: Translate): string {
   const b = PRICE_BUCKETS.find((x) => x.id === id);
   if (!b) return "";
-  if (b.min === 0) return `Under ${whole(b.max, currency)}`;
-  if (b.max === Infinity) return `Over ${whole(b.min, currency)}`;
+  if (b.min === 0) return t("Under {pris}", { pris: whole(b.max, currency) });
+  if (b.max === Infinity) return t("Over {pris}", { pris: whole(b.min, currency) });
   return `${whole(b.min, currency)} – ${whole(b.max, currency)}`;
 }
 
@@ -89,6 +92,7 @@ export default function AdvertFilters({
   onClose: () => void;
   resultCount: number;
 }) {
+  const t = useT();
   // Bare stiler som finnes blant annonsene.
   const usedStyles = new Set(adverts.flatMap((a) => a.styles || []));
   const styles = STYLES.filter((s) => usedStyles.has(s.slug));
@@ -102,31 +106,31 @@ export default function AdvertFilters({
       <div
         onClick={(e) => e.stopPropagation()}
         role="dialog"
-        aria-label="Filter"
+        aria-label={t("Filter")}
         style={{ width: "100%", maxWidth: 520, maxHeight: "80dvh", overflowY: "auto", backgroundColor: "var(--background)", color: "var(--foreground)", borderRadius: "20px 20px 0 0", padding: "16px 20px 20px", boxSizing: "border-box" }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button type="button" onClick={() => onChange(NO_FILTERS)} style={{ background: "none", border: "none", color: "var(--primary)", fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 0 }}>
-            Nullstill
+            {t("Nullstill")}
           </button>
-          <h2 style={{ margin: 0, fontSize: 17, fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>Filter</h2>
-          <button type="button" onClick={onClose} aria-label="Lukk" style={{ background: "none", border: "none", color: "var(--foreground)", cursor: "pointer", padding: 0, display: "flex" }}>
+          <h2 style={{ margin: 0, fontSize: 17, fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>{t("Filter")}</h2>
+          <button type="button" onClick={onClose} aria-label={t("Lukk")} style={{ background: "none", border: "none", color: "var(--foreground)", cursor: "pointer", padding: 0, display: "flex" }}>
             <CloseIcon size={22} strokeWidth={2.2} />
           </button>
         </div>
 
         {!hasProducts ? (
           <p style={{ opacity: 0.65, fontSize: 14, textAlign: "center", margin: "28px 0" }}>
-            Pris, stil og kjønn kan velges når butikker legger ut annonser for produkter.
+            {t("Pris, stil og kjønn kan velges når butikker legger ut annonser for produkter.")}
           </p>
         ) : (
           <>
-            <p style={heading}>Pris</p>
+            <p style={heading}>{t("Pris")}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {PRICE_BUCKETS.map((b) => (
                 <Chip
                   key={b.id}
-                  label={priceBucketLabel(b.id, currency)}
+                  label={priceBucketLabel(b.id, currency, t)}
                   active={filters.price === b.id}
                   onClick={() => onChange({ ...filters, price: filters.price === b.id ? null : b.id })}
                 />
@@ -135,19 +139,19 @@ export default function AdvertFilters({
 
             {styles.length > 0 && (
               <>
-                <p style={heading}>Stil</p>
+                <p style={heading}>{t("Stil")}</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {styles.map((s) => (
-                    <Chip key={s.slug} label={s.label} active={filters.styles.includes(s.slug)} onClick={() => toggleStyle(s.slug)} />
+                    <Chip key={s.slug} label={t(s.label)} active={filters.styles.includes(s.slug)} onClick={() => toggleStyle(s.slug)} />
                   ))}
                 </div>
               </>
             )}
 
-            <p style={heading}>Kjønn</p>
+            <p style={heading}>{t("Kjønn")}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              <Chip label="Herre" active={filters.gender === "herre"} onClick={() => onChange({ ...filters, gender: filters.gender === "herre" ? null : "herre" })} />
-              <Chip label="Dame" active={filters.gender === "dame"} onClick={() => onChange({ ...filters, gender: filters.gender === "dame" ? null : "dame" })} />
+              <Chip label={t("Herre")} active={filters.gender === "herre"} onClick={() => onChange({ ...filters, gender: filters.gender === "herre" ? null : "herre" })} />
+              <Chip label={t("Dame")} active={filters.gender === "dame"} onClick={() => onChange({ ...filters, gender: filters.gender === "dame" ? null : "dame" })} />
             </div>
           </>
         )}
@@ -157,7 +161,7 @@ export default function AdvertFilters({
           onClick={onClose}
           style={{ width: "100%", marginTop: 24, padding: "13px 20px", borderRadius: 12, border: "none", backgroundColor: "var(--primary)", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer" }}
         >
-          Vis {resultCount} annonse{resultCount === 1 ? "" : "r"}
+          {resultCount === 1 ? t("Vis {antall} annonse", { antall: resultCount }) : t("Vis {antall} annonser", { antall: resultCount })}
         </button>
       </div>
     </div>
