@@ -10,6 +10,7 @@ export type CardProduct = {
   id: string;
   title: string;
   price: number;
+  localPrices?: Record<string, number>;
   currency: string;
   vendor: string;
   image: string;
@@ -79,7 +80,7 @@ export default function ProductCard({
       <p style={{ margin: 0, fontSize: 14, fontWeight: 500, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
         {p.title}
       </p>
-      <p style={{ margin: "2px 0 0", fontSize: 15, fontWeight: 700 }}>{priceLabel(p.price, p.currency, currencyInfo)}</p>
+      <p style={{ margin: "2px 0 0", fontSize: 15, fontWeight: 700 }}>{priceLabel(p.price, p.currency, currencyInfo, p.localPrices)}</p>
     </a>
     <button
       type="button"
