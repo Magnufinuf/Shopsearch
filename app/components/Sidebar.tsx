@@ -10,6 +10,8 @@ import { useT } from "@/lib/i18n";
 
 const navItems = [
   { href: "/", label: "Søk" },
+  { href: "/outfit", label: "AI-outfit" },
+  { href: "/swipe", label: "Swipe" },
   { href: "/adverts", label: "Annonser" },
   { href: "/min-side", label: "Min side" },
   { href: "/innstillinger", label: "Innstillinger" },
