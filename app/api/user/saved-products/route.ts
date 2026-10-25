@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getSessionUserId } from "@/lib/session";
+import { getAllProducts } from "@/lib/products";
 
 const notLoggedIn = () => NextResponse.json({ error: "Logg inn for å lagre produkter." }, { status: 401 });
 
@@ -53,7 +54,16 @@ export async function GET() {
     .order("created_at", { ascending: false });
   if (error) return NextResponse.json({ products: [] });
 
-  return NextResponse.json({ products: (data || []).map((row) => row.product) });
+  // Vis dagens pris og bilde hvis produktet fortsatt finnes i butikken, ellers det som ble lagret.
+  const current = new Map((await getAllProducts().catch(() => [])).map((p) => [p.id, p]));
+  const products = (data || []).map((row) => {
+    const saved = row.product as SavedProduct;
+    const now = current.get(saved.id);
+    return now
+      ? { ...saved, title: now.title, price: now.price, currency: now.currency, localPrices: "localPrices" in now ? now.localPrices : undefined, image: now.image || saved.image, url: now.url }
+      : saved;
+  });
+  return NextResponse.json({ products });
 }
 
 // { product, saved: true } lagrer, { product, saved: false } fjerner.
