@@ -24,7 +24,7 @@ type ProductNode = {
   createdAt: string;
   featuredMedia: { preview?: { image?: { url: string } | null } | null } | null;
   options: { name: string; values: string[] }[];
-  variants: { nodes: { price: string }[] };
+  variants: { nodes: ({ price: string } & { [country: `local_${string}`]: { price: { amount: string; currencyCode: string } } | null | undefined })[] };
 };
 
 type ProductsPage = {
@@ -32,9 +32,13 @@ type ProductsPage = {
   products: { pageInfo: { hasNextPage: boolean; endCursor: string | null }; nodes: ProductNode[] };
 };
 
-const PAGE_SIZE = 100;
-const MAX_PAGES = 20; // inntil 2000 produkter per butikk
+const PAGE_SIZE = 50;
+const MAX_PAGES = 40; // inntil 2000 produkter per butikk
 const CACHE_SECONDS = 600; // produktene hentes på nytt fra Shopify hvert 10. minutt
+
+// Prisene butikken selv viser kunder i disse landene (Shopify Markets), så Scavenger
+// viser samme pris som butikken i stedet for å regne om med dagens kurs.
+const PRICE_COUNTRIES = ["NO", "SE", "DK", "DE", "US", "GB"];
 
 // Bare aktive, publiserte produkter (ikke utkast eller arkiverte).
 const PRODUCTS_QUERY = `
@@ -53,7 +57,12 @@ const PRODUCTS_QUERY = `
         createdAt
         featuredMedia { preview { image { url } } }
         options { name values }
-        variants(first: 1) { nodes { price } }
+        variants(first: 1) {
+          nodes {
+            price
+            ${PRICE_COUNTRIES.map((c) => `local_${c}: contextualPricing(context: { country: ${c} }) { price { amount currencyCode } }`).join("\n            ")}
+          }
+        }
       }
     }
   }
@@ -108,6 +117,18 @@ async function fetchViaRest(store: Store): Promise<{ nodes: ProductNode[]; curre
   return { nodes, currency };
 }
 
+// { NOK: 381, SEK: 399, ... } fra butikkens egne priser per land.
+function localPrices(variant: ProductNode["variants"]["nodes"][number] | undefined): Record<string, number> | undefined {
+  if (!variant) return undefined;
+  const prices: Record<string, number> = {};
+  for (const country of PRICE_COUNTRIES) {
+    const money = variant[`local_${country}`];
+    const amount = parseFloat(money?.price.amount ?? "");
+    if (money && isFinite(amount)) prices[money.price.currencyCode] = amount;
+  }
+  return Object.keys(prices).length ? prices : undefined;
+}
+
 // failed = true hvis Shopify ikke svarte ordentlig, så et tomt/halvt svar ikke mellomlagres.
 async function fetchProductsForStore(store: Store) {
   if (!isShopifyDomain(store.store_domain)) return fetchWooProducts(store);
@@ -149,6 +170,7 @@ async function fetchProductsForStore(store: Store) {
       id: `${store.store_domain}-${p.legacyResourceId}`,
       title: p.title,
       price: parseFloat(p.variants.nodes[0]?.price ?? "0"),
+      localPrices: localPrices(p.variants.nodes[0]),
       currency,
       category: p.productType,
       vendor: store.display_name || p.vendor,
@@ -180,7 +202,7 @@ const getCachedProducts = unstable_cache(
     if (result.failed) throw new Error("Klarte ikke å hente alle produktene fra Shopify");
     return result.products;
   },
-  ["all-products-v5"],
+  ["all-products-v6"],
   { revalidate: CACHE_SECONDS, tags: ["products"] }
 );
 

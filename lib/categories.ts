@@ -3,6 +3,7 @@ export type Product = {
   title: string;
   price: number;
   currency: string;
+  localPrices?: Record<string, number>; // butikkens egne priser i andre valutaer, f.eks. { NOK: 381 }
   category: string;
   vendor: string;
   tags: string[];

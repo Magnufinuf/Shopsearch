@@ -71,7 +71,7 @@ export default function KategoriPage() {
     const ai = query.trim() ? aiCache.current?.filters ?? null : null;
     const smart = parseSmartQuery(query, buildVocabulary(everyProduct));
     const rangeDef = PRICE_RANGES.find((r) => r.key === priceRange);
-    const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo);
+    const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo, p.localPrices);
     const passesButtons = (p: Product) => {
       const price = priceOf(p);
       const matchesRangeMin = !rangeDef || rangeDef.min === undefined || price >= rangeDef.min;

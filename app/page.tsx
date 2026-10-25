@@ -15,6 +15,7 @@ type Product = {
   title: string;
   price: number;
   currency: string;
+  localPrices?: Record<string, number>;
   category: string;
   vendor: string;
   tags: string[];
@@ -31,7 +32,7 @@ type SortKey = "relevans" | "pris-lav" | "pris-hoy" | "nyeste";
 
 function sortProducts(products: Product[], sort: SortKey, info: CurrencyInfo | null): Product[] {
   if (sort === "relevans") return products;
-  const priceOf = (p: Product) => convertPrice(p.price, p.currency, info);
+  const priceOf = (p: Product) => convertPrice(p.price, p.currency, info, p.localPrices);
   const sorted = [...products];
   if (sort === "pris-lav") sorted.sort((a, b) => priceOf(a) - priceOf(b));
   if (sort === "pris-hoy") sorted.sort((a, b) => priceOf(b) - priceOf(a));
@@ -121,7 +122,7 @@ export default function Home() {
 
     // AI-søk først. Gir det ingen treff, prøv uten farge/størrelse, og til slutt vanlig søk.
     if (ai) {
-      const priceOf = (p: Product) => convertPrice(p.price, p.currency, info);
+      const priceOf = (p: Product) => convertPrice(p.price, p.currency, info, p.localPrices);
       let hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p)));
       if (hits.length === 0) hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p), false));
       if (hits.length > 0) {
@@ -135,7 +136,7 @@ export default function Home() {
     // Smart søk (gratis, uten AI): forstår «noe varmt», synonymer, skrivefeil, farger, pris og stil.
     // Gir det null treff, prøves det uten farge, størrelse og vage ønsker.
     const smart = parseSmartQuery(query, buildVocabulary(all));
-    const priceOf = (p: Product) => convertPrice(p.price, p.currency, info);
+    const priceOf = (p: Product) => convertPrice(p.price, p.currency, info, p.localPrices);
     let hits = all.filter((p) => matchesSmartQuery(p, smart, priceOf(p)));
     // Forklaringen fra det vanlige søket finnes bare på norsk.
     let summary = lang === "no" ? smart.summary : "";
@@ -288,7 +289,7 @@ function FrontSections({ catalog, currencyInfo, onSearch }: { catalog: Product[]
   if (catalog === null) return <p style={{ opacity: 0.5 }}>{t("Laster produkter...")}</p>;
   if (catalog.length === 0) return null;
 
-  const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo);
+  const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo, p.localPrices);
   const newest = [...catalog].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 12);
   const cheap = catalog.filter((p) => priceOf(p) <= 500).slice(0, 12);
   // Stiler med minst to produkter, de største først.

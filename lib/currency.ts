@@ -88,7 +88,10 @@ export async function fetchCurrencyInfo(fromCurrencies: string[]): Promise<Curre
 }
 
 // Returnerer f.eks. "349,00 kr", eller original pris hvis vi mangler kurs.
-export function priceLabel(price: number, productCurrency: string, info: CurrencyInfo | null): string {
+// localPrices: prisene butikken selv bruker i andre valutaer. Brukes før omregning.
+export function priceLabel(price: number, productCurrency: string, info: CurrencyInfo | null, localPrices?: Record<string, number>): string {
+  const local = info ? localPrices?.[info.currency] : undefined;
+  if (info && local !== undefined) return formatPrice(local, info.currency);
   const rate = info?.rates[productCurrency];
   if (info && rate !== undefined) return formatPrice(price * rate, info.currency);
   return formatPrice(price, productCurrency);
@@ -96,7 +99,9 @@ export function priceLabel(price: number, productCurrency: string, info: Currenc
 
 // Pris i besøkerens valuta (brukes til pris-filtrene "under 500 kr" osv.).
 // Mangler vi kurs, brukes originalprisen.
-export function convertPrice(price: number, productCurrency: string, info: CurrencyInfo | null): number {
+export function convertPrice(price: number, productCurrency: string, info: CurrencyInfo | null, localPrices?: Record<string, number>): number {
+  const local = info ? localPrices?.[info.currency] : undefined;
+  if (local !== undefined) return local;
   const rate = info?.rates[productCurrency];
   return rate !== undefined ? price * rate : price;
 }
