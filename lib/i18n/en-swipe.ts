@@ -27,4 +27,6 @@ export const EN_SWIPE: Record<string, string> = {
   "Åpne {navn} i butikken": "Open {navn} in the store",
   "Fjern fra lagrede": "Remove from saved",
   "Lagre produktet": "Save product",
+  "Kategorier": "Categories",
+  "Alle": "All",
 };
