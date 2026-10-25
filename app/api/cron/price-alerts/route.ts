@@ -32,10 +32,11 @@ async function loadRecipients(userIds: string[]): Promise<Map<string, string>> {
   const recipients = new Map<string, string>();
   for (let i = 0; i < userIds.length; i += 200) {
     const ids = userIds.slice(i, i + 200);
-    let { data, error } = await supabase.from("users").select("id, email, notify_price_drops").in("id", ids);
-    if (error) ({ data, error } = await supabase.from("users").select("id, email").in("id", ids));
-    if (error) throw new Error(`Kunne ikke hente brukere: ${error.message}`);
-    for (const u of (data || []) as { id: string; email: string | null; notify_price_drops?: boolean | null }[]) {
+    type UserRow = { id: string; email: string | null; notify_price_drops?: boolean | null };
+    const withPref = await supabase.from("users").select("id, email, notify_price_drops").in("id", ids);
+    const result = withPref.error ? await supabase.from("users").select("id, email").in("id", ids) : withPref;
+    if (result.error) throw new Error(`Kunne ikke hente brukere: ${result.error.message}`);
+    for (const u of (result.data || []) as UserRow[]) {
       if (u.email && u.notify_price_drops !== false) recipients.set(u.id, u.email);
     }
   }
