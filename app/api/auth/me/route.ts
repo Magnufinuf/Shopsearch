@@ -28,6 +28,7 @@ export async function GET() {
   return NextResponse.json({
     loggedIn: true,
     shop,
+    platform: shop.endsWith(".myshopify.com") ? "shopify" : String(data.client_id || "").startsWith("wix:") ? "wix" : "woocommerce",
     // Et navn som bare er myshopify-adressen regnes som ikke valgt.
     displayName: data.display_name && data.display_name !== shop.replace(".myshopify.com", "") ? data.display_name : null,
     subscribed: !!data.subscribed,

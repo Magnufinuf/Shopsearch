@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { detectStyles } from "@/lib/styles";
 import { ShopifyError, shopifyGraphQL } from "@/lib/shopify";
 import { fetchWooProducts, isShopifyDomain } from "@/lib/woocommerce";
+import { fetchWixProducts, isWixStore } from "@/lib/wix";
 import { ensureWebhooks } from "@/lib/shopify-webhooks";
 
 type Store = {
@@ -131,6 +132,7 @@ function localPrices(variant: ProductNode["variants"]["nodes"][number] | undefin
 
 // failed = true hvis Shopify ikke svarte ordentlig, så et tomt/halvt svar ikke mellomlagres.
 async function fetchProductsForStore(store: Store) {
+  if (isWixStore(store.client_id)) return fetchWixProducts(store);
   if (!isShopifyDomain(store.store_domain)) return fetchWooProducts(store);
   const token = store.client_secret;
   if (!token) return { products: [], failed: false };

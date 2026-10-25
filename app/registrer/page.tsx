@@ -1,6 +1,7 @@
 "use client";
 
 import WooConnectForm from "../components/WooConnectForm";
+import WixConnectForm from "../components/WixConnectForm";
 import { useState } from "react";
 
 export default function Registrer() {
@@ -122,6 +123,16 @@ export default function Registrer() {
             <span style={{ flex: 1, height: 1, backgroundColor: "var(--border)" }} />
           </div>
           <WooConnectForm />
+        </div>
+
+        {/* Wix */}
+        <div className="mt-8">
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, opacity: 0.5, fontSize: 13 }}>
+            <span style={{ flex: 1, height: 1, backgroundColor: "var(--border)" }} />
+            Bruker du Wix?
+            <span style={{ flex: 1, height: 1, backgroundColor: "var(--border)" }} />
+          </div>
+          <WixConnectForm />
         </div>
 
         <div className="mt-8 text-center">
