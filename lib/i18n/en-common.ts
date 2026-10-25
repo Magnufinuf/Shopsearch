@@ -5,4 +5,10 @@ export const EN_COMMON: Record<string, string> = {
   "Søk etter språk": "Search languages",
   "Fant ingen språk": "No languages found",
   "Oversatt automatisk": "Translated automatically",
+  "Søk med bilde": "Search with a photo",
+  "Leser bildet...": "Reading the photo...",
+  "Fjern bildet": "Remove photo",
+  "Bildet du søkte med": "The photo you searched with",
+  "Kunne ikke lese bildet. Prøv et annet bilde.": "Couldn't read the photo. Try another one.",
+  "Fant ingen lignende produkter.": "No similar products found.",
 };
