@@ -1,6 +1,6 @@
 // Registrerer at noen trykket seg videre til en butikk. Sendes i bakgrunnen
 // (sendBeacon), så det aldri forsinker at butikken åpnes.
-export type ClickSource = "forside" | "sok" | "kategori" | "annonse" | "lagret";
+export type ClickSource = "forside" | "sok" | "kategori" | "annonse" | "lagret" | "swipe" | "outfit";
 
 export function trackClick(storeDomain: string, source: ClickSource, productId?: string) {
   try {

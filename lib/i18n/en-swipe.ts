@@ -1,0 +1,30 @@
+// Engelske tekster for sveipemodus (/swipe).
+export const EN_SWIPE: Record<string, string> = {
+  "Sveip": "Swipe",
+  "Sveip til høyre på det du liker – Scavenger lærer stilen din.": "Swipe right on what you like – Scavenger learns your style.",
+  "Din stil:": "Your style:",
+  "Likte ({n})": "Liked ({n})",
+  "← Tilbake til sveiping": "← Back to swiping",
+  "Produkter du har likt": "Products you've liked",
+  "Lagres bare på denne enheten. Trykk på hjertet for å lagre et produkt på kontoen din.":
+    "Only stored on this device. Tap the heart to save a product to your account.",
+  "Du har ikke likt noe ennå. Sveip til høyre på det du liker.": "You haven't liked anything yet. Swipe right on what you like.",
+  "Fjern fra likte": "Remove from liked",
+  "Laster produkter...": "Loading products...",
+  "Fant ingen produkter å vise akkurat nå.": "No products to show right now.",
+  "← Tilbake til forsiden": "← Back to home",
+  "Du har sett alt!": "You've seen everything!",
+  "Start på nytt for å se produktene igjen – Scavenger husker hva du liker.":
+    "Start over to see the products again – Scavenger remembers what you like.",
+  "Start på nytt": "Start over",
+  "Angre siste": "Undo last",
+  "Angre": "Undo",
+  "Nei takk": "No thanks",
+  "Liker": "Like",
+  "Tips: bruk piltastene ← og →": "Tip: use the arrow keys ← and →",
+  "LIKER": "LIKE",
+  "NEI": "NOPE",
+  "Åpne {navn} i butikken": "Open {navn} in the store",
+  "Fjern fra lagrede": "Remove from saved",
+  "Lagre produktet": "Save product",
+};

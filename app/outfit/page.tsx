@@ -163,7 +163,7 @@ export default function OutfitPage() {
                     <h2 style={{ fontFamily: "var(--font-heading)", fontSize: 20, fontWeight: 600, margin: 0, overflowWrap: "anywhere" }}>{o.title}</h2>
                     {o.description && <p style={{ margin: "4px 0 0", fontSize: 14, opacity: 0.7 }}>{o.description}</p>}
                   </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ flexShrink: 0 }}>
                     <div style={{ fontSize: 12, opacity: 0.55, textTransform: "uppercase", letterSpacing: 1 }}>{t("Totalt")}</div>
                     <div style={{ fontSize: 18, fontWeight: 600 }}>{formatPrice(total, totalCurrency)}</div>
                     <div style={{ fontSize: 12, opacity: 0.55 }}>
@@ -175,7 +175,7 @@ export default function OutfitPage() {
                   {o.items.map((i) => (
                     <div key={i.product.id} style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--primary)" }}>{i.role}</span>
-                      <ProductCard p={i.product} currencyInfo={currencyInfo} />
+                      <ProductCard p={i.product} currencyInfo={currencyInfo} source="outfit" />
                     </div>
                   ))}
                 </div>
