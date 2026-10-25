@@ -4,11 +4,12 @@ import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
 import { STYLES } from "@/lib/styles";
 import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart-search";
-import { AiFilters, fetchAiFilters, matchesAiFilters } from "@/lib/ai-search";
+import { AiFilters, fetchAiFilters, fetchImageFilters, matchesAiFilters, shrinkImage } from "@/lib/ai-search";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo } from "@/lib/currency";
 import { useLang, useT } from "@/lib/i18n";
 import ProductCard from "./components/ProductCard";
 import InstallPrompt from "./components/InstallPrompt";
+import { CameraIcon, CloseIcon } from "./components/Icons";
 
 type Product = {
   id: string;
@@ -77,6 +78,9 @@ export default function Home() {
   // Alle produkter, hentet med en gang så forsiden kan vise «Nytt nå» osv. før man søker.
   const [catalog, setCatalog] = useState<Product[] | null>(null);
   const [sort, setSort] = useState<SortKey>("relevans");
+  // Bildesøk: bildet man søkte med (vises over resultatene) og feilmelding.
+  const [searchImage, setSearchImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState("");
 
   useEffect(() => {
     fetch("/api/products")
@@ -94,6 +98,50 @@ export default function Home() {
     setQuery("");
     setResults([]);
     setAiSummary(null);
+    setSearchImage(null);
+    setImageError("");
+  }
+
+  // Bildesøk: Claude ser på bildet og gjør det om til de samme filtrene som tekstsøket.
+  async function runImageSearch(file: File) {
+    setLoading(true);
+    setSearched(true);
+    setAiSummary(null);
+    setImageError("");
+    setResults([]);
+    setQuery("");
+    setSort("relevans");
+    let image: string;
+    try {
+      image = await shrinkImage(file);
+    } catch {
+      setImageError(t("Kunne ikke lese bildet. Prøv et annet bilde."));
+      setLoading(false);
+      return;
+    }
+    setSearchImage(image);
+    const [all, ai]: [Product[], AiFilters | null] = await Promise.all([
+      catalog ?? fetch("/api/products").then((res) => res.json()).then((d) => (d.products || []) as Product[]),
+      fetchImageFilters(image, lang),
+    ]);
+    const info = currencyInfo ?? (await fetchCurrencyInfo(all.map((p) => p.currency)));
+    setCurrencyInfo(info);
+    if (!ai) {
+      setImageError(t("Kunne ikke lese bildet. Prøv et annet bilde."));
+      setLoading(false);
+      return;
+    }
+    // Strengt først, så uten farge/størrelse, og til slutt bare hva slags plagg det er.
+    const priceOf = (p: Product) => convertPrice(p.price, p.currency, info, p.localPrices);
+    let hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p)));
+    if (hits.length === 0) hits = all.filter((p) => matchesAiFilters(p, ai, priceOf(p), false));
+    if (hits.length === 0) {
+      const loose = { ...ai, styles: [], gender: null, category: null };
+      hits = all.filter((p) => matchesAiFilters(p, loose, priceOf(p), false));
+    }
+    setAiSummary(ai.summary || null);
+    setResults(hits);
+    setLoading(false);
   }
 
   async function handleSearch(e: React.FormEvent) {
@@ -111,6 +159,8 @@ export default function Home() {
     setLoading(true);
     setSearched(true);
     setAiSummary(null);
+    setSearchImage(null);
+    setImageError("");
     setSort("relevans");
     // Henter produkter (hvis ikke allerede hentet) og AI-tolkning samtidig.
     const [all, ai]: [Product[], AiFilters | null] = await Promise.all([
@@ -173,16 +223,34 @@ export default function Home() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("F.eks. noe varmt til vinteren under 1000 kr")}
-            className="flex-1 rounded-full border px-5 py-3 text-base outline-none"
+            className="min-w-0 flex-1 rounded-full border px-5 py-3 text-base outline-none"
             style={{
               borderColor: "var(--border)",
               backgroundColor: "var(--background)",
               color: "var(--foreground)",
             }}
           />
+          <label
+            title={t("Søk med bilde")}
+            aria-label={t("Søk med bilde")}
+            className="flex items-center justify-center rounded-full border"
+            style={{ width: 48, flexShrink: 0, borderColor: "var(--border)", color: "var(--foreground)", cursor: "pointer" }}
+          >
+            <CameraIcon size={22} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) runImageSearch(file);
+              }}
+              style={{ display: "none" }}
+            />
+          </label>
           <button
             type="submit"
-            className="rounded-full px-6 py-3 font-medium text-white transition-colors"
+            className="shrink-0 rounded-full px-5 py-3 font-medium text-white transition-colors"
             style={{ backgroundColor: "var(--primary)" }}
           >
             {t("Søk")}
@@ -232,11 +300,25 @@ export default function Home() {
           </div>
         </div>
 
-        {loading && <p style={{ opacity: 0.6 }}>{t("Søker...")}</p>}
+        {searchImage && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, alignSelf: "flex-start", textAlign: "left" }}>
+            <img src={searchImage} alt={t("Bildet du søkte med")} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 12, border: "1px solid var(--border)" }} />
+            <div style={{ fontSize: 14 }}>
+              <div style={{ fontWeight: 600 }}>{loading ? t("Leser bildet...") : t("Søk med bilde")}</div>
+              <button onClick={backToFront} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "none", border: "none", padding: 0, color: "var(--primary)", fontSize: 13, cursor: "pointer" }}>
+                <CloseIcon size={14} /> {t("Fjern bildet")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {imageError && <p style={{ color: "#e05252", fontSize: 14 }}>{imageError}</p>}
+
+        {loading && !searchImage && <p style={{ opacity: 0.6 }}>{t("Søker...")}</p>}
 
 
-        {!loading && searched && results.length === 0 && (
-          <p style={{ opacity: 0.6 }}>{t("Fant ingen produkter.")}</p>
+        {!loading && searched && !imageError && results.length === 0 && (
+          <p style={{ opacity: 0.6 }}>{searchImage ? t("Fant ingen lignende produkter.") : t("Fant ingen produkter.")}</p>
         )}
 
         {searched && !loading && (

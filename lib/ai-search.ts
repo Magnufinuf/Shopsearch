@@ -31,6 +31,34 @@ export async function fetchAiFilters(query: string, lang = "no"): Promise<AiFilt
   }
 }
 
+// Bildesøk: send et bilde (som data-URL) og få filtre tilbake. Tar litt lenger tid enn tekst.
+export async function fetchImageFilters(image: string, lang = "no"): Promise<AiFilters | null> {
+  try {
+    const res = await fetch("/api/ai-search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image, lang }),
+      signal: AbortSignal.timeout(25000),
+    });
+    if (!res.ok) return null;
+    return (await res.json()).filters ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Krymper bildet i nettleseren (maks 1024 px, JPEG), så det går raskt å sende.
+export async function shrinkImage(file: File, maxSize = 1024): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return canvas.toDataURL("image/jpeg", 0.82);
+}
+
 function hasAny(text: string, words: string[]): boolean {
   return words.some((w) => text.includes(w.toLowerCase()));
 }
