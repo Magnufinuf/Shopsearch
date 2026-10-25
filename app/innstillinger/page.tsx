@@ -100,7 +100,7 @@ export default function InnstillingerPage() {
   const [currency, setCurrency] = useState("auto");
   const [user, setUser] = useState<UserInfo | null>(null);
   const [editingUsername, setEditingUsername] = useState(false);
-  const [notify, setNotify] = useState<{ notifyShares: boolean; notifyMentions: boolean; ready: boolean } | null>(null);
+  const [notify, setNotify] = useState<{ notifyShares: boolean; notifyMentions: boolean; notifyPriceDrops?: boolean; ready: boolean; priceDropsReady?: boolean } | null>(null);
   const [notifyMessage, setNotifyMessage] = useState("");
 
   const [domain, setDomain] = useState("");
@@ -160,7 +160,7 @@ export default function InnstillingerPage() {
     } catch {}
   }
 
-  async function saveNotify(change: { notifyShares?: boolean; notifyMentions?: boolean }) {
+  async function saveNotify(change: { notifyShares?: boolean; notifyMentions?: boolean; notifyPriceDrops?: boolean }) {
     if (!notify) return;
     const previous = notify;
     setNotify({ ...notify, ...change });
@@ -271,7 +271,10 @@ export default function InnstillingerPage() {
               <Row label={t("Når noen tagger meg i en kommentar")}>
                 <Toggle on={notify.notifyMentions} disabled={!notify.ready} onChange={(on) => saveNotify({ notifyMentions: on })} />
               </Row>
-              {!notify.ready && <p style={{ fontSize: 12, opacity: 0.6, margin: "6px 0 0" }}>{t("Kommer snart.")}</p>}
+              <Row label={t("Når et lagret produkt blir billigere")}>
+                <Toggle on={notify.notifyPriceDrops !== false} disabled={!notify.priceDropsReady} onChange={(on) => saveNotify({ notifyPriceDrops: on })} />
+              </Row>
+              {(!notify.ready || !notify.priceDropsReady) && <p style={{ fontSize: 12, opacity: 0.6, margin: "6px 0 0" }}>{t("Kommer snart.")}</p>}
               {notifyMessage && <p style={{ fontSize: 13, color: "#e05252", margin: "6px 0 0" }}>{notifyMessage}</p>}
             </>
           )}
