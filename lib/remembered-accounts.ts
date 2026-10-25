@@ -1,6 +1,6 @@
 // Butikker som har logget inn på denne enheten, så de kan logge inn igjen med ett klikk.
 // Lagrer kun domene og navn – aldri hemmeligheter.
-export type RememberedAccount = { shop: string; name: string };
+export type RememberedAccount = { shop: string; name: string; platform?: string };
 
 const KEY = "scavenger_accounts";
 

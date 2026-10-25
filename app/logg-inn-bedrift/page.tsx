@@ -5,6 +5,7 @@ import Link from "next/link";
 import { fetchSession } from "@/lib/session-client";
 import { RememberedAccount, forgetAccount, getRememberedAccounts } from "@/lib/remembered-accounts";
 import WooConnectForm from "../components/WooConnectForm";
+import WixConnectForm from "../components/WixConnectForm";
 
 const SHOPIFY_GREEN = "#5E8E3E";
 
@@ -73,6 +74,7 @@ export default function LoggInnBedrift() {
   const [showShopifyForm, setShowShopifyForm] = useState(false);
   const [showSecretForm, setShowSecretForm] = useState(false);
   const [showWooForm, setShowWooForm] = useState(false);
+  const [showWixForm, setShowWixForm] = useState(false);
   const [wooUrl, setWooUrl] = useState("");
   const [shopInput, setShopInput] = useState("");
   const [domain, setDomain] = useState("");
@@ -96,10 +98,16 @@ export default function LoggInnBedrift() {
     });
   }, []);
 
-  function continueWithAccount(shop: string) {
-    // WooCommerce-butikker logger inn med nøkkelen sin.
+  function continueWithAccount(shop: string, platform?: string) {
+    // Wix- og WooCommerce-butikker logger inn med nøkkelen sin.
+    if (platform === "wix") {
+      setShowWooForm(false);
+      setShowWixForm(true);
+      return;
+    }
     if (!shop.endsWith(".myshopify.com")) {
       setWooUrl(shop);
+      setShowWixForm(false);
       setShowWooForm(true);
       return;
     }
@@ -150,7 +158,7 @@ export default function LoggInnBedrift() {
             {accounts.map((a) => (
               <div key={a.shop} style={{ ...card, padding: 0 }}>
                 <button
-                  onClick={() => continueWithAccount(a.shop)}
+                  onClick={() => continueWithAccount(a.shop, a.platform)}
                   style={{ ...card, border: "none", flex: 1, cursor: "pointer" }}
                 >
                   <span style={{ width: 44, height: 44, borderRadius: 999, backgroundColor: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, flexShrink: 0 }}>
@@ -217,20 +225,34 @@ export default function LoggInnBedrift() {
         {/* WooCommerce og Wix */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
           <button
-            onClick={() => setShowWooForm((v) => !v)}
+            onClick={() => {
+              setShowWixForm(false);
+              setShowWooForm((v) => !v);
+            }}
             style={{ ...card, justifyContent: "center", flexDirection: "column", gap: 2, padding: "12px 8px", cursor: "pointer", borderColor: showWooForm ? "#7F54B3" : "var(--border)" }}
           >
             <span style={{ fontWeight: 600, fontSize: 14 }}>WooCommerce</span>
             <span style={{ fontSize: 11, opacity: 0.6 }}>Koble til med nøkkel</span>
           </button>
-          <div style={{ ...card, justifyContent: "center", flexDirection: "column", gap: 2, padding: "12px 8px", opacity: 0.5, cursor: "not-allowed" }} title="Kommer snart">
+          <button
+            onClick={() => {
+              setShowWooForm(false);
+              setShowWixForm((v) => !v);
+            }}
+            style={{ ...card, justifyContent: "center", flexDirection: "column", gap: 2, padding: "12px 8px", cursor: "pointer", borderColor: showWixForm ? "var(--foreground)" : "var(--border)" }}
+          >
             <span style={{ fontWeight: 600, fontSize: 14 }}>Wix</span>
-            <span style={{ fontSize: 11 }}>Kommer snart</span>
-          </div>
+            <span style={{ fontSize: 11, opacity: 0.6 }}>Koble til med nøkkel</span>
+          </button>
         </div>
         {showWooForm && (
           <div style={{ marginTop: 14 }}>
             <WooConnectForm key={wooUrl} initialUrl={wooUrl} />
+          </div>
+        )}
+        {showWixForm && (
+          <div style={{ marginTop: 14 }}>
+            <WixConnectForm />
           </div>
         )}
 

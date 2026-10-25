@@ -21,12 +21,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const { storeDomain, productId, source } = await request.json();
-    if (typeof storeDomain !== "string" || !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(storeDomain)) {
+    if (typeof storeDomain !== "string" || !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(storeDomain) || storeDomain.length > 255) {
       return new NextResponse(null, { status: 204 });
     }
     await supabase.from("product_clicks").insert({
       store_domain: storeDomain.toLowerCase(),
-      product_id: typeof productId === "string" && /^\d+$/.test(productId) ? productId : null,
+      product_id: typeof productId === "string" && /^[\w-]{1,64}$/.test(productId) ? productId : null,
       source: SOURCES.includes(source) ? source : "sok",
     });
   } catch {
