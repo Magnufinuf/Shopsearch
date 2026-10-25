@@ -23,7 +23,7 @@ export type CategoryDef = {
 
 export const CATEGORIES: CategoryDef[] = [
   { slug: "sko", label: "Sko", keywords: ["sko", "sneaker", "sneakers", "boots", "støvel", "joggesko"] },
-  { slug: "ytterplagg", label: "Ytterplagg", keywords: ["hoodie", "genser", "jakke", "halfzip", "half-zip", "zip-up", "sweater", "cardigan"] },
+  { slug: "ytterplagg", label: "Ytterplagg", keywords: ["hoodie", "genser", "jakke", "halfzip", "half-zip", "quarter-zip", "zip-up", "sweater", "sweatshirt", "crewneck", "cardigan"] },
   { slug: "topper", label: "Topper", keywords: ["t-skjorte", "tskjorte", "t-shirt", "tshirt", "shirt", "singlet", "longsleeve", "long sleeve", "topp"] },
   { slug: "underdeler", label: "Underdeler", keywords: ["bukse", "bukser", "shorts", "jogger", "joggebukse", "pants"] },
   { slug: "undertoy", label: "Undertøy", keywords: ["undertøy", "boxer", "truse", "bh", "underwear"] },

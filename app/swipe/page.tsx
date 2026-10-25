@@ -7,7 +7,7 @@ import { CurrencyInfo, convertPrice, fetchCurrencyInfo } from "@/lib/currency";
 import { useT } from "@/lib/i18n";
 import { useSavedProducts } from "@/lib/saved-products";
 import { trackClick } from "@/lib/track";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, categorizeProduct } from "@/lib/categories";
 import { STYLES } from "@/lib/styles";
 import {
   LikedProduct,
@@ -50,6 +50,8 @@ export default function SwipePage() {
   const [exit, setExit] = useState<SwipeDir | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [showLiked, setShowLiked] = useState(false);
+  // Kategorien man sveiper i ("alle" = alt).
+  const [category, setCategory] = useState("alle");
   const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Egenskapene til hvert produkt regnes ut én gang per katalog/valuta.
@@ -65,6 +67,31 @@ export default function SwipePage() {
       featureMap.get(p.id) ?? productFeatures(p, convertPrice(p.price, p.currency, currencyInfo, p.localPrices)),
     [featureMap, currencyInfo]
   );
+
+  const categoryOf = useCallback((p: TasteProduct) => categorizeProduct({ ...p, tags: p.tags || [] }), []);
+  // Neste produkt i valgt kategori.
+  const pick = useCallback(
+    (exclude: Set<string>, weights: Record<string, number>, cat = category) => {
+      if (!catalog) return null;
+      const pool = cat === "alle" ? catalog : catalog.filter((p) => categoryOf(p) === cat);
+      return pickNext(pool, exclude, featuresOf, weights);
+    },
+    [catalog, category, categoryOf, featuresOf]
+  );
+  // Bare kategorier som har produkter vises som knapper.
+  const categoryChips = useMemo(() => {
+    const present = new Set((catalog || []).map(categoryOf));
+    return CATEGORIES.filter((c) => present.has(c.slug));
+  }, [catalog, categoryOf]);
+
+  function chooseCategory(cat: string) {
+    if (cat === category || exit) return;
+    setCategory(cat);
+    const seen = new Set(taste.seen);
+    const first = pick(seen, taste.weights, cat);
+    setCurrent(first);
+    setUpcoming(first ? pick(new Set([...seen, first.id]), taste.weights, cat) : null);
+  }
 
   // Henter produkter, valuta og lagret smak. All state settes i .then, ikke direkte i effekten.
   useEffect(() => {
@@ -110,10 +137,10 @@ export default function SwipePage() {
       const exclude = new Set(seen);
       if (newCurrent) exclude.add(newCurrent.id);
       setCurrent(newCurrent);
-      setUpcoming(newCurrent ? pickNext(catalog, exclude, featuresOf, weights) : null);
+      setUpcoming(newCurrent ? pick(exclude, weights) : null);
       setExit(null);
     },
-    [catalog, taste, upcoming, featuresOf]
+    [catalog, taste, upcoming, featuresOf, pick]
   );
 
   const decide = useCallback(
@@ -148,9 +175,9 @@ export default function SwipePage() {
     saveTaste(next);
     setTaste(next);
     setHistory([]);
-    const first = pickNext(catalog, new Set(), featuresOf, next.weights);
+    const first = pick(new Set(), next.weights);
     setCurrent(first);
-    setUpcoming(first ? pickNext(catalog, new Set([first.id]), featuresOf, next.weights) : null);
+    setUpcoming(first ? pick(new Set([first.id]), next.weights) : null);
   }
 
   function openProduct(p: TasteProduct) {
@@ -245,6 +272,39 @@ export default function SwipePage() {
           )}
         </button>
       </header>
+
+      {/* Kategorier: sveip bare i det du er ute etter. */}
+      {!showLiked && categoryChips.length > 1 && (
+        <nav
+          aria-label={t("Kategorier")}
+          style={{ width: "100%", maxWidth: 420, display: "flex", gap: 8, overflowX: "auto", padding: "12px 0 2px", scrollbarWidth: "none" }}
+        >
+          {[{ slug: "alle", label: "Alle" }, ...categoryChips].map((c) => {
+            const active = c.slug === category;
+            return (
+              <button
+                key={c.slug}
+                type="button"
+                onClick={() => chooseCategory(c.slug)}
+                aria-pressed={active}
+                style={{
+                  flexShrink: 0,
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  border: `1px solid ${active ? "var(--primary)" : "var(--border)"}`,
+                  backgroundColor: active ? "var(--primary)" : "transparent",
+                  color: active ? "#fff" : "var(--foreground)",
+                  fontSize: 13,
+                  fontWeight: active ? 600 : 400,
+                  cursor: "pointer",
+                }}
+              >
+                {t(c.label)}
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       {showLiked ? (
         <section style={{ width: "100%", maxWidth: 900, marginTop: 20 }}>
