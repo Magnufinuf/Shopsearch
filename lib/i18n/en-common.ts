@@ -2,6 +2,8 @@ export const EN_COMMON: Record<string, string> = {
   "Språk": "Language",
   "AI-outfit": "AI outfit",
   "Swipe": "Swipe",
+  "Ingen produkter i denne stilen ennå.": "No products in this style yet.",
+  "Søk i alle produkter": "Search all products",
   "Bytt språk": "Change language",
   "Velg språk": "Choose language",
   "Søk etter språk": "Search languages",

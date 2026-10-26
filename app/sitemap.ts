@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { APP_URL } from "@/lib/app-url";
 import { CATEGORIES } from "@/lib/categories";
+import { STYLE_PAGES } from "@/lib/style-pages";
 
 // Forteller Google hvilke sider som finnes.
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -12,6 +13,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${APP_URL}/swipe`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     ...CATEGORIES.map((c) => ({
       url: `${APP_URL}/kategori/${c.slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.7,
+    })),
+    ...STYLE_PAGES.map((s) => ({
+      url: `${APP_URL}/stil/${s.slug}`,
       lastModified: now,
       changeFrequency: "daily" as const,
       priority: 0.7,

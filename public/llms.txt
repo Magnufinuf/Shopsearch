@@ -1,0 +1,35 @@
+# Scavenger
+
+> Scavenger (scavengers.shop) is a Norwegian shopping search engine for clothes, shoes, accessories and home decor. It searches products from many independent online stores at once, so shoppers don't have to visit each store. Shoppers buy directly in the store's own web shop. Free to use.
+
+Scavenger er en norsk søkemotor for klær, sko, tilbehør og interiør. Den søker i produkter fra mange nettbutikker samtidig, og kunden handler direkte i butikkens egen nettbutikk. Gratis å bruke.
+
+## For shoppers
+
+- [Search](https://scavengers.shop/): describe what you want in everyday words (e.g. "warm black hoodie under 500 kr") or search with a photo. Results come from many stores at once.
+- [AI outfit](https://scavengers.shop/outfit): describe a style, occasion and budget, and Scavenger puts together complete outfits from different stores.
+- [Swipe](https://scavengers.shop/swipe): swipe through products; Scavenger learns your style.
+- [Ads](https://scavengers.shop/adverts): video and image ads from connected stores.
+- Price alerts: save a product with the heart and get an email when it gets cheaper.
+- Available in Norwegian, English and 130+ other languages; prices shown in the shopper's currency.
+
+## Styles
+
+- [Old money](https://scavengers.shop/stil/old-money)
+- [Soss / preppy](https://scavengers.shop/stil/soss)
+- [Streetwear](https://scavengers.shop/stil/streetwear)
+- [Sporty](https://scavengers.shop/stil/sporty)
+- [Outdoor / friluft](https://scavengers.shop/stil/friluft)
+- [Minimalist](https://scavengers.shop/stil/minimalistisk)
+- [Vintage](https://scavengers.shop/stil/vintage)
+
+## For stores
+
+- [Connect your store](https://scavengers.shop/registrer): free. Works with Shopify (app), WooCommerce (read-only API key) and Wix (API key). Products appear in search automatically and stay in sync. Scavenger only reads products; orders, customers and payments stay in the store.
+- Stores get statistics on visitors Scavenger sends them and can upload video/image ads.
+
+## About
+
+- [Contact](https://scavengers.shop/kontakt)
+- [Privacy](https://scavengers.shop/personvern)
+- [Terms](https://scavengers.shop/vilkar)
