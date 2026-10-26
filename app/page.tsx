@@ -200,6 +200,17 @@ export default function Home() {
     setLoading(false);
   }
 
+  // Lenker som scavengers.shop/?q=hoodie (f.eks. fra Google) søker med en gang.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q")?.trim().slice(0, 200);
+    if (!q) return;
+    Promise.resolve().then(() => {
+      setQuery(q);
+      runSearch(q);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div
       className="flex min-h-screen flex-col items-center px-6 py-16"
