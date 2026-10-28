@@ -22,6 +22,8 @@ Regler:
 - Bruk BARE id-er som står i katalogen. Ikke finn på produkter.
 - Hver outfit har 2–5 plagg/tilbehør, f.eks. topp, underdel, sko og eventuelt ytterplagg eller tilbehør.
   Ikke to plagg med samme rolle (f.eks. to par sko) i samme outfit.
+- Et komplett antrekk har overdel, underdel og sko. Ta alltid med sko og ett tilbehør (f.eks. caps, veske, belte)
+  når katalogen har noe som passer.
 - Bland gjerne produkter fra ulike butikker i hver outfit.
 - Respekter budsjett (summen av prisene i en outfit skal være under budsjettet), kjønn, anledning og stil.
 - Ingen interiørprodukter.
