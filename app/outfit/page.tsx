@@ -5,7 +5,6 @@ import type { Product } from "@/lib/categories";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, formatPrice } from "@/lib/currency";
 import { useLang, useT } from "@/lib/i18n";
 import ProductCard from "../components/ProductCard";
-import OutfitBoard from "./OutfitBoard";
 
 type Outfit = { title: string; description: string; items: { role: string; product: Product }[] };
 
@@ -172,16 +171,13 @@ export default function OutfitPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start", justifyContent: "center" }}>
-                  <OutfitBoard products={o.items.map((i) => i.product)} />
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-5 lg:grid-cols-3" style={{ flex: "1 1 300px", minWidth: 0 }}>
-                    {o.items.map((i) => (
-                      <div key={i.product.id} style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--primary)" }}>{i.role}</span>
-                        <ProductCard p={i.product} currencyInfo={currencyInfo} source="outfit" />
-                      </div>
-                    ))}
-                  </div>
+                <div className="grid w-full grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4">
+                  {o.items.map((i) => (
+                    <div key={i.product.id} style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--primary)" }}>{i.role}</span>
+                      <ProductCard p={i.product} currencyInfo={currencyInfo} source="outfit" />
+                    </div>
+                  ))}
                 </div>
               </section>
             );
