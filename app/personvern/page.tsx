@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Personvern – Scavenger" };
 
 export default function PersonvernPage() {
   return (
-    <LegalPage title="Personvernerklæring" updated="15. oktober 2026">
+    <LegalPage title="Personvernerklæring" updated="28. oktober 2026">
       <p>
         Scavenger er en søketjeneste som samler produkter fra flere nettbutikker på ett sted. Her forklarer vi hvilke
         opplysninger vi behandler, hvorfor, og hvilke rettigheter du har.
@@ -18,6 +18,12 @@ export default function PersonvernPage() {
         (Anthropic) for å forstå hva du leter etter. Den brukes bare til å svare på søket. For å vise priser i din valuta bruker vi hvilket
         land forespørselen kommer fra (gjettet ut fra IP-adressen av vår hostingleverandør). Landet brukes bare der og
         da og lagres ikke.
+      </p>
+      <p>
+        Søker du med bilde, krympes bildet i nettleseren din og sendes til Anthropic, som tolker hvilket plagg som er på
+        bildet. Bildet brukes bare til å svare på søket, og vi lagrer det ikke. Ikke last opp bilder av andre personer
+        uten at de er med på det. Det samme gjelder teksten du skriver i AI-outfit: den sendes til Anthropic for å sette
+        sammen antrekk, og vi lagrer den ikke.
       </p>
       <p>
         Når du klikker på et produkt, sendes du til butikkens egen nettside. Lenken inneholder en merking som viser at
@@ -32,6 +38,11 @@ export default function PersonvernPage() {
         brukernavn, kan andre brukere se det og sende annonser til deg med det. Sender du en annonse til noen, lagrer vi
         mottakerens e-postadresse og hilsenen din, og mottakeren ser brukernavnet ditt (ikke e-postadressen din). Du kan slette kontoen din når som helst på Min side, og da slettes alt vi har lagret om deg.
       </p>
+      <p>
+        Lagrer du produkter med hjertet, lagrer vi hvilke produkter det er og prisen da du lagret dem. Vi sjekker prisene
+        én gang om dagen og sender deg en e-post hvis et lagret produkt har blitt billigere (prisvarsel). Du kan skru av
+        prisvarsel og andre e-postvarsler under Innstillinger.
+      </p>
 
       <H2>Når du kontakter oss</H2>
       <p>
@@ -42,12 +53,12 @@ export default function PersonvernPage() {
 
       <H2>Butikker som kobler seg til</H2>
       <p>
-        Scavenger-appen for Shopify ber bare om lesetilgang til butikkens produkter. WooCommerce-butikker kobler til med en
-        lesenøkkel de lager selv, og vi bruker den bare til å hente produkter. Vi henter ikke kunder, ordrer eller andre
+        Scavenger-appen for Shopify ber bare om lesetilgang til butikkens produkter. WooCommerce- og Wix-butikker kobler til
+        med en nøkkel de lager selv, og vi bruker den bare til å hente produkter. Vi henter ikke kunder, ordrer eller andre
         personopplysninger fra butikken.
       </p>
       <p>
-        For butikker lagrer vi butikkdomene, tilgangsnøkkel til Shopify eller WooCommerce (for å hente produkter), visningsnavn,
+        For butikker lagrer vi butikkdomene, tilgangsnøkkel til Shopify, WooCommerce eller Wix (for å hente produkter), visningsnavn,
         kontakt-e-post, abonnementsstatus, produkter butikken har skjult, annonser butikken laster opp og
         klikkstatistikk. Grunnlaget er avtalen med butikken.
       </p>
@@ -58,8 +69,10 @@ export default function PersonvernPage() {
 
       <H2>Cookies og lagring i nettleseren</H2>
       <p>
-        Vi bruker nødvendige cookies for å holde deg innlogget, både som bruker og som butikk. I tillegg husker nettleseren din om du har valgt
-        mørk eller lys modus. Vi bruker ikke cookies til reklame eller sporing.
+        Vi bruker nødvendige cookies for å holde deg innlogget, både som bruker og som butikk. I tillegg husker nettleseren din
+        valgene dine (mørk eller lys modus, språk og valuta), hva du har likt og hoppet over i Swipe, og hvilke butikker som har
+        logget inn på enheten. Dette lagres bare i nettleseren din og sendes ikke til oss. Vi bruker ikke cookies til reklame
+        eller sporing.
       </p>
 
       <H2>Hvem vi deler med</H2>
@@ -69,8 +82,8 @@ export default function PersonvernPage() {
         <li>Supabase – database og lagring av annonser</li>
         <li>Resend – sending av e-post</li>
         <li>Stripe – betaling av abonnement for butikker</li>
-        <li>Shopify og WooCommerce – henting av produkter fra butikkene</li>
-        <li>Anthropic – tolking av søketekst (AI-søk)</li>
+        <li>Shopify, WooCommerce og Wix – henting av produkter fra butikkene</li>
+        <li>Anthropic – AI-søk, bildesøk, AI-outfit og oversettelse av nettsiden</li>
       </ul>
       <p>
         Noen av disse kan behandle data utenfor EU/EØS. Det skjer i så fall med EUs standard personvernbestemmelser
