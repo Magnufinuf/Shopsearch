@@ -39,6 +39,8 @@ export default function OutfitBoard({ products }: { products: Product[] }) {
   const lower = bottoms[0];
   const feet = shoes[0];
   const body = [upper, lower, feet].filter(Boolean) as Product[];
+  // Bare overdeler (f.eks. hoodie + t-skjorte) blir ikke en kropp: da vises ingen tavle.
+  if (body.length < 2) return null;
   const extras = withImage.filter((p) => !body.includes(p)).slice(0, 3);
 
   return (
@@ -59,12 +61,11 @@ export default function OutfitBoard({ products }: { products: Product[] }) {
       }}
     >
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        {upper && <Piece product={upper} flex={4} zoom={1.3} />}
-        {lower && <Piece product={lower} flex={4} zoom={1.3} />}
-        {feet && <Piece product={feet} flex={2} zoom={1.2} />}
-        {body.length === 0 && extras[0] && <Piece product={extras[0]} flex={1} />}
+        {upper && <Piece product={upper} flex={4} zoom={1.15} />}
+        {lower && <Piece product={lower} flex={4} zoom={1.15} />}
+        {feet && <Piece product={feet} flex={2} zoom={1.1} />}
       </div>
-      {extras.length > 0 && body.length > 0 && (
+      {extras.length > 0 && (
         <div style={{ width: "34%", display: "flex", flexDirection: "column", justifyContent: "center", gap: 8 }}>
           {extras.map((p) => (
             <Piece key={p.id} product={p} flex={1} />
