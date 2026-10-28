@@ -1,6 +1,5 @@
 // Engelsk for tekstene på /outfit (AI-outfit). Nøkkelen er den norske teksten.
 export const EN_OUTFIT: Record<string, string> = {
-  "Outfit-tavle": "Outfit board",
   "AI-outfit": "AI outfit",
   "Beskriv stilen, anledningen og budsjettet, så setter vi sammen komplette outfits med plagg fra ulike butikker.":
     "Describe the style, occasion and budget, and we'll put together complete outfits with pieces from different stores.",
