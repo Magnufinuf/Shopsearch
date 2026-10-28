@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { Product } from "@/lib/categories";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo, formatPrice } from "@/lib/currency";
 import { useLang, useT } from "@/lib/i18n";
-import ProductCard from "../components/ProductCard";
+import OutfitLook from "./OutfitLook";
 
 type Outfit = { title: string; description: string; items: { role: string; product: Product }[] };
 
@@ -171,14 +171,7 @@ export default function OutfitPage() {
                     </div>
                   </div>
                 </div>
-                <div className="grid w-full grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4">
-                  {o.items.map((i) => (
-                    <div key={i.product.id} style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, color: "var(--primary)" }}>{i.role}</span>
-                      <ProductCard p={i.product} currencyInfo={currencyInfo} source="outfit" />
-                    </div>
-                  ))}
-                </div>
+                <OutfitLook items={o.items} currencyInfo={currencyInfo} />
               </section>
             );
           })}
