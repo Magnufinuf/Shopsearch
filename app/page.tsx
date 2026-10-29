@@ -7,6 +7,8 @@ import { buildVocabulary, matchesSmartQuery, parseSmartQuery } from "@/lib/smart
 import { AiFilters, fetchAiFilters, fetchImageFilters, matchesAiFilters, shrinkImage } from "@/lib/ai-search";
 import { CurrencyInfo, convertPrice, fetchCurrencyInfo } from "@/lib/currency";
 import { useLang, useT } from "@/lib/i18n";
+import { useRouter } from "next/navigation";
+import { recommend } from "@/lib/for-you";
 import ProductCard from "./components/ProductCard";
 import InstallPrompt from "./components/InstallPrompt";
 import { CameraIcon, CloseIcon } from "./components/Icons";
@@ -379,8 +381,11 @@ export default function Home() {
 // Forsiden før man har søkt: rader med produkter så det er noe å se på med en gang.
 function FrontSections({ catalog, currencyInfo, onSearch }: { catalog: Product[] | null; currencyInfo: CurrencyInfo | null; onSearch: (q: string) => void }) {
   const t = useT();
+  const router = useRouter();
   if (catalog === null) return <p style={{ opacity: 0.5 }}>{t("Laster produkter...")}</p>;
   if (catalog.length === 0) return null;
+  // Lignende produkter som det du har trykket på og lagret (lagret i nettleseren).
+  const forYou = recommend(catalog, 12);
 
   const priceOf = (p: Product) => convertPrice(p.price, p.currency, currencyInfo, p.localPrices);
   const newest = [...catalog].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 12);
@@ -393,6 +398,7 @@ function FrontSections({ catalog, currencyInfo, onSearch }: { catalog: Product[]
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 32, width: "100%", marginTop: 8 }}>
+      {forYou.length >= 2 && <ProductRow title={t("For deg")} products={forYou} currencyInfo={currencyInfo} onMore={() => router.push("/for-deg")} />}
       <ProductRow title={t("Nytt nå")} products={newest} currencyInfo={currencyInfo} />
       {cheap.length >= 2 && cheap.length < catalog.length && (
         <ProductRow title={t("Under 500 kr")} products={cheap} currencyInfo={currencyInfo} onMore={() => onSearch("under 500")} />

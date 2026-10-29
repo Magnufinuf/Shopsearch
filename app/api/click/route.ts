@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-const SOURCES = ["forside", "sok", "kategori", "annonse", "lagret", "swipe", "outfit"];
+const SOURCES = ["forside", "sok", "kategori", "annonse", "lagret", "swipe", "outfit", "fordeg"];
 
 // Enkel sperre mot at noen blåser opp tallene: maks 60 klikk i minuttet per IP.
 const recent = new Map<string, number[]>();
