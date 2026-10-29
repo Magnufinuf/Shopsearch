@@ -5,6 +5,7 @@ import { ClickSource, trackClick } from "@/lib/track";
 import { useSavedProducts } from "@/lib/saved-products";
 import { HeartIcon } from "./Icons";
 import { useT } from "@/lib/i18n";
+import { recordInterest } from "@/lib/for-you";
 
 export type CardProduct = {
   id: string;
@@ -54,7 +55,10 @@ export default function ProductCard({
     <a
       href={withTracking(p.url)}
       // Teller besøket for butikkens statistikk (Administrasjon).
-      onClick={() => p.storeDomain && trackClick(p.storeDomain, source, p.shopifyProductId)}
+      onClick={() => {
+        if (p.storeDomain) trackClick(p.storeDomain, source, p.shopifyProductId);
+        recordInterest(p, "click");
+      }}
       target="_blank"
       rel="noopener noreferrer"
       className="sc-product-card"
@@ -84,7 +88,8 @@ export default function ProductCard({
     </a>
     <button
       type="button"
-      onClick={() =>
+      onClick={() => {
+        if (!saved) recordInterest(p, "save");
         toggle({
           id: p.id,
           title: p.title,
@@ -95,8 +100,8 @@ export default function ProductCard({
           url: p.url,
           storeDomain: p.storeDomain,
           shopifyProductId: p.shopifyProductId,
-        })
-      }
+        });
+      }}
       aria-label={saved ? t("Fjern fra lagrede") : t("Lagre produktet")}
       aria-pressed={saved}
       style={{
