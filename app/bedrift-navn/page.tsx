@@ -9,7 +9,7 @@ function nextPath(): string {
   return next.startsWith("/") && !next.startsWith("//") && next !== "/bedrift-navn" ? next : "/admin";
 }
 
-// Butikker må velge navn og logo (vises for kundene) før de kan bruke Scavenger.
+// Butikker må velge navn (vises for kundene) før de kan bruke Scavenger. Logo kan lastes opp her eller senere.
 export default function BedriftNavn() {
   const [shop, setShop] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -26,8 +26,7 @@ export default function BedriftNavn() {
         window.location.assign("/logg-inn-bedrift");
         return;
       }
-      const needsLogo = !!s.logoSupported && !s.logoUrl;
-      if (s.displayName && !needsLogo) {
+      if (s.displayName) {
         window.location.assign(nextPath());
         return;
       }
@@ -85,7 +84,8 @@ export default function BedriftNavn() {
   if (!shop) return <p style={{ padding: 24, opacity: 0.6 }}>Laster...</p>;
 
   const shownLogo = preview || logoUrl;
-  const valid = name.trim().length >= 2 && (!logoSupported || !!shownLogo);
+  // Logo er valgfritt (kan legges til senere under Innstillinger), navn er påkrevd.
+  const valid = name.trim().length >= 2;
   return (
     <main style={{ minHeight: "var(--page-h)", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 16px" }}>
       <form onSubmit={save} style={{ width: "100%", maxWidth: 380, display: "flex", flexDirection: "column", gap: 12 }}>
