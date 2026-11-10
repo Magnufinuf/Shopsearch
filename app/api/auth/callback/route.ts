@@ -4,7 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { safeEqual, setSessionCookie } from "@/lib/session";
 import { APP_URL } from "@/lib/app-url";
 import { revalidateTag } from "next/cache";
-import { allApps, appByClientId } from "@/lib/shopify-apps";
+import { allApps, appByClientId, mainApp } from "@/lib/shopify-apps";
+import { TokenSet, exchangeCode, isMissingTokenColumns, tokenColumns } from "@/lib/shopify-token";
 import { registerWebhooks } from "@/lib/shopify-webhooks";
 
 // Sjekker at svaret faktisk kommer fra Shopify (hmac, signert med appens hemmelighet).
@@ -51,7 +52,7 @@ async function handleCallback(req: NextRequest) {
     console.error(`Shopify-callback for ${shop}: ugyldig hmac (ingen app-hemmelighet stemmer)`);
     return errorPage(allApps().length ? "invalid_signature" : "not_configured", shop);
   }
-  const { clientId, clientSecret } = app;
+  const { clientId } = app;
 
   // Mangler eller feil state (cookien er borte, utløpt eller fra en annen fane): start på nytt én gang.
   if (!hasValidState(req)) {
@@ -65,27 +66,15 @@ async function handleCallback(req: NextRequest) {
     return retry;
   }
 
-  const tokenRes = await fetch(`https://${shop}/admin/oauth/access_token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: clientId,
-      client_secret: clientSecret,
-      code,
-    }),
-  });
-
-  if (!tokenRes.ok) {
-    console.error(`Shopify-token for ${shop} feilet (${tokenRes.status}):`, (await tokenRes.text()).slice(0, 300));
+  // Offentlige apper (hovedappen) må bruke nøkler som utløper; den gamle appen bruker nøkler som ikke gjør det.
+  let tokens: TokenSet;
+  try {
+    tokens = await exchangeCode(shop, app, code, clientId === mainApp()?.clientId);
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
     return errorPage("token", shop);
   }
-
-  const tokenData = await tokenRes.json().catch(() => ({}));
-  const accessToken = tokenData.access_token;
-  if (!accessToken) {
-    console.error(`Shopify-token for ${shop}: svaret mangler access_token`);
-    return errorPage("token", shop);
-  }
+  const accessToken = tokens.accessToken;
 
   // Navnet butikken har valgt beholdes. Mangler det, må butikken velge det før den går videre.
   const { data: existing } = await supabase.from("stores").select("*").eq("store_domain", shop).maybeSingle();
@@ -94,15 +83,15 @@ async function handleCallback(req: NextRequest) {
   const savedName = existing?.display_name?.trim() || "";
   const displayName = savedName && savedName !== shop.replace(".myshopify.com", "") ? savedName : null;
 
-  const { error: saveError } = await supabase.from("stores").upsert(
-    {
-      store_domain: shop,
-      client_id: clientId,
-      client_secret: accessToken,
-      display_name: displayName,
-    },
-    { onConflict: "store_domain" }
-  );
+  const row = { store_domain: shop, client_id: clientId, display_name: displayName, ...tokenColumns(tokens) };
+  let { error: saveError } = await supabase.from("stores").upsert(row, { onConflict: "store_domain" });
+  // Før supabase/shopify-tokens.sql er kjørt: lagre uten kolonnene for utløpende nøkler.
+  if (saveError && isMissingTokenColumns(saveError.message)) {
+    console.error("Kolonnene for utløpende Shopify-nøkler mangler (kjør supabase/shopify-tokens.sql)");
+    ({ error: saveError } = await supabase
+      .from("stores")
+      .upsert({ store_domain: shop, client_id: clientId, display_name: displayName, client_secret: accessToken }, { onConflict: "store_domain" }));
+  }
   if (saveError) {
     console.error(`Kunne ikke lagre butikken ${shop}:`, saveError.message);
     return errorPage("save", shop);
