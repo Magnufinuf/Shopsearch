@@ -6,12 +6,15 @@ import { ShopifyError, shopifyGraphQL } from "@/lib/shopify";
 import { fetchWooProducts, isShopifyDomain } from "@/lib/woocommerce";
 import { fetchWixProducts, isWixStore } from "@/lib/wix";
 import { ensureWebhooks } from "@/lib/shopify-webhooks";
+import { getStoreToken } from "@/lib/shopify-token";
 
 type Store = {
   store_domain: string;
   client_id: string;
   client_secret: string;
   display_name: string | null;
+  refresh_token?: string | null;
+  token_expires_at?: string | null;
 };
 
 type ProductNode = {
@@ -86,7 +89,7 @@ type RestProduct = {
 };
 
 async function fetchViaRest(store: Store): Promise<{ nodes: ProductNode[]; currency: string }> {
-  const token = store.client_secret;
+  const token = await getStoreToken(store);
   const headers = { "X-Shopify-Access-Token": token };
   const shopRes = await fetch(`https://${store.store_domain}/admin/api/2025-01/shop.json`, { headers, cache: "no-store" });
   const currency = shopRes.ok ? (await shopRes.json()).shop?.currency || "USD" : "USD";
@@ -134,8 +137,8 @@ function localPrices(variant: ProductNode["variants"]["nodes"][number] | undefin
 async function fetchProductsForStore(store: Store) {
   if (isWixStore(store.client_id)) return fetchWixProducts(store);
   if (!isShopifyDomain(store.store_domain)) return fetchWooProducts(store);
-  const token = store.client_secret;
-  if (!token) return { products: [], failed: false };
+  if (!store.client_secret) return { products: [], failed: false };
+  const token = await getStoreToken(store);
   await ensureWebhooks(store.store_domain, token);
 
   const nodes: ProductNode[] = [];
@@ -190,7 +193,7 @@ async function fetchProductsForStore(store: Store) {
 }
 
 async function loadAllProducts() {
-  const { data: stores, error } = await supabase.from("stores").select("store_domain, client_id, client_secret, display_name");
+  const { data: stores, error } = await supabase.from("stores").select("*");
   const results = await Promise.all(((stores || []) as Store[]).map(fetchProductsForStore));
   return { products: results.flatMap((r) => r.products), failed: !!error || results.some((r) => r.failed) };
 }
