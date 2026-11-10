@@ -4,17 +4,14 @@ import { supabase } from "@/lib/supabase";
 import { safeEqual, setSessionCookie } from "@/lib/session";
 import { APP_URL } from "@/lib/app-url";
 import { revalidateTag } from "next/cache";
-import { appByClientId, mainApp } from "@/lib/shopify-apps";
+import { allApps, appByClientId } from "@/lib/shopify-apps";
 import { registerWebhooks } from "@/lib/shopify-webhooks";
 
-// Sjekker at svaret faktisk kommer fra Shopify (hmac) og hører til innloggingen vi startet (state).
-function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean {
+// Sjekker at svaret faktisk kommer fra Shopify (hmac, signert med appens hemmelighet).
+function hasValidHmac(req: NextRequest, clientSecret: string): boolean {
   const params = req.nextUrl.searchParams;
   const hmac = params.get("hmac");
-  const state = params.get("state");
-  const savedState = req.cookies.get("shopify_oauth_state")?.value;
-  if (!hmac || !state || !savedState || !safeEqual(state, savedState)) return false;
-
+  if (!hmac) return false;
   const message = Array.from(params.entries())
     .filter(([key]) => key !== "hmac")
     .sort(([a], [b]) => a.localeCompare(b))
@@ -24,22 +21,48 @@ function isValidShopifyCallback(req: NextRequest, clientSecret: string): boolean
   return safeEqual(hmac, expected);
 }
 
-export async function GET(req: NextRequest) {
+// Og at svaret hører til innloggingen vi startet (state lagret i cookie).
+function hasValidState(req: NextRequest): boolean {
+  const state = req.nextUrl.searchParams.get("state");
+  const savedState = req.cookies.get("shopify_oauth_state")?.value;
+  return !!state && !!savedState && safeEqual(state, savedState);
+}
+
+// Feil vises som en vanlig side med «Prøv igjen», aldri som rå JSON.
+function errorPage(code: string, shop?: string | null) {
+  const params = new URLSearchParams({ kode: code });
+  if (shop) params.set("shop", shop);
+  return NextResponse.redirect(`${APP_URL}/shopify-feil?${params}`);
+}
+
+async function handleCallback(req: NextRequest) {
   const shop = req.nextUrl.searchParams.get("shop");
   const code = req.nextUrl.searchParams.get("code");
 
   if (!shop || !code || !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(shop)) {
-    return NextResponse.json({ error: "Mangler shop eller code" }, { status: 400 });
+    console.error("Shopify-callback mangler shop eller code:", req.nextUrl.search);
+    return errorPage("missing_params", shop);
   }
 
-  const app = appByClientId(req.cookies.get("shopify_oauth_app")?.value) ?? mainApp();
+  // Appen fra cookien først; mangler den, den av appene som har signert svaret.
+  const cookieApp = appByClientId(req.cookies.get("shopify_oauth_app")?.value);
+  const app = [cookieApp, ...allApps()].find((a) => a && hasValidHmac(req, a.clientSecret)) ?? null;
   if (!app) {
-    return NextResponse.json({ error: "Shopify er ikke satt opp." }, { status: 500 });
+    console.error(`Shopify-callback for ${shop}: ugyldig hmac (ingen app-hemmelighet stemmer)`);
+    return errorPage(allApps().length ? "invalid_signature" : "not_configured", shop);
   }
   const { clientId, clientSecret } = app;
 
-  if (!isValidShopifyCallback(req, clientSecret)) {
-    return NextResponse.json({ error: "Ugyldig svar fra Shopify, prøv igjen." }, { status: 400 });
+  // Mangler eller feil state (cookien er borte, utløpt eller fra en annen fane): start på nytt én gang.
+  if (!hasValidState(req)) {
+    if (req.cookies.get("shopify_oauth_retry")?.value === "1") {
+      console.error(`Shopify-callback for ${shop}: state stemmer ikke etter nytt forsøk`);
+      return errorPage("invalid_state", shop);
+    }
+    console.warn(`Shopify-callback for ${shop}: state mangler eller stemmer ikke, starter på nytt`);
+    const retry = NextResponse.redirect(`${APP_URL}/api/auth/start?shop=${encodeURIComponent(shop)}`);
+    retry.cookies.set("shopify_oauth_retry", "1", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 300 });
+    return retry;
   }
 
   const tokenRes = await fetch(`https://${shop}/admin/oauth/access_token`, {
@@ -53,11 +76,16 @@ export async function GET(req: NextRequest) {
   });
 
   if (!tokenRes.ok) {
-    return NextResponse.json({ error: "Klarte ikke å fullføre installasjonen" }, { status: 500 });
+    console.error(`Shopify-token for ${shop} feilet (${tokenRes.status}):`, (await tokenRes.text()).slice(0, 300));
+    return errorPage("token", shop);
   }
 
-  const tokenData = await tokenRes.json();
+  const tokenData = await tokenRes.json().catch(() => ({}));
   const accessToken = tokenData.access_token;
+  if (!accessToken) {
+    console.error(`Shopify-token for ${shop}: svaret mangler access_token`);
+    return errorPage("token", shop);
+  }
 
   // Navnet butikken har valgt beholdes. Mangler det, må butikken velge det før den går videre.
   const { data: existing } = await supabase.from("stores").select("*").eq("store_domain", shop).maybeSingle();
@@ -66,7 +94,7 @@ export async function GET(req: NextRequest) {
   const savedName = existing?.display_name?.trim() || "";
   const displayName = savedName && savedName !== shop.replace(".myshopify.com", "") ? savedName : null;
 
-  await supabase.from("stores").upsert(
+  const { error: saveError } = await supabase.from("stores").upsert(
     {
       store_domain: shop,
       client_id: clientId,
@@ -75,6 +103,10 @@ export async function GET(req: NextRequest) {
     },
     { onConflict: "store_domain" }
   );
+  if (saveError) {
+    console.error(`Kunne ikke lagre butikken ${shop}:`, saveError.message);
+    return errorPage("save", shop);
+  }
   revalidateTag("products", { expire: 0 });
 
   // Be Shopify si fra når appen avinstalleres eller produktene endres (håndteres i /api/webhooks/shopify).
@@ -88,6 +120,17 @@ export async function GET(req: NextRequest) {
   response.cookies.delete("shopify_oauth_state");
   response.cookies.delete("shopify_oauth_login");
   response.cookies.delete("shopify_oauth_app");
+  response.cookies.delete("shopify_oauth_retry");
   setSessionCookie(response, shop);
   return response;
+}
+
+// Uventede feil (nettverk, database) gir også feilsiden, aldri en rå 500-side.
+export async function GET(req: NextRequest) {
+  try {
+    return await handleCallback(req);
+  } catch (err) {
+    console.error("Shopify-callback feilet:", err);
+    return errorPage("unexpected", req.nextUrl.searchParams.get("shop"));
+  }
 }
