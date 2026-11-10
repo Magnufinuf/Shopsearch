@@ -36,7 +36,7 @@ export default function Sidebar() {
       setBusinessName(s.displayName || s.shop?.replace(".myshopify.com", "") || null);
       if (s.shop) rememberAccount({ shop: s.shop, name: s.displayName || s.shop.replace(".myshopify.com", ""), platform: s.platform });
       // Butikker må velge navn og logo før de bruker Scavenger.
-      if (s.shop && (!s.displayName || (s.logoSupported && !s.logoUrl)) && pathname !== "/bedrift-navn") {
+      if (s.shop && !s.displayName && pathname !== "/bedrift-navn") {
         window.location.assign(`/bedrift-navn?neste=${encodeURIComponent(pathname)}`);
       }
     });

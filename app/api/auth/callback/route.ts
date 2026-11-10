@@ -78,8 +78,6 @@ async function handleCallback(req: NextRequest) {
 
   // Navnet butikken har valgt beholdes. Mangler det, må butikken velge det før den går videre.
   const { data: existing } = await supabase.from("stores").select("*").eq("store_domain", shop).maybeSingle();
-  // Logo kreves bare når logo-kolonnen finnes (supabase/butikk-logo.sql).
-  const missingLogo = !!existing && "logo_url" in existing && !existing.logo_url;
   const savedName = existing?.display_name?.trim() || "";
   const displayName = savedName && savedName !== shop.replace(".myshopify.com", "") ? savedName : null;
 
@@ -104,7 +102,7 @@ async function handleCallback(req: NextRequest) {
   const isLogin = req.cookies.get("shopify_oauth_login")?.value === "1";
   const next = isLogin ? "/admin" : "/registrer/suksess";
   const response = NextResponse.redirect(
-    displayName && !missingLogo ? `${APP_URL}${next}` : `${APP_URL}/bedrift-navn?neste=${encodeURIComponent(next)}`
+    displayName ? `${APP_URL}${next}` : `${APP_URL}/bedrift-navn?neste=${encodeURIComponent(next)}`
   );
   response.cookies.delete("shopify_oauth_state");
   response.cookies.delete("shopify_oauth_login");
