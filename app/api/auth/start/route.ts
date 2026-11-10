@@ -5,13 +5,15 @@ import { appForShop } from "@/lib/shopify-apps";
 
 export async function GET(req: NextRequest) {
   const shop = req.nextUrl.searchParams.get("shop");
+  // Uten gyldig butikk (f.eks. åpnet direkte): send til siden der man kobler til, ikke en feilmelding.
   if (!shop || !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(shop)) {
-    return NextResponse.json({ error: "Ugyldig butikkdomene" }, { status: 400 });
+    return NextResponse.redirect(`${APP_URL}/registrer`);
   }
 
   const app = await appForShop(shop.toLowerCase());
   if (!app) {
-    return NextResponse.redirect(`${APP_URL}/logg-inn-bedrift?feil=shopify`);
+    console.error("Shopify-start: ingen Shopify-app er satt opp (SHOPIFY_CLIENT_ID/SECRET)");
+    return NextResponse.redirect(`${APP_URL}/shopify-feil?kode=not_configured`);
   }
   const clientId = app.clientId;
   const redirectUri = `${APP_URL}/api/auth/callback`;
