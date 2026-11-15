@@ -16,7 +16,11 @@ export async function POST(request: Request) {
   // Kontakt-e-post endres bare når den sendes med (navnesteget sender bare navnet).
   const update: Record<string, string | null> = { display_name: name };
   if (contactEmail !== undefined) {
-    update.contact_email = typeof contactEmail === "string" && contactEmail.trim() ? contactEmail.trim() : null;
+    const email = typeof contactEmail === "string" ? contactEmail.trim().toLowerCase() : "";
+    if (email && !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(email)) {
+      return NextResponse.json({ error: "Skriv inn en gyldig e-postadresse." }, { status: 400 });
+    }
+    update.contact_email = email || null;
   }
   const { error } = await supabase.from("stores").update(update).eq("store_domain", shop);
   revalidateTag("products", { expire: 0 });

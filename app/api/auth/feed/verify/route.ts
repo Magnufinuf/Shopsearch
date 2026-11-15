@@ -28,15 +28,15 @@ export async function POST(request: NextRequest) {
   if (existing && !/^(feed|site):/.test(String(existing.client_id || ""))) {
     return NextResponse.json({ error: "Denne nettbutikken er allerede koblet til Scavenger på en annen måte." }, { status: 400 });
   }
-  const { error } = await supabase.from("stores").upsert(
-    {
-      store_domain: pending.domain,
-      client_id: `${pending.kind}:${pending.email}`,
-      client_secret: pending.source,
-      display_name: existing?.display_name ?? null,
-    },
-    { onConflict: "store_domain" }
-  );
+  const row = {
+    store_domain: pending.domain,
+    client_id: `${pending.kind}:${pending.email}`,
+    client_secret: pending.source,
+    display_name: existing?.display_name ?? null,
+  };
+  // Den bekreftede e-posten blir kontakt-e-post (varsler om pris og faktura). Uten kolonnen lagres resten.
+  let { error } = await supabase.from("stores").upsert({ ...row, contact_email: pending.email }, { onConflict: "store_domain" });
+  if (error && /contact_email/.test(error.message)) ({ error } = await supabase.from("stores").upsert(row, { onConflict: "store_domain" }));
   if (error) return NextResponse.json({ error: "Noe gikk galt, prøv igjen." }, { status: 500 });
   revalidateTag("products", { expire: 0 });
   attempts.delete(pending.codeHash);

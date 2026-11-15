@@ -102,7 +102,7 @@ async function handleCallback(req: NextRequest) {
   const isLogin = req.cookies.get("shopify_oauth_login")?.value === "1";
   const next = isLogin ? "/admin" : "/registrer/suksess";
   const response = NextResponse.redirect(
-    displayName ? `${APP_URL}${next}` : `${APP_URL}/bedrift-navn?neste=${encodeURIComponent(next)}`
+    displayName && (!existing || !("contact_email" in existing) || existing.contact_email) ? `${APP_URL}${next}` : `${APP_URL}/bedrift-navn?neste=${encodeURIComponent(next)}`
   );
   response.cookies.delete("shopify_oauth_state");
   response.cookies.delete("shopify_oauth_login");
