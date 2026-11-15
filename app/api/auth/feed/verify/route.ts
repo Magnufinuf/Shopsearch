@@ -1,0 +1,49 @@
+import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
+import { supabase } from "@/lib/supabase";
+import { hashLoginCode, readSignedData, safeEqual, setSessionCookie } from "@/lib/session";
+import { FEED_PREFIX } from "@/lib/feed";
+
+// Steg 2: riktig kode = butikken kobles til (eller logges inn) med feeden.
+const VERIFY_COOKIE = "feed_verify";
+type Pending = { domain: string; feedUrl: string; email: string; codeHash: string };
+
+const attempts = new Map<string, number>();
+
+export async function POST(request: NextRequest) {
+  const pending = readSignedData<Pending>(request.cookies.get(VERIFY_COOKIE)?.value);
+  if (!pending) return NextResponse.json({ error: "Koden har gått ut. Start på nytt." }, { status: 400 });
+
+  // Maks 5 feil per kode.
+  const tries = (attempts.get(pending.codeHash) || 0) + 1;
+  attempts.set(pending.codeHash, tries);
+  if (attempts.size > 5000) attempts.clear();
+  if (tries > 5) return NextResponse.json({ error: "For mange feil forsøk. Start på nytt." }, { status: 429 });
+
+  const { code } = await request.json().catch(() => ({}));
+  if (!safeEqual(hashLoginCode(pending.email, String(code || "").trim()), pending.codeHash)) {
+    return NextResponse.json({ error: "Feil kode. Prøv igjen." }, { status: 400 });
+  }
+
+  const { data: existing } = await supabase.from("stores").select("client_id, display_name").eq("store_domain", pending.domain).maybeSingle();
+  if (existing && !String(existing.client_id || "").startsWith(FEED_PREFIX)) {
+    return NextResponse.json({ error: "Denne nettbutikken er allerede koblet til Scavenger på en annen måte." }, { status: 400 });
+  }
+  const { error } = await supabase.from("stores").upsert(
+    {
+      store_domain: pending.domain,
+      client_id: `${FEED_PREFIX}${pending.email}`,
+      client_secret: pending.feedUrl,
+      display_name: existing?.display_name ?? null,
+    },
+    { onConflict: "store_domain" }
+  );
+  if (error) return NextResponse.json({ error: "Noe gikk galt, prøv igjen." }, { status: 500 });
+  revalidateTag("products", { expire: 0 });
+  attempts.delete(pending.codeHash);
+
+  const response = NextResponse.json({ success: true, next: existing?.display_name ? "/admin" : "/bedrift-navn?neste=/registrer/suksess" });
+  response.cookies.delete(VERIFY_COOKIE);
+  setSessionCookie(response, pending.domain);
+  return response;
+}

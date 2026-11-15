@@ -6,6 +6,9 @@ import { fetchSession } from "@/lib/session-client";
 import { RememberedAccount, forgetAccount, getRememberedAccounts } from "@/lib/remembered-accounts";
 import WooConnectForm from "../components/WooConnectForm";
 import WixConnectForm from "../components/WixConnectForm";
+import FeedConnectForm from "../components/FeedConnectForm";
+import PlatformSearch from "../components/PlatformSearch";
+import type { Platform } from "@/lib/platforms";
 
 const SHOPIFY_GREEN = "#5E8E3E";
 
@@ -75,6 +78,8 @@ export default function LoggInnBedrift() {
   const [showSecretForm, setShowSecretForm] = useState(false);
   const [showWooForm, setShowWooForm] = useState(false);
   const [showWixForm, setShowWixForm] = useState(false);
+  // Butikker på andre plattformer kobler til med produktfeed.
+  const [feedPlatform, setFeedPlatform] = useState<Platform | null>(null);
   const [wooUrl, setWooUrl] = useState("");
   const [shopInput, setShopInput] = useState("");
   const [domain, setDomain] = useState("");
@@ -98,8 +103,24 @@ export default function LoggInnBedrift() {
     });
   }, []);
 
+  // Viser bare skjemaet for plattformen som er valgt.
+  function showOnly(form: "shopify" | "woo" | "wix" | "feed", platform?: Platform) {
+    setShowShopifyForm(form === "shopify");
+    setShowWooForm(form === "woo");
+    setShowWixForm(form === "wix");
+    setFeedPlatform(form === "feed" ? platform ?? { name: "produktfeed", kind: "feed" } : null);
+  }
+
+  function pickPlatform(p: Platform) {
+    showOnly(p.kind === "woocommerce" ? "woo" : p.kind, p);
+  }
+
   function continueWithAccount(shop: string, platform?: string) {
-    // Wix- og WooCommerce-butikker logger inn med nøkkelen sin.
+    // Feed-, Wix- og WooCommerce-butikker logger inn med nøkkelen eller koden sin.
+    if (platform === "feed") {
+      showOnly("feed");
+      return;
+    }
     if (platform === "wix") {
       setShowWooForm(false);
       setShowWixForm(true);
@@ -253,6 +274,19 @@ export default function LoggInnBedrift() {
         {showWixForm && (
           <div style={{ marginTop: 14 }}>
             <WixConnectForm />
+          </div>
+        )}
+
+        {/* Alle andre plattformer: søk, og koble til med produktfeed */}
+        <div style={{ marginTop: 14 }}>
+          <PlatformSearch onPick={pickPlatform} />
+        </div>
+        {feedPlatform && (
+          <div style={{ marginTop: 14 }}>
+            <p style={{ margin: "0 0 8px", fontWeight: 600, fontSize: 15 }}>
+              {feedPlatform.name === "produktfeed" ? "Logg inn med produktfeed" : `Koble til fra ${feedPlatform.name}`}
+            </p>
+            <FeedConnectForm key={feedPlatform.name} platform={feedPlatform.name === "produktfeed" ? undefined : feedPlatform} />
           </div>
         )}
 

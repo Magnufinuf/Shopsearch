@@ -2,7 +2,7 @@
 export type SessionInfo = {
   loggedIn: boolean;
   shop: string | null;
-  platform?: "shopify" | "woocommerce" | "wix";
+  platform?: "shopify" | "woocommerce" | "wix" | "feed";
   displayName: string | null;
   logoUrl?: string | null;
   logoSupported?: boolean;

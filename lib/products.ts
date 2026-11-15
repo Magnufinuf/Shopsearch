@@ -5,6 +5,7 @@ import { detectStyles } from "@/lib/styles";
 import { ShopifyError, shopifyGraphQL } from "@/lib/shopify";
 import { fetchWooProducts, isShopifyDomain } from "@/lib/woocommerce";
 import { fetchWixProducts, isWixStore } from "@/lib/wix";
+import { fetchFeedProducts, isFeedStore } from "@/lib/feed";
 import { ensureWebhooks } from "@/lib/shopify-webhooks";
 import { getStoreToken } from "@/lib/shopify-token";
 
@@ -136,6 +137,7 @@ function localPrices(variant: ProductNode["variants"]["nodes"][number] | undefin
 // failed = true hvis Shopify ikke svarte ordentlig, så et tomt/halvt svar ikke mellomlagres.
 async function fetchProductsForStore(store: Store) {
   if (isWixStore(store.client_id)) return fetchWixProducts(store);
+  if (isFeedStore(store.client_id)) return fetchFeedProducts(store);
   if (!isShopifyDomain(store.store_domain)) return fetchWooProducts(store);
   if (!store.client_secret) return { products: [], failed: false };
   const token = await getStoreToken(store);
