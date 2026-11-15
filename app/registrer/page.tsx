@@ -4,6 +4,7 @@ import WooConnectForm from "../components/WooConnectForm";
 import WixConnectForm from "../components/WixConnectForm";
 import FeedConnectForm from "../components/FeedConnectForm";
 import PlatformSearch from "../components/PlatformSearch";
+import PricingNotice from "../components/PricingNotice";
 import type { Platform } from "@/lib/platforms";
 import { useState } from "react";
 
@@ -82,7 +83,7 @@ export default function Registrer() {
           Koble til butikken din
         </h1>
         <p className="mt-3 text-center" style={{ color: "var(--foreground)", opacity: 0.7 }}>
-          Produktene dine blir søkbare på Scavenger med en gang. Gratis i lanseringsperioden.
+          Produktene dine blir søkbare på Scavenger med en gang.
         </p>
 
         <ul className="mt-6 flex flex-col gap-2 text-sm" style={{ color: "var(--foreground)", opacity: 0.85 }}>
@@ -120,6 +121,12 @@ export default function Registrer() {
             <a href="/personvern" className="underline">personvernerklæringen</a>.
           </p>
         </form>
+
+        {/* Pris for butikker utenfor Shopify (Shopify-butikker betaler via Shopify, og appen er gratis nå) */}
+        <div className="mt-8">
+          <p style={{ margin: "0 0 8px", fontSize: 13, opacity: 0.6, textAlign: "center" }}>For WooCommerce, Wix og andre plattformer:</p>
+          <PricingNotice />
+        </div>
 
         {/* WooCommerce */}
         <div className="mt-8">

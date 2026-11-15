@@ -35,6 +35,9 @@ export async function GET() {
     logoUrl: data.logo_url || null,
     // false før logo-kolonnen finnes; da kreves ikke logo.
     logoSupported: "logo_url" in data,
+    // Kontakt-e-post kreves (varsler om pris og faktura). false før kolonnen finnes.
+    contactEmail: data.contact_email || null,
+    contactEmailSupported: "contact_email" in data,
     shopifyEnabled,
     ...freePeriod,
   });

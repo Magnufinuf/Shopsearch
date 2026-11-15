@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchSession } from "@/lib/session-client";
+import PricingNotice from "../components/PricingNotice";
 
 // Bare interne stier, så lenken ikke kan sende folk til en annen nettside.
 function nextPath(): string {
@@ -15,6 +16,10 @@ export default function BedriftNavn() {
   const [name, setName] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoSupported, setLogoSupported] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailSupported, setEmailSupported] = useState(false);
+  // Shopify-butikker: prisen må stå i App Store-oppføringen og tas via Shopify, så vi viser den ikke her ennå.
+  const [isShopify, setIsShopify] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -26,10 +31,13 @@ export default function BedriftNavn() {
         window.location.assign("/logg-inn-bedrift");
         return;
       }
-      if (s.displayName) {
+      if (s.displayName && (!s.contactEmailSupported || s.contactEmail)) {
         window.location.assign(nextPath());
         return;
       }
+      setEmail(s.contactEmail || "");
+      setEmailSupported(!!s.contactEmailSupported);
+      setIsShopify(s.platform === "shopify");
       setShop(s.shop);
       setName(s.displayName || "");
       setLogoUrl(s.logoUrl || null);
@@ -75,7 +83,7 @@ export default function BedriftNavn() {
     const res = await fetch("/api/update-store-info", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ displayName: name }),
+      body: JSON.stringify(emailSupported ? { displayName: name, contactEmail: email } : { displayName: name }),
     });
     if (!res.ok) return fail(res);
     window.location.assign(nextPath());
@@ -85,7 +93,8 @@ export default function BedriftNavn() {
 
   const shownLogo = preview || logoUrl;
   // Logo er valgfritt (kan legges til senere under Innstillinger), navn er påkrevd.
-  const valid = name.trim().length >= 2;
+  const validEmail = !emailSupported || /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email.trim());
+  const valid = name.trim().length >= 2 && validEmail;
   return (
     <main style={{ minHeight: "var(--page-h)", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 16px" }}>
       <form onSubmit={save} style={{ width: "100%", maxWidth: 380, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -129,6 +138,21 @@ export default function BedriftNavn() {
           placeholder="F.eks. Auto Collections"
           style={{ width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 16, boxSizing: "border-box" }}
         />
+        {emailSupported && (
+          <>
+            <label style={{ fontSize: 13, fontWeight: 600 }}>E-post</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="post@butikken.no"
+              autoComplete="email"
+              style={{ width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 16, boxSizing: "border-box" }}
+            />
+            <p style={{ margin: "-4px 0 0", fontSize: 12, opacity: 0.6 }}>Hit sender vi viktige beskjeder om butikken.</p>
+          </>
+        )}
+        {!isShopify && <PricingNotice compact />}
         <button
           type="submit"
           disabled={!valid || saving}

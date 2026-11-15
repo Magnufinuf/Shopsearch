@@ -6,6 +6,8 @@ export type SessionInfo = {
   displayName: string | null;
   logoUrl?: string | null;
   logoSupported?: boolean;
+  contactEmail?: string | null;
+  contactEmailSupported?: boolean;
   shopifyEnabled: boolean;
   subscribed: boolean;
   free: boolean;

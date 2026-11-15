@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { fetchSession } from "@/lib/session-client";
 import StatsPanel from "./StatsPanel";
+import SalesPanel from "./SalesPanel";
 
 type Product = {
   id: string;
@@ -173,6 +174,7 @@ function AdminContent() {
       </div>
 
       <StatsPanel productTitles={Object.fromEntries(products.map((p) => [p.shopifyProductId, p.title]))} />
+      {!domain.endsWith(".myshopify.com") && <SalesPanel isFree={isFree} subscribed={subscribed} />}
 
       {/* To kolonner */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 20, alignItems: "start" }}>
@@ -220,7 +222,9 @@ function AdminContent() {
           {isFree && (
             <Panel title="Abonnement">
               <p style={{ opacity: 0.75, fontSize: 14, lineHeight: 1.5 }}>
-                {freeLabel}. Ingen provisjon og ikke noe abonnement i denne perioden. Etterpå kan dere velge 299 kr/mnd eller 4% provisjon per salg.
+                {domain.endsWith(".myshopify.com")
+                  ? "Scavenger er gratis for Shopify-butikker."
+                  : `${freeLabel}. Ingen provisjon og ikke noe abonnement i denne perioden. Etterpå kan dere velge 299 kr/mnd eller 4% provisjon per salg.`}
               </p>
             </Panel>
           )}
