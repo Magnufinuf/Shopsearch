@@ -55,7 +55,8 @@ export default function PersonvernPage() {
       <p>
         Scavenger-appen for Shopify ber bare om lesetilgang til butikkens produkter. WooCommerce- og Wix-butikker kobler til
         med en nøkkel de lager selv, og vi bruker den bare til å hente produkter. Butikker på andre plattformer kobler til med
-        en lenke til produktfeeden sin og bekrefter med en kode vi sender til en e-postadresse på butikkens domene. Vi henter ikke kunder, ordrer eller andre
+        nettadressen sin (vi leser produktsidene på samme måte som søkemotorer gjør) eller en produktfeed, og bekrefter med en
+        kode vi sender til en e-postadresse på butikkens domene. Butikker kan også legge inn produkter selv. Vi henter ikke kunder, ordrer eller andre
         personopplysninger fra butikken.
       </p>
       <p>

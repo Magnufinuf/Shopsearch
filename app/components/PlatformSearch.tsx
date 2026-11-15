@@ -30,7 +30,7 @@ export default function PlatformSearch({ onPick }: { onPick: (platform: Platform
               style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 14px", background: "none", border: "none", borderBottom: "1px solid var(--border)", color: "var(--foreground)", fontSize: 15, cursor: "pointer", textAlign: "left" }}
             >
               <span>{p.name}</span>
-              <span style={{ fontSize: 12, opacity: 0.55 }}>{p.kind === "feed" ? "Koble til med feed" : "Egen tilkobling"}</span>
+              <span style={{ fontSize: 12, opacity: 0.55 }}>{p.kind === "feed" ? "Koble til med nettadresse" : "Egen tilkobling"}</span>
             </button>
           ))}
           <button
@@ -41,7 +41,7 @@ export default function PlatformSearch({ onPick }: { onPick: (platform: Platform
             }}
             style={{ padding: "11px 14px", background: "none", border: "none", color: "var(--primary)", fontSize: 14, cursor: "pointer", textAlign: "left" }}
           >
-            {results.length ? "Ikke på lista? " : ""}Koble til «{query.trim()}» med produktfeed →
+            {results.length ? "Ikke på lista? " : ""}Koble til «{query.trim()}» med nettadresse →
           </button>
         </div>
       )}

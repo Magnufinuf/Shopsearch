@@ -6,6 +6,7 @@ import { ShopifyError, shopifyGraphQL } from "@/lib/shopify";
 import { fetchWooProducts, isShopifyDomain } from "@/lib/woocommerce";
 import { fetchWixProducts, isWixStore } from "@/lib/wix";
 import { fetchFeedProducts, isFeedStore } from "@/lib/feed";
+import { fetchSiteProducts, isSiteStore } from "@/lib/site-products";
 import { ensureWebhooks } from "@/lib/shopify-webhooks";
 import { getStoreToken } from "@/lib/shopify-token";
 
@@ -138,6 +139,7 @@ function localPrices(variant: ProductNode["variants"]["nodes"][number] | undefin
 async function fetchProductsForStore(store: Store) {
   if (isWixStore(store.client_id)) return fetchWixProducts(store);
   if (isFeedStore(store.client_id)) return fetchFeedProducts(store);
+  if (isSiteStore(store.client_id)) return fetchSiteProducts(store);
   if (!isShopifyDomain(store.store_domain)) return fetchWooProducts(store);
   if (!store.client_secret) return { products: [], failed: false };
   const token = await getStoreToken(store);
@@ -194,10 +196,40 @@ async function fetchProductsForStore(store: Store) {
   return { products, failed };
 }
 
+type ManualProduct = { id: number; store_domain: string; title: string; price: number; currency: string; image_url: string | null; url: string; category: string | null; created_at: string };
+
+// Produkter butikkene har lagt inn selv (supabase/egne-produkter.sql). Tom liste før tabellen finnes.
+async function loadManualProducts(storeNames: Map<string, string | null>) {
+  const { data, error } = await supabase.from("manual_products").select("*").limit(10000);
+  if (error) return [];
+  return ((data || []) as ManualProduct[])
+    .filter((p) => storeNames.has(p.store_domain))
+    .map((p) => ({
+      id: `${p.store_domain}-m${p.id}`,
+      title: p.title,
+      price: Number(p.price) || 0,
+      currency: p.currency || "NOK",
+      category: p.category || "",
+      vendor: storeNames.get(p.store_domain) || p.store_domain,
+      tags: [] as string[],
+      image: p.image_url || "",
+      sizes: [] as string[],
+      url: p.url,
+      storeDomain: p.store_domain,
+      shopifyProductId: `m${p.id}`,
+      createdAt: p.created_at,
+      styles: detectStyles([p.title, p.category || ""].join(" "), `${p.title} ${p.category || ""}`),
+    }));
+}
+
 async function loadAllProducts() {
   const { data: stores, error } = await supabase.from("stores").select("*");
-  const results = await Promise.all(((stores || []) as Store[]).map(fetchProductsForStore));
-  return { products: results.flatMap((r) => r.products), failed: !!error || results.some((r) => r.failed) };
+  const list = (stores || []) as Store[];
+  const [results, manual] = await Promise.all([
+    Promise.all(list.map(fetchProductsForStore)),
+    loadManualProducts(new Map(list.map((s) => [s.store_domain, s.display_name]))),
+  ]);
+  return { products: [...results.flatMap((r) => r.products), ...manual], failed: !!error || results.some((r) => r.failed) };
 }
 
 // Alle produkter fra alle butikker, mellomlagret så søket går raskt.

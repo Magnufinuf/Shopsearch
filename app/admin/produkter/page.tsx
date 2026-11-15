@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchSession } from "@/lib/session-client";
+import AddProductForm from "./AddProductForm";
 
 type Product = {
   id: string;
@@ -10,6 +11,7 @@ type Product = {
   image: string;
   storeDomain: string;
   shopifyProductId: string;
+  url: string;
 };
 
 export default function AlleProdukterPage() {
@@ -39,7 +41,14 @@ export default function AlleProdukterPage() {
     const mine = (data.products || []).filter((p: Product) => p.storeDomain === domain);
     setProducts(mine);
     setLoading(false);
-    if (mine.length === 0) setMessage("Fant ingen produkter for denne butikken.");
+    if (mine.length === 0) setMessage("Fant ingen produkter for denne butikken ennå. Legg dem inn selv over, så dukker de opp i søket.");
+  }
+
+  // Produkter butikken har lagt inn selv har id-er som starter med «m».
+  async function deleteManual(shopifyProductId: string) {
+    if (!confirm("Slette produktet fra Scavenger?")) return;
+    const res = await fetch(`/api/admin/manual-products?id=${shopifyProductId.slice(1)}`, { method: "DELETE" });
+    if (res.ok) setProducts((prev) => prev.filter((p) => p.shopifyProductId !== shopifyProductId));
   }
 
   async function hideProduct(shopifyProductId: string) {
@@ -74,6 +83,8 @@ export default function AlleProdukterPage() {
       </h1>
       <p style={{ opacity: 0.6, fontSize: 14, marginBottom: 24 }}>{domain}</p>
 
+      <AddProductForm onAdded={loadProducts} />
+
       {loading && <p style={{ opacity: 0.6 }}>Laster produkter...</p>}
       {!loading && message && <p style={{ opacity: 0.6 }}>{message}</p>}
 
@@ -82,7 +93,7 @@ export default function AlleProdukterPage() {
           {products.map((p) => (
             <div key={p.shopifyProductId} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 0", borderBottom: "1px solid var(--border)" }}>
               <a
-                href={`https://${p.storeDomain}/admin/products/${p.shopifyProductId}`}
+                href={p.storeDomain.endsWith(".myshopify.com") ? `https://${p.storeDomain}/admin/products/${p.shopifyProductId}` : p.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, textDecoration: "none", color: "inherit", minWidth: 0 }}
@@ -92,8 +103,8 @@ export default function AlleProdukterPage() {
                 )}
                 <span style={{ fontSize: 15 }}>{p.title}</span>
               </a>
-              <button onClick={() => hideProduct(p.shopifyProductId)} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 13, cursor: "pointer", flexShrink: 0 }}>
-                Skjul
+              <button onClick={() => (p.shopifyProductId.startsWith("m") ? deleteManual(p.shopifyProductId) : hideProduct(p.shopifyProductId))} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 13, cursor: "pointer", flexShrink: 0 }}>
+                {p.shopifyProductId.startsWith("m") ? "Slett" : "Skjul"}
               </button>
             </div>
           ))}

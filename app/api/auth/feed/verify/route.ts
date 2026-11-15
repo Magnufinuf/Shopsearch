@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { supabase } from "@/lib/supabase";
 import { hashLoginCode, readSignedData, safeEqual, setSessionCookie } from "@/lib/session";
-import { FEED_PREFIX } from "@/lib/feed";
 
-// Steg 2: riktig kode = butikken kobles til (eller logges inn) med feeden.
+// Steg 2: riktig kode = butikken kobles til (eller logges inn) med nettadressen eller feeden.
 const VERIFY_COOKIE = "feed_verify";
-type Pending = { domain: string; feedUrl: string; email: string; codeHash: string };
+type Pending = { domain: string; kind: "feed" | "site"; source: string; email: string; codeHash: string };
 
 const attempts = new Map<string, number>();
 
@@ -26,14 +25,14 @@ export async function POST(request: NextRequest) {
   }
 
   const { data: existing } = await supabase.from("stores").select("client_id, display_name").eq("store_domain", pending.domain).maybeSingle();
-  if (existing && !String(existing.client_id || "").startsWith(FEED_PREFIX)) {
+  if (existing && !/^(feed|site):/.test(String(existing.client_id || ""))) {
     return NextResponse.json({ error: "Denne nettbutikken er allerede koblet til Scavenger på en annen måte." }, { status: 400 });
   }
   const { error } = await supabase.from("stores").upsert(
     {
       store_domain: pending.domain,
-      client_id: `${FEED_PREFIX}${pending.email}`,
-      client_secret: pending.feedUrl,
+      client_id: `${pending.kind}:${pending.email}`,
+      client_secret: pending.source,
       display_name: existing?.display_name ?? null,
     },
     { onConflict: "store_domain" }
