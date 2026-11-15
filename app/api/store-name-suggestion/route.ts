@@ -13,7 +13,7 @@ export async function GET() {
   if (!shop) return notLoggedIn();
 
   const { data } = await supabase.from("stores").select("*").eq("store_domain", shop).maybeSingle();
-  if (isWixStore(data?.client_id) || isFeedStore(data?.client_id)) return NextResponse.json({ name: "" });
+  if (isWixStore(data?.client_id) || isFeedStore(data?.client_id) || String(data?.client_id || "").startsWith("site:")) return NextResponse.json({ name: "" });
   if (!isShopifyDomain(shop)) return NextResponse.json({ name: await wooSiteName(shop) });
   if (!data?.client_secret) return NextResponse.json({ name: "" });
 

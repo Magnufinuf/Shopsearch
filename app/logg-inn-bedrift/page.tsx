@@ -284,7 +284,7 @@ export default function LoggInnBedrift() {
         {feedPlatform && (
           <div style={{ marginTop: 14 }}>
             <p style={{ margin: "0 0 8px", fontWeight: 600, fontSize: 15 }}>
-              {feedPlatform.name === "produktfeed" ? "Logg inn med produktfeed" : `Koble til fra ${feedPlatform.name}`}
+              {feedPlatform.name === "produktfeed" ? "Logg inn med nettadresse" : `Koble til fra ${feedPlatform.name}`}
             </p>
             <FeedConnectForm key={feedPlatform.name} platform={feedPlatform.name === "produktfeed" ? undefined : feedPlatform} />
           </div>

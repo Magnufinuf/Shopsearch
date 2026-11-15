@@ -232,21 +232,15 @@ export function emailMatchesDomain(email: string, domain: string): boolean {
 
 type FeedStore = { store_domain: string; client_id: string; client_secret: string; display_name: string | null };
 
-// Samme form som Shopify-produktene i lib/products.ts. failed = midlertidig feil som ikke skal mellomlagres.
-export async function fetchFeedProducts(store: FeedStore) {
+// Gjør feed- og nettside-produkter om til samme form som Shopify-produktene i lib/products.ts.
+// Bare produkter på butikkens eget domene tas med.
+export function itemsToProducts(items: FeedItem[], store: FeedStore) {
   const domain = store.store_domain;
-  let items: FeedItem[] = [];
-  let failed = false;
-  try {
-    items = await fetchFeed(store.client_secret);
-  } catch (err) {
-    console.error(`Kunne ikke hente feeden til ${domain}:`, err instanceof Error ? err.message : err);
-    failed = !(err instanceof FeedError && (err.reason === "url" || err.reason === "empty"));
-  }
-  const products = items
+  const bare = (h: string) => h.replace(/^www\./, "");
+  return items
     .filter((i) => {
       try {
-        return new URL(i.link).hostname.toLowerCase() === domain;
+        return bare(new URL(i.link).hostname.toLowerCase()) === bare(domain);
       } catch {
         return false;
       }
@@ -267,5 +261,17 @@ export async function fetchFeedProducts(store: FeedStore) {
       createdAt: undefined as string | undefined,
       styles: detectStyles([i.title, i.category, i.brand, i.description].join(" "), `${i.title} ${i.category}`),
     }));
-  return { products, failed };
+}
+
+// failed = midlertidig feil som ikke skal mellomlagres.
+export async function fetchFeedProducts(store: FeedStore) {
+  let items: FeedItem[] = [];
+  let failed = false;
+  try {
+    items = await fetchFeed(store.client_secret);
+  } catch (err) {
+    console.error(`Kunne ikke hente feeden til ${store.store_domain}:`, err instanceof Error ? err.message : err);
+    failed = !(err instanceof FeedError && (err.reason === "url" || err.reason === "empty"));
+  }
+  return { products: itemsToProducts(items, store), failed };
 }
