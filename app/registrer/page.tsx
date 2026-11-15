@@ -2,9 +2,15 @@
 
 import WooConnectForm from "../components/WooConnectForm";
 import WixConnectForm from "../components/WixConnectForm";
+import FeedConnectForm from "../components/FeedConnectForm";
+import PlatformSearch from "../components/PlatformSearch";
+import type { Platform } from "@/lib/platforms";
 import { useState } from "react";
 
 export default function Registrer() {
+  // Plattformen butikken valgte i søket (andre enn Shopify, WooCommerce og Wix kobler til med feed).
+  const [picked, setPicked] = useState<Platform | null>(null);
+  const pickPlatform = (p: Platform) => setPicked(p);
   const [storeDomain, setStoreDomain] = useState("");
   const [clientId, setClientId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
@@ -133,6 +139,33 @@ export default function Registrer() {
             <span style={{ flex: 1, height: 1, backgroundColor: "var(--border)" }} />
           </div>
           <WixConnectForm />
+        </div>
+
+        {/* Andre plattformer */}
+        <div className="mt-8">
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, opacity: 0.5, fontSize: 13 }}>
+            <span style={{ flex: 1, height: 1, backgroundColor: "var(--border)" }} />
+            Bruker du noe annet?
+            <span style={{ flex: 1, height: 1, backgroundColor: "var(--border)" }} />
+          </div>
+          <PlatformSearch onPick={pickPlatform} />
+          {picked && (
+            <div style={{ marginTop: 14 }}>
+              {picked.kind === "feed" ? (
+                <>
+                  <p style={{ margin: "0 0 8px", fontWeight: 600, fontSize: 15 }}>Koble til fra {picked.name}</p>
+                  <FeedConnectForm key={picked.name} platform={picked} />
+                </>
+              ) : (
+                <p style={{ margin: 0, fontSize: 14 }}>
+                  {picked.name} har egen tilkobling lenger opp på siden.{" "}
+                  <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ background: "none", border: "none", padding: 0, color: "var(--primary)", fontSize: 14, cursor: "pointer" }}>
+                    Gå dit ↑
+                  </button>
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="mt-8 text-center">

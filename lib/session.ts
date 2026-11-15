@@ -99,3 +99,21 @@ export function isAdminPassword(password: unknown): boolean {
   const expected = process.env.ADMIN_PASSWORD;
   return !!expected && typeof password === "string" && safeEqual(password, expected);
 }
+
+// Signerte, kortlivede data (f.eks. en ventende e-postbekreftelse) som lagres i en cookie.
+export function signData(data: object, minutes: number): string {
+  const payload = Buffer.from(JSON.stringify({ ...data, exp: Date.now() + minutes * 60 * 1000 })).toString("base64url");
+  return `${payload}.${sign(`data.${payload}`)}`;
+}
+
+export function readSignedData<T>(token: string | undefined): T | null {
+  if (!token) return null;
+  const [payload, signature] = token.split(".");
+  if (!payload || !signature || !safeEqual(signature, sign(`data.${payload}`))) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString());
+    return typeof data.exp === "number" && Date.now() < data.exp ? (data as T) : null;
+  } catch {
+    return null;
+  }
+}
