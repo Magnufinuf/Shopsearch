@@ -79,7 +79,7 @@ async function handleCallback(req: NextRequest) {
   // Navnet butikken har valgt beholdes. Mangler det, må butikken velge det før den går videre.
   const { data: existing } = await supabase.from("stores").select("*").eq("store_domain", shop).maybeSingle();
   const savedName = existing?.display_name?.trim() || "";
-  const displayName = savedName && savedName !== shop.replace(".myshopify.com", "") ? savedName : null;
+  const displayName = savedName || null;
 
   const row = { store_domain: shop, client_id: clientId, display_name: displayName, ...tokenColumns(tokens) };
   let { error: saveError } = await supabase.from("stores").upsert(row, { onConflict: "store_domain" });

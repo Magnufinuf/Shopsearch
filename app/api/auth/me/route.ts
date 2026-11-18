@@ -29,8 +29,7 @@ export async function GET() {
     loggedIn: true,
     shop,
     platform: shop.endsWith(".myshopify.com") ? "shopify" : String(data.client_id || "").startsWith("wix:") ? "wix" : /^(feed|site):/.test(String(data.client_id || "")) ? "feed" : "woocommerce",
-    // Et navn som bare er myshopify-adressen regnes som ikke valgt.
-    displayName: data.display_name && data.display_name !== shop.replace(".myshopify.com", "") ? data.display_name : null,
+    displayName: data.display_name || null,
     subscribed: !!data.subscribed,
     logoUrl: data.logo_url || null,
     // false før logo-kolonnen finnes; da kreves ikke logo.
