@@ -35,8 +35,10 @@ export default function Sidebar() {
       setBusinessDomain(s.shop);
       setBusinessName(s.displayName || s.shop?.replace(".myshopify.com", "") || null);
       if (s.shop) rememberAccount({ shop: s.shop, name: s.displayName || s.shop.replace(".myshopify.com", ""), platform: s.platform });
-      // Butikker må velge navn og logo før de bruker Scavenger.
-      if (s.shop && (!s.displayName || (s.contactEmailSupported && !s.contactEmail)) && pathname !== "/bedrift-navn") {
+      // Butikker må sette opp navn og e-post før de bruker butikksidene (administrasjon og annonser).
+      // Resten av Scavenger skal kunne brukes som vanlig.
+      const businessPage = pathname.startsWith("/admin") || pathname.startsWith("/adverts/last-opp");
+      if (s.shop && businessPage && (!s.displayName || (s.contactEmailSupported && !s.contactEmail))) {
         window.location.assign(`/bedrift-navn?neste=${encodeURIComponent(pathname)}`);
       }
     });
