@@ -73,7 +73,6 @@ function Segmented<T extends string>({ options, value, onChange }: { options: { 
     </div>
   );
 }
-};
 
 const linkButton: React.CSSProperties = {
   background: "none",
