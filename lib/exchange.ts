@@ -1,4 +1,5 @@
 // Valutakurser (kun server). Brukes av /api/currency og når provisjon regnes om til kroner.
+// Kilder: frankfurter (ECB) og Exchange Rate API (https://www.exchangerate-api.com).
 export async function fetchRate(from: string, to: string): Promise<number | null> {
   if (from === to) return 1;
   const urls = [
@@ -15,6 +16,16 @@ export async function fetchRate(from: string, to: string): Promise<number | null
     } catch {
       // prøv neste URL
     }
+  }
+  // Reserve for valutaer ECB-kursene (frankfurter) ikke har: Exchange Rate API (gratis, ca. 160 valutaer).
+  try {
+    const res = await fetch(`https://open.er-api.com/v6/latest/${from}`, { next: { revalidate: 3600 } });
+    if (res.ok) {
+      const rate = (await res.json()).rates?.[to];
+      if (typeof rate === "number") return rate;
+    }
+  } catch {
+    // ingen kurs
   }
   console.error(`Fant ingen valutakurs ${from} -> ${to}`);
   return null;

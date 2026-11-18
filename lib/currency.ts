@@ -36,7 +36,20 @@ const COUNTRY_TO_CURRENCY: Record<string, string> = {
 export const DEFAULT_CURRENCY = "NOK";
 
 // Valutaer man kan velge i Innstillinger.
-export const SUPPORTED_CURRENCIES = ["NOK", "SEK", "DKK", "EUR", "USD", "GBP", "CHF", "PLN", "ISK"];
+// De vanligste vises øverst i lista.
+export const POPULAR_CURRENCIES = ["NOK", "SEK", "DKK", "EUR", "USD", "GBP"];
+// Alle valutaer i bruk i verden (ISO 4217).
+export const SUPPORTED_CURRENCIES = [
+  "AED", "AFN", "ALL", "AMD", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", "BDT", "BGN", "BHD", "BIF", "BMD", "BND",
+  "BOB", "BRL", "BSD", "BTN", "BWP", "BYN", "BZD", "CAD", "CDF", "CHF", "CLP", "CNY", "COP", "CRC", "CUP", "CVE", "CZK",
+  "DJF", "DKK", "DOP", "DZD", "EGP", "ERN", "ETB", "EUR", "FJD", "FKP", "GBP", "GEL", "GHS", "GIP", "GMD", "GNF", "GTQ",
+  "GYD", "HKD", "HNL", "HTG", "HUF", "IDR", "ILS", "INR", "IQD", "IRR", "ISK", "JMD", "JOD", "JPY", "KES", "KGS", "KHR",
+  "KMF", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL", "LYD", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT",
+  "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MYR", "MZN", "NAD", "NGN", "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN",
+  "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP",
+  "SLE", "SOS", "SRD", "SSP", "STN", "SYP", "SZL", "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS", "UAH",
+  "UGX", "USD", "UYU", "UZS", "VES", "VND", "VUV", "WST", "XAF", "XCD", "XOF", "XPF", "YER", "ZAR", "ZMW",
+];
 export const CURRENCY_KEY = "scavenger_currency";
 
 export function currencyForCountry(country: string | null | undefined): string | null {
@@ -104,4 +117,13 @@ export function convertPrice(price: number, productCurrency: string, info: Curre
   if (local !== undefined) return local;
   const rate = info?.rates[productCurrency];
   return rate !== undefined ? price * rate : price;
+}
+
+// "NOK" -> "norske kroner" på språket brukeren har valgt (locale, f.eks. "nb-NO").
+export function currencyName(code: string, locale: string): string {
+  try {
+    return new Intl.DisplayNames([locale, "en"], { type: "currency" }).of(code) || code;
+  } catch {
+    return code;
+  }
 }
