@@ -24,6 +24,7 @@ export default function BedriftNavn() {
   const [preview, setPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [tried, setTried] = useState(false);
 
   useEffect(() => {
     fetchSession().then((s) => {
@@ -64,6 +65,9 @@ export default function BedriftNavn() {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    // Vis hva som mangler ved feltet i stedet for en grå knapp uten forklaring.
+    setTried(true);
+    if (!valid) return;
     setSaving(true);
     setError("");
 
@@ -86,6 +90,15 @@ export default function BedriftNavn() {
       body: JSON.stringify(emailSupported ? { displayName: name, contactEmail: email } : { displayName: name }),
     });
     if (!res.ok) return fail(res);
+
+    // Sjekk at alt faktisk ble lagret før vi går videre, så ingen sendes tilbake hit uten å vite hvorfor.
+    const s = await fetchSession();
+    const missing = [!s.displayName && "navn", s.contactEmailSupported && !s.contactEmail && "e-post"].filter(Boolean);
+    if (missing.length) {
+      setSaving(false);
+      setError(`Dette ble ikke lagret: ${missing.join(" og ")}. Prøv igjen, eller kontakt oss hvis det fortsetter.`);
+      return;
+    }
     window.location.assign(nextPath());
   }
 
@@ -136,8 +149,10 @@ export default function BedriftNavn() {
           onChange={(e) => setName(e.target.value)}
           maxLength={60}
           placeholder="F.eks. Auto Collections"
+          aria-invalid={tried && name.trim().length < 2}
           style={{ width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 16, boxSizing: "border-box" }}
         />
+        {tried && name.trim().length < 2 && <p style={{ margin: "-6px 0 0", fontSize: 13, color: "#e05252" }}>Skriv inn navnet på butikken.</p>}
         {emailSupported && (
           <>
             <label style={{ fontSize: 13, fontWeight: 600 }}>E-post</label>
@@ -146,17 +161,22 @@ export default function BedriftNavn() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="post@butikken.no"
+              aria-invalid={tried && !validEmail}
               autoComplete="email"
               style={{ width: "100%", padding: "13px 14px", borderRadius: 12, border: "1px solid var(--border)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: 16, boxSizing: "border-box" }}
             />
-            <p style={{ margin: "-4px 0 0", fontSize: 12, opacity: 0.6 }}>Hit sender vi viktige beskjeder om butikken.</p>
+            {tried && !validEmail ? (
+              <p style={{ margin: "-4px 0 0", fontSize: 13, color: "#e05252" }}>{email.trim() ? "E-postadressen ser feil ut." : "Skriv inn en e-postadresse."}</p>
+            ) : (
+              <p style={{ margin: "-4px 0 0", fontSize: 12, opacity: 0.6 }}>Hit sender vi viktige beskjeder om butikken.</p>
+            )}
           </>
         )}
         {!isShopify && <PricingNotice compact />}
         <button
           type="submit"
-          disabled={!valid || saving}
-          style={{ width: "100%", padding: "13px 20px", borderRadius: 12, backgroundColor: "var(--primary)", color: "white", border: "none", fontWeight: 600, fontSize: 15, cursor: "pointer", opacity: !valid || saving ? 0.6 : 1 }}
+          disabled={saving}
+          style={{ width: "100%", padding: "13px 20px", borderRadius: 12, backgroundColor: "var(--primary)", color: "white", border: "none", fontWeight: 600, fontSize: 15, cursor: "pointer", opacity: saving ? 0.6 : 1 }}
         >
           {saving ? "Lagrer..." : "Fortsett"}
         </button>
