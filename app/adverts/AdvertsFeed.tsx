@@ -36,7 +36,8 @@ function ActionButton({
   );
 }
 
-function AdvertSlide({
+// Eksportert så annonseskjemaet kan forhåndsvise annonsen akkurat slik den blir seende ut.
+export function AdvertSlide({
   advert,
   currency,
   saved,
