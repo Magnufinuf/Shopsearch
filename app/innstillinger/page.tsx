@@ -6,7 +6,7 @@ import { fetchSession } from "@/lib/session-client";
 import { fetchUser, logoutUser, UserInfo } from "@/lib/user-client";
 import { CURRENCY_KEY, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { THEME_KEY, ThemeChoice, applyTheme, readTheme } from "@/lib/theme";
-import { languageName, useLang, useT } from "@/lib/i18n";
+import { languageName, locale, useLang, useT } from "@/lib/i18n";
 import UsernameForm from "../components/UsernameForm";
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -71,6 +71,15 @@ function Segmented<T extends string>({ options, value, onChange }: { options: { 
       ))}
     </div>
   );
+}
+
+// "NOK" -> "norske kroner" (på språket brukeren har valgt).
+function currencyName(code: string, lang: string): string {
+  try {
+    return new Intl.DisplayNames([locale(lang), "en"], { type: "currency" }).of(code) || code;
+  } catch {
+    return code;
+  }
 }
 
 const inputStyle: React.CSSProperties = {
@@ -267,7 +276,9 @@ export default function InnstillingerPage() {
           <select value={currency} onChange={(e) => chooseCurrency(e.target.value)} style={{ ...inputStyle, width: "auto", paddingRight: 32 }}>
             <option value="auto">{t("Automatisk")}</option>
             {SUPPORTED_CURRENCIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c} title={currencyName(c, lang)}>
+                {c} – {currencyName(c, lang)}
+              </option>
             ))}
           </select>
         </Row>
