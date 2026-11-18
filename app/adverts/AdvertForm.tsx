@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchSession } from "@/lib/session-client";
 import { ADVERT_CATEGORIES, Advert, STORE_CATEGORY } from "@/lib/adverts";
 import { Product, categorizeProduct } from "@/lib/categories";
 import { formatPrice } from "@/lib/currency";
-import { BagIcon, CheckIcon, SearchIcon } from "../components/Icons";
+import { BagIcon, CheckIcon, CloseIcon, SearchIcon } from "../components/Icons";
+import { AdvertSlide } from "./AdvertsFeed";
 
 type Kind = "store" | "product";
 
@@ -72,13 +73,25 @@ export default function AdvertForm({ existing }: { existing?: Advert }) {
   const [caption, setCaption] = useState(existing?.caption || "");
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
+  // Forhåndsvisning: annonsen vist akkurat som i feeden, før den legges ut.
+  const [previewing, setPreviewing] = useState(false);
+  const [storeName, setStoreName] = useState("");
+  const [storeLogo, setStoreLogo] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSession().then((s) => {
       if (s.shop) setDomain(s.shop);
+      setStoreName(s.displayName || "");
+      setStoreLogo(s.logoUrl || null);
       setSessionChecked(true);
     });
   }, []);
+
+  // Lokal lenke til den valgte filen, så den kan vises før den lastes opp.
+  const fileUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  useEffect(() => () => {
+    if (fileUrl) URL.revokeObjectURL(fileUrl);
+  }, [fileUrl]);
 
   // Produktene til butikken, så man kan velge hvilket annonsen gjelder.
   useEffect(() => {
@@ -101,6 +114,25 @@ export default function AdvertForm({ existing }: { existing?: Advert }) {
   }
 
   const ready = (editing || !!file) && (kind === "store" || (kind === "product" && !!product && !!category));
+
+  const previewAdvert: Advert | null =
+    ready && kind
+      ? {
+          id: "preview",
+          store_domain: domain,
+          media_url: fileUrl || existing?.media_url || "",
+          media_type: file ? (file.type.startsWith("video") ? "video" : "image") : existing?.media_type || "image",
+          caption,
+          created_at: new Date().toISOString(),
+          category: kind === "product" ? category : STORE_CATEGORY,
+          store_name: storeName || undefined,
+          store_logo: storeLogo,
+          product_url: kind === "product" ? product?.url : null,
+          product_title: kind === "product" ? product?.title : null,
+          product_price: kind === "product" ? product?.price : undefined,
+          product_currency: kind === "product" ? product?.currency : undefined,
+        }
+      : null;
 
   async function handleUpload() {
     if (!ready || !kind) return;
@@ -284,11 +316,31 @@ export default function AdvertForm({ existing }: { existing?: Advert }) {
           />
 
           <button
+            type="button"
+            onClick={() => setPreviewing(true)}
+            disabled={!ready}
+            style={{
+              width: "100%",
+              marginTop: 20,
+              padding: "13px 20px",
+              borderRadius: 12,
+              backgroundColor: "transparent",
+              color: "var(--foreground)",
+              border: "1px solid var(--border)",
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: "pointer",
+              opacity: !ready ? 0.6 : 1,
+            }}
+          >
+            Forhåndsvis annonsen
+          </button>
+          <button
             onClick={handleUpload}
             disabled={!ready || uploading}
             style={{
               width: "100%",
-              marginTop: 20,
+              marginTop: 10,
               padding: "13px 20px",
               borderRadius: 12,
               backgroundColor: "var(--primary)",
@@ -306,6 +358,40 @@ export default function AdvertForm({ existing }: { existing?: Advert }) {
       )}
 
       {message && <p style={{ marginTop: 14, textAlign: "center" }}>{message}</p>}
+
+      {previewing && previewAdvert && (
+        <div
+          role="dialog"
+          aria-label="Forhåndsvisning av annonsen"
+          style={{ position: "fixed", inset: 0, zIndex: 1000, backgroundColor: "rgba(0,0,0,0.85)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16, gap: 12 }}
+        >
+          <p style={{ margin: 0, color: "white", fontSize: 14, opacity: 0.85 }}>Slik ser kundene annonsen i feeden</p>
+          {/* Samme størrelse som feeden på mobil. */}
+          <div style={{ width: "min(400px, 100%, calc((100dvh - 170px) * 9 / 16))", aspectRatio: "9 / 16", borderRadius: 18, overflow: "hidden" }}>
+            <AdvertSlide advert={previewAdvert} currency={null} saved={false} muted={false} onToggleMute={() => {}} onToggleSave={() => {}} onShare={() => {}} onComments={() => {}} />
+          </div>
+          <div style={{ display: "flex", gap: 10, width: "min(400px, 100%)" }}>
+            <button
+              type="button"
+              onClick={() => setPreviewing(false)}
+              style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.4)", background: "none", color: "white", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+            >
+              <CloseIcon size={16} /> Endre
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPreviewing(false);
+                handleUpload();
+              }}
+              disabled={uploading}
+              style={{ flex: 1, padding: "12px 14px", borderRadius: 12, border: "none", backgroundColor: "var(--primary)", color: "white", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+            >
+              {editing ? "Lagre endringer" : "Legg ut annonse"}
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
