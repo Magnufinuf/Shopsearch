@@ -148,7 +148,12 @@ function AdminContent() {
           <h1 style={{ fontFamily: "var(--font-heading), Georgia, serif", fontSize: 28, fontWeight: 600, margin: "0 0 4px" }}>
             Butikkadministrasjon
           </h1>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>{domain}</p>
+          <p style={{ margin: 0, fontSize: 13, opacity: 0.6 }}>
+            {domain} ·{" "}
+            <Link href="/admin/innstillinger" style={{ color: "var(--primary)", opacity: 1 }}>
+              Butikkinnstillinger
+            </Link>
+          </p>
         </div>
         {isFree && (
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, backgroundColor: "rgba(74,222,128,0.15)", color: "#4ade80", fontSize: 13, padding: "6px 14px", borderRadius: 999 }}>

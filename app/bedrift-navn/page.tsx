@@ -105,7 +105,7 @@ export default function BedriftNavn() {
   if (!shop) return <p style={{ padding: 24, opacity: 0.6 }}>Laster...</p>;
 
   const shownLogo = preview || logoUrl;
-  // Logo er valgfritt (kan legges til senere under Innstillinger), navn er påkrevd.
+  // Logo er valgfritt (kan legges til senere under Butikkinnstillinger), navn er påkrevd.
   const validEmail = !emailSupported || /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email.trim());
   const valid = name.trim().length >= 2 && validEmail;
   return (
@@ -180,7 +180,7 @@ export default function BedriftNavn() {
         >
           {saving ? "Lagrer..." : "Fortsett"}
         </button>
-        <p style={{ margin: 0, fontSize: 12, opacity: 0.55, textAlign: "center" }}>Du kan endre dette senere under Innstillinger.</p>
+        <p style={{ margin: 0, fontSize: 12, opacity: 0.55, textAlign: "center" }}>Du kan endre dette senere under Administrasjon → Butikkinnstillinger.</p>
         {error && <p style={{ color: "#e05252", fontSize: 14, margin: 0, textAlign: "center" }}>{error}</p>}
       </form>
     </main>
