@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { fetchSession } from "@/lib/session-client";
 import { fetchUser, logoutUser, UserInfo } from "@/lib/user-client";
-import { CURRENCY_KEY, SUPPORTED_CURRENCIES } from "@/lib/currency";
+import { CURRENCY_KEY } from "@/lib/currency";
+import CurrencyPicker from "../components/CurrencyPicker";
 import { THEME_KEY, ThemeChoice, applyTheme, readTheme } from "@/lib/theme";
-import { languageName, locale, useLang, useT } from "@/lib/i18n";
+import { languageName, useLang, useT } from "@/lib/i18n";
 import UsernameForm from "../components/UsernameForm";
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
@@ -73,26 +74,6 @@ function Segmented<T extends string>({ options, value, onChange }: { options: { 
   );
 }
 
-// "NOK" -> "norske kroner" (på språket brukeren har valgt).
-function currencyName(code: string, lang: string): string {
-  try {
-    return new Intl.DisplayNames([locale(lang), "en"], { type: "currency" }).of(code) || code;
-  } catch {
-    return code;
-  }
-}
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 14px",
-  borderRadius: 10,
-  border: "1px solid var(--border)",
-  backgroundColor: "transparent",
-  color: "var(--foreground)",
-  fontSize: 15,
-  boxSizing: "border-box",
-};
-
 const linkButton: React.CSSProperties = {
   background: "none",
   border: "none",
@@ -105,6 +86,8 @@ const linkButton: React.CSSProperties = {
 export default function InnstillingerPage() {
   const [theme, setTheme] = useState<ThemeChoice>("light");
   const lang = useLang();
+  // Valutanavnene lages av nettleseren (serveren kan skrive dem litt annerledes), så de vises først etter innlasting.
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const t = useT();
   const [currency, setCurrency] = useState("auto");
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -143,6 +126,8 @@ export default function InnstillingerPage() {
     } catch {}
     applyTheme(choice);
   }
+
+
 
   function chooseCurrency(value: string) {
     setCurrency(value);
@@ -272,16 +257,16 @@ export default function InnstillingerPage() {
 
       {/* Valuta */}
       <Panel title={t("Valuta")}>
-        <Row label={t("Vis priser i")} hint={t("Automatisk velger valuta ut fra landet du er i.")}>
-          <select value={currency} onChange={(e) => chooseCurrency(e.target.value)} style={{ ...inputStyle, width: "auto", paddingRight: 32 }}>
-            <option value="auto">{t("Automatisk")}</option>
-            {SUPPORTED_CURRENCIES.map((c) => (
-              <option key={c} value={c} title={currencyName(c, lang)}>
-                {c} – {currencyName(c, lang)}
-              </option>
-            ))}
-          </select>
-        </Row>
+        <p style={{ fontSize: 13, opacity: 0.7, margin: "0 0 8px" }}>{t("Vis priser i")}</p>
+        {mounted ? (
+          <CurrencyPicker value={currency} onChange={chooseCurrency} />
+        ) : (
+          <div style={{ height: 44 }} />
+        )}
+        <p style={{ fontSize: 12, opacity: 0.6, margin: "8px 0 0" }}>{t("Automatisk velger valuta ut fra landet du er i.")}</p>
+        <p style={{ fontSize: 11, opacity: 0.5, margin: "8px 0 0" }}>
+          {t("Valutakurser fra")} <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>ExchangeRate-API</a> {t("og ECB")}
+        </p>
       </Panel>
 
 

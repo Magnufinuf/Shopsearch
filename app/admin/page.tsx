@@ -227,9 +227,9 @@ function AdminContent() {
           {isFree && (
             <Panel title="Abonnement">
               <p style={{ opacity: 0.75, fontSize: 14, lineHeight: 1.5 }}>
-                {domain.endsWith(".myshopify.com")
-                  ? "Scavenger er gratis for Shopify-butikker."
-                  : `${freeLabel}. Ingen provisjon og ikke noe abonnement i denne perioden. Etterpå kan dere velge 299 kr/mnd eller 4% provisjon per salg.`}
+                {freePeriod?.freeUntil
+                  ? `${freeLabel}. Ingen provisjon og ikke noe abonnement i denne perioden.`
+                  : "Scavenger er gratis for alle butikker foreløpig."}
               </p>
             </Panel>
           )}
